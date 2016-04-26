@@ -5,7 +5,7 @@
 #           can use the virtualbox or libvirt Vagrant providers
 # Initially written by Eric Pulvino 2015-10-19
 #
-#  hosted @ https://github.com/eric-cumulus/topology_converter
+#  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
 version = "4.0.3"
@@ -428,7 +428,6 @@ inventory = ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 hostfile= ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 host_key_checking=False
 callback_whitelist = profile_tasks""")
-    print "got here3"
 
 
 
