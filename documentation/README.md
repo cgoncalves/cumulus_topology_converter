@@ -43,7 +43,7 @@
 ##Glossary:
 * **Topology File** -- Usually a file ending in the ".dot" suffix. This file describes the network topology link-by-link. Written in https://en.wikipedia.org/wiki/DOT_(graph_description_language). This file can be the same one used as part of the [Perscriptive Topology Manager (PTM) feature](https://docs.cumulusnetworks.com/display/DOCS/Prescriptive+Topology+Manager+-+PTM) in Cumulus Linux.
 * **Provider** -- similar to a hypervisor, providers are Vagrant's term for the device that is either directoy hosting the VM (virtualbox) or the subsystem that vagrant is communicating with to further orchestratrate the creation of the VM (libvirt)
-* **Interface Remapping** -- Interface remapping is the process by which interfaces are renamed to match the interfaces specified in the topology file. Interface Remapping uses UDEV rules that are orchestrated in the Vagrantfile and applied by the apply_udev.py script on the machines under simulation. This process allows a device in a topologyfile to simulate ports like "swp49" without having to simulate ports swp1-48. See the "Caveats" Section for additional information.
+* **Interface Remapping** -- Interface remapping is the process by which interfaces are renamed to match the interfaces specified in the topology file. Interface Remapping uses UDEV rules that are orchestrated in the Vagrantfile and applied by the apply_udev.py script on the machines under simulation. This process allows a device in a topologyfile to simulate ports like "swp49" without having to simulate ports swp1-48. See the "Miscellaneous Info" Section for additional information.
 
 
 ##Features
@@ -58,7 +58,7 @@
 ##Installation
 
 ###Ubuntu
-Both 16.04 (and 14.04)
+Both 16.04 and 14.04.
 
 ```
 sudo apt install python-pip
@@ -336,7 +336,7 @@ Documentation coming soon!
 These topologies can be used to get started with topology converter.
 
 ## The Reference Topology
-This topology can be used to simulate any feature offered by Cumulus Linux. It is not necessary to turn on each device in this topology, only those which you intend to use (to keep the simulation more manageable on a laptop). For more information on the reference topology see the [wiki page](https://wiki.cumulusnetworks.com/display/SAL/Reference+Topology).
+This topology can be used to simulate any feature offered by Cumulus Linux. It is not necessary to turn on each device in this topology, only those which you intend to use (to keep the simulation more manageable on a laptop). For more information on the reference topology see the [internal wiki page](https://wiki.cumulusnetworks.com/display/SAL/Reference+Topology), public documentation on the Reference Topology is coming soon!
 
 ![Reference Topology](reference_topology.png)
 
