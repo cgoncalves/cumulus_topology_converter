@@ -1,0 +1,12 @@
+
+graph dc1 {
+ "leaf1" [os="CumulusCommunity/cumulus-vx" function="leaf" memory="300" config="./helper_scripts/extra_switch_config.sh"]
+ "server1" [os="boxcutter/ubuntu1404" function="host"  memory="400" ubuntu=True config="./helper_scripts/extra_server_config.sh"]
+   "leaf1":"eth0" -- "server1":"eth0"   
+   "leaf1":"swp1" -- "server1":"eth1" 
+   "leaf1":"swp2" -- "server1":"eth2" 
+   "leaf1":"swp3" -- "server1":"eth3" 
+   "leaf1":"swp4" -- "server1":"eth4" 
+   "leaf1":"swp5" -- "server1":"eth5" 
+   "leaf1":"swp6" -- "server1":"eth6" 
+}
