@@ -22,6 +22,8 @@ parser.add_argument('-nd','--no-vagrant-default', action='store_true',
                    help='Using this option will not create a vagrant default route when applying the re-map.')
 parser.add_argument('-vm','--vagrant_mapping', action='store_true',
                    help='Using this option will create the mapping for the vagrant interface that happens automatically during the apply option.')
+parser.add_argument("--vagrant-name", default='vagrant',
+                   help='The name of the vagrant interface (default "vagrant")')
 parser.add_argument("--apply", action='store_true',
                    help='Apply the remap as it has been provided.')
 
@@ -44,7 +46,7 @@ def show_rules():
         if verbose: print " >>> No Rules Present or File Does Not Exist <<<"
         return
     rules=subprocess.check_output(["cat",udev_file]).split('\n')
-    for line in rules: print line 
+    for line in rules: print line
 
 def parse_interfaces():
     #Parse Interfaces
@@ -54,7 +56,7 @@ def parse_interfaces():
     interface=""
     mac=""
     index_map={}
-    
+
     #parse ip link show output for interface, ifindex and MAC
     for line in output:
         if re.match("^.*LOOPBACK.*$",line): continue #skip loopbacks
@@ -98,7 +100,7 @@ def delete_rule(mac):
         print ">>> BEFORE"
         show_rules()
     remove_rule=subprocess.check_output(["sed -i '/"+mac+"/d' " + udev_file],shell=True).split('\n')
-    if verbose: 
+    if verbose:
         print "<<< AFTER"
         show_rules()
 
@@ -111,7 +113,7 @@ def add_rule(mac,interface):
     if not mac_found:
         print " WARNING: this MAC address presently does not belong to any device on the system."
 
-    if verbose: 
+    if verbose:
         print "deleting any matching rules to be safe..."
     delete_rule(mac)
 
@@ -129,10 +131,10 @@ def apply_remap():
     lowest_index_interface=""
     #Determine Driver and lowest index
     for interface in index_map:
-        if lowest_index == "": 
+        if lowest_index == "":
             lowest_index = index_map[interface]["index"]
             lowest_index_interface = interface
-        elif int(index_map[interface]["index"]) < int(lowest_index): 
+        elif int(index_map[interface]["index"]) < int(lowest_index):
             lowest_index = index_map[interface]["index"]
             lowest_index_interface = interface
         if verbose:
@@ -154,16 +156,16 @@ def apply_remap():
         print "lowest_index: " + str(lowest_index)
         print drivers
 
-    
+    global vagrant_name
     if use_vagrant_interface:
         print lowest_index_interface + " will become the vagrant interface."
-        add_rule(index_map[lowest_index_interface]["mac"],"vagrant")
-    
+        add_rule(index_map[lowest_index_interface]["mac"], vagrant_name)
+
     if just_vagrant: return 0
     for driver in drivers:
         dead_drop=subprocess.check_output(["modprobe","-r",driver])
-    
-    
+
+
     dead_drop=subprocess.check_output(["udevadm","control","--reload-rules"])
     dead_drop=subprocess.check_output(["udevadm","trigger"])
     time.sleep(4)
@@ -185,23 +187,24 @@ def main():
     udev_file="/etc/udev/rules.d/70-persistent-net.rules"
     global use_vagrant_interface
     use_vagrant_interface=True
-    global use_vagrant_default 
-    use_vagrant_default=True 
+    global use_vagrant_default
+    use_vagrant_default=True
     add=False
     show=False
     delete=False
     global just_vagrant
     just_vagrant=False
+    global vagrant_name
     apply=False
     additions=[]
     removals=[]
 
     args = parser.parse_args()
     if args.verbose: verbose=args.verbose
-    if args.add: 
+    if args.add:
         add=True
         for mac,interface in args.add: additions.append([is_mac(mac),interface])
-    if args.delete: 
+    if args.delete:
         delete=True
         for mac in args.delete: removals.append(is_mac(mac))
     if args.show: show=True
@@ -211,8 +214,9 @@ def main():
         just_vagrant=True
     if args.no_vagrant_default: use_vagrant_default=False
     if args.apply: apply=True
+    vagrant_name = args.vagrant_name
 
-    if verbose: 
+    if verbose:
         print "Arguments:"
         print args
 
@@ -220,7 +224,7 @@ def main():
     elif delete == True:
         for mac in removals: delete_rule(mac)
     elif add == False: apply_remap()
-    elif add == True: 
+    elif add == True:
         for mac,interface in additions: add_rule(mac,interface)
 
 
@@ -228,5 +232,3 @@ if __name__ == "__main__":
     main()
 
 exit(0)
-
-

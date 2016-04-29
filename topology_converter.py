@@ -1,4 +1,5 @@
-#
+#!/usr/bin/env python
+
 #
 #    Topology Converter
 #       converts a given topology.dot file to a Vagrantfile
@@ -50,7 +51,7 @@ provider="virtualbox"
 generate_ansible_hostfile=False
 verbose=False
 start_port=8000
-port_gap=1000 
+port_gap=1000
 synced_folder=False
 display_datastructures=False
 VAGRANTFILE='Vagrantfile'
@@ -72,7 +73,7 @@ if args.port_gap: port_gap=args.port_gap
 if args.display_datastructures: display_datastructures=True
 if args.synced_folder: synced_folder=True
 
-if verbose: 
+if verbose:
     print "Arguments:"
     print args
 
@@ -82,9 +83,9 @@ if verbose:
 
 # The starting MAC for assignment for any devices not in mac_map
 #Cumulus Range ( https://support.cumulusnetworks.com/hc/en-us/articles/203837076-Reserved-MAC-Address-Range-for-Use-with-Cumulus-Linux )
-start_mac="443839000000" 
+start_mac="443839000000"
 #This file is generated to store the mapping between macs and mgmt interfaces
-dhcp_mac_file="./dhcp_mac_map" 
+dhcp_mac_file="./dhcp_mac_map"
 
 ######################################################
 #############    Everything Else     #################
@@ -102,7 +103,7 @@ mac_map={}
 
 #LIBvirt Provider Settings
 # start_port and port_gap are only relevant to the libvirt provider. These settings provide the basis
-#   for the UDP tunnel construction which is used by libvirt. Since UDB tunnels only make sense in a 
+#   for the UDP tunnel construction which is used by libvirt. Since UDB tunnels only make sense in a
 #   point-to-point fashion, there is additional error checking when using the libvirt provider to make
 #   sure that interfaces are not reused for a point-to-multipoint configuration.
 
@@ -128,7 +129,7 @@ def mac_fetch(hostname,interface):
     new_mac = hex(int(start_mac, 16) + 1)[2:].upper()
     while new_mac in mac_map:
         print " WARNING: MF MAC Address Collision -- tried to use " + new_mac + " (on "+interface+") but it was already in use."
-        start_mac = new_mac        
+        start_mac = new_mac
         new_mac = hex(int(start_mac, 16) + 1)[2:].upper()
         warning=True
     start_mac = new_mac
@@ -167,11 +168,11 @@ def parse_topology(topology_file):
         #   light sanity checking.
         if 'function' not in inventory[node_name]: inventory[node_name]['function'] = "Unknown"
         if 'memory' in inventory[node_name]:
-            if int(inventory[node_name]['memory']) <= 0: 
+            if int(inventory[node_name]['memory']) <= 0:
                 print " ### ERROR -- Memory must be greater than 0mb on " + node_name
                 exit(1)
         if provider == "libvirt":
-            if 'tunnel_ip' not in inventory[node_name]: inventory[node_name]['tunnel_ip']='127.0.0.1'         
+            if 'tunnel_ip' not in inventory[node_name]: inventory[node_name]['tunnel_ip']='127.0.0.1'
 
 
     net_number = 1
@@ -232,7 +233,7 @@ def parse_topology(topology_file):
             mac_map[left_mac_address]=left_device+","+left_interface
             if provider=="virtualbox":
                 inventory[left_device]['interfaces'][left_interface]['network'] = network_string
-            elif provider=="libvirt":     
+            elif provider=="libvirt":
                 inventory[left_device]['interfaces'][left_interface]['local_port'] = PortA
                 inventory[left_device]['interfaces'][left_interface]['remote_port'] = PortB
         else:
@@ -272,11 +273,11 @@ def parse_topology(topology_file):
             inventory[left_device]['interfaces'][left_interface][attribute]=edge_attributes[attribute]
             inventory[right_device]['interfaces'][right_interface][attribute]=edge_attributes[attribute]
         net_number += 1
-    
+
     if verbose:
         print "\n\n ### Inventory Datastructure: ###"
         pp.pprint(inventory)
-    
+
     return inventory
 
 def clean_datastructure(devices):
@@ -314,7 +315,7 @@ def generate_shareable_zip():
     if template_dir not in folders_to_zip: folders_to_zip.append(template_dir)
 
     if verbose: print "Creating ZIP..."
-    if verbose: print "  Folders_to_Zip: ["+", ".join(folders_to_zip)+"]"  
+    if verbose: print "  Folders_to_Zip: ["+", ".join(folders_to_zip)+"]"
 
     zf = zipfile.ZipFile(ZIPFILE, "w")
     for dirname, subdirs, files in os.walk("./"):
@@ -326,10 +327,10 @@ def generate_shareable_zip():
                 elif dirname == topology_dir:
                     if filename != topo_file: continue
                 file_to_add=os.path.join(dirname, filename)
-                if verbose: 
+                if verbose:
                     print "  adding %s to zip..." % (file_to_add)
                 zf.write(file_to_add)
-        else: 
+        else:
             continue
     zf.close()
 
@@ -357,7 +358,7 @@ def sorted_interfaces(interface_dictionary):
         interface_list.append(link)
     interface_list.sort(key=getKey)
     return interface_list
-    
+
 def generate_dhcp_mac_file(mac_map):
     if verbose: print "GENERATING DHCP MAC FILE..."
     mac_file = open(dhcp_mac_file,"a")
@@ -372,7 +373,7 @@ def generate_dhcp_mac_file(mac_map):
 
 def populate_data_structures(inventory):
     devices = []
-    for device in inventory: 
+    for device in inventory:
         inventory[device]['hostname']=device
         devices.append(inventory[device])
     return clean_datastructure(devices)
@@ -381,7 +382,7 @@ def populate_data_structures(inventory):
 def render_jinja_templates(devices):
     if display_datastructures: print_datastructures(devices)
     if verbose: print "RENDERING JINJA TEMPLATES..."
-    for templatefile,destination in TEMPLATES:  
+    for templatefile,destination in TEMPLATES:
         if verbose: print "    Rendering: " + templatefile + " --> " + destination
         template = jinja2.Template(open(templatefile).read())
         with open(destination, 'w') as outfile:
@@ -448,13 +449,12 @@ def main():
     generate_dhcp_mac_file(mac_map)
 
     generate_ansible_files()
-    
+
     #generate_shareable_zip() #Disabled because it is unreliable
 
-    
+
 if __name__ == "__main__":
     main()
     print "\nVagrantfile has been generated!\n"
     print "\nDONE!\n"
 exit(0)
-
