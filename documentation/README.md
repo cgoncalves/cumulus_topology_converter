@@ -140,8 +140,9 @@ or if using Libvirt:
 
 ###Providers
 Topology Converter supports the use of two providers, Virtualbox and Libvirt (/w KVM). Virtualbox is the default provider. 
-Virtualbox: (do nothing... it's the default)
+
 Libvirt (/w KVM):
+
 To use Libvirt/KVM specify the -p option
 
 ```
@@ -252,6 +253,7 @@ python ./topology_converter.py ./examples/2switch.dot -dd
 ```
 
 To specify a custom template use the "-t" option: 
+
 ```
   -t [templatefile] [rendered_output_location], --template TEMPLATE TEMPLATE
                         Specify an additional jinja2 template and a
@@ -265,6 +267,7 @@ When working with custom templates or when modifying the included Vagrantfile te
 **Note: for links it is possible to override the attributes generated for the link by TC since passthrough attributes are applied last. One could use this to manually specify a particular network number for the virtualbox provider. For attributes specified on links, any attrubutes which are not "left_mac" or "right_mac" will be applied to both ends of the link.**
 
 Node-Based Passthrough Attribute shown below: "testattr"
+
 Link-Based Passthrough Attribute shown below: "newattribute"
 
 
@@ -282,7 +285,7 @@ graph dc1 {
 
 
 ###Provisioning Scripts
-Scripts can be specified for execution on the end host using the "config=* node attribute in a topology file. In the example below, a "custom_script.sh" is used to provision the leaf1 device.
+Scripts can be specified for execution on the end host using the "config=" node attribute in a topology file. In the example below, a "custom_script.sh" is used to provision the leaf1 device.
 
 ```
 graph dc1 {
@@ -324,6 +327,7 @@ Documentation coming soon!
 
  
 ##Miscellaneous Info
+* When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is unknown at this point in time.
 * When simulating with Ubuntu, specify the "ubuntu=True" node-level attribute in the topology file. This will enable proper handling of network interfaces after a reboot.
 * Point to Multipoint connections are not supported at this time.
 * Vagrantfiles written for the libvirt provider will come up in parallel by default regardless of the order specified in the Vagrantfile this give libvirt an obvious advantage for simulations with many nodes. To avoid this use "vagrant up --provider=libvirt --no-parallel

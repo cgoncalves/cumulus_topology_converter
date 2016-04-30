@@ -102,7 +102,7 @@ mac_map={}
 
 #LIBvirt Provider Settings
 # start_port and port_gap are only relevant to the libvirt provider. These settings provide the basis
-#   for the UDP tunnel construction which is used by libvirt. Since UDB tunnels only make sense in a 
+#   for the UDP tunnel construction which is used by libvirt. Since UDP tunnels only make sense in a 
 #   point-to-point fashion, there is additional error checking when using the libvirt provider to make
 #   sure that interfaces are not reused for a point-to-multipoint configuration.
 
