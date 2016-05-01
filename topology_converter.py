@@ -203,8 +203,14 @@ def parse_topology(topology_file):
         #Set Devices/interfaces/MAC Addresses
         left_device=edge.get_source().split(":")[0].replace('"','')
         left_interface=edge.get_source().split(":")[1].replace('"','')
+        if left_device not in inventory:
+            print " ### ERROR: device " + left_device + " is referred to in list of edges/links but not defined as a node."
+            exit(1)
         right_device=edge.get_destination().split(":")[0].replace('"','')
         right_interface=edge.get_destination().split(":")[1].replace('"','')
+        if right_device not in inventory:
+            print " ### ERROR: device " + right_device + " is referred to in list of edges/links but not defined as a node."
+            exit(1)
 
         left_mac_address=""
         if edge.get('left_mac') != None : left_mac_address=edge.get('left_mac').replace('"','')
