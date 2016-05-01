@@ -10,6 +10,7 @@
 * [Optional Features](#optional-features)
   * [Providers](#providers)
   * [Faked Devices](#faked-devices)
+  * [Functional Defaults](#functional-defaults)
   * [Boot Ordering](#boot-ordering)
   * [MAC Address Handout](#mac-handout)
   * [Ansible Hostfile Generation](#ansible-hostfile-generation)
@@ -43,7 +44,7 @@
 ##Glossary:
 * **Topology File** -- Usually a file ending in the ".dot" suffix. This file describes the network topology link-by-link. Written in https://en.wikipedia.org/wiki/DOT_(graph_description_language). This file can be the same one used as part of the [Perscriptive Topology Manager (PTM) feature](https://docs.cumulusnetworks.com/display/DOCS/Prescriptive+Topology+Manager+-+PTM) in Cumulus Linux.
 * **Provider** -- similar to a hypervisor, providers are Vagrant's term for the device that is either directoy hosting the VM (virtualbox) or the subsystem that vagrant is communicating with to further orchestratrate the creation of the VM (libvirt)
-* **Interface Remapping** -- Interface remapping is the process by which interfaces are renamed to match the interfaces specified in the topology file. Interface Remapping uses UDEV rules that are orchestrated in the Vagrantfile and applied by the apply_udev.py script on the machines under simulation. This process allows a device in a topologyfile to simulate ports like "swp49" without having to simulate ports swp1-48. See the "Miscellaneous Info" Section for additional information.
+* **Interface Remapping** -- Interface remapping is the process by which interfaces are renamed to match the interfaces specified in the topology file. Interface Remapping uses UDEV rules that are orchestrated in the Vagrantfile and applied by the apply_udev.py script on the machines under simulation. This process allows a device in a topologyfile to simulate ports like "swp49" without having to simulate ports swp1-48. See the "[Miscellaneous Info](#miscellaneous-info)" Section for additional information.
 
 
 ##Features
@@ -132,7 +133,7 @@ or if using Libvirt:
 
 ###What is happening when you run Topology Converter?
 1. When topology_converter (TC) is called, TC reads the provided topology file line by line and learns information about each node and each link in the topology.
-2. This information is stored in a variables datastructure.
+2. This information is stored in a variables datastructure. (View this datastructure using the "python ./topology_converter.py [topology_file] -dd" option)
 3. A jinja2 template "Vagrantfile.j2" (stored in the /templates directory) is used to render a Vagrantfile based on the variables datastructure.
 
 
@@ -141,9 +142,7 @@ or if using Libvirt:
 ###Providers
 Topology Converter supports the use of two providers, Virtualbox and Libvirt (/w KVM). Virtualbox is the default provider. 
 
-Libvirt (/w KVM):
-
-To use Libvirt/KVM specify the -p option
+To use Libvirt/KVM specify the "-p libvirt" option
 
 ```
 -p PROVIDER, --provider PROVIDER
@@ -165,6 +164,22 @@ graph dc1 {
    "leaf1":"swp50" -- "leaf2":"swp50"
 }
 ```
+
+###Functional Defaults
+Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
+
+function="oob-switch"
+function="exit"
+function="spine"
+function="leaf"
+Functional Defaults are: os="CumulusCommunity/cumulus-vx", memory="300"
+
+function="oob-server"
+function="host"
+Functional Defaults are: os="boxcutter/ubuntu1604", memory="500"
+
+Leaf,Spine,Exit,oob-switch os="CumulusCommunity/cumulus-vx" memory="300"
+Host,oob-server os="boxcutter/ubuntu1604" memory="500"
 
 
 ###Boot Ordering
