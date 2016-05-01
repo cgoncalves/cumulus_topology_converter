@@ -168,15 +168,17 @@ graph dc1 {
 ###Functional Defaults
 Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
 
-function="oob-switch"
-function="exit"
-function="spine"
-function="leaf"
-Functional Defaults are: os="CumulusCommunity/cumulus-vx", memory="300"
+For Functions: "oob-switch" "exit" "spine" "leaf"
 
-function="oob-server"
-function="host"
-Functional Defaults are: os="boxcutter/ubuntu1604", memory="500"
+Functional Defaults are: 
+* os="CumulusCommunity/cumulus-vx"
+* memory="300"
+
+For Functions: "oob-server" and "host"
+
+Functional Defaults are:
+* os="boxcutter/ubuntu1604"
+* memory="500"
 
 Leaf,Spine,Exit,oob-switch os="CumulusCommunity/cumulus-vx" memory="300"
 Host,oob-server os="boxcutter/ubuntu1604" memory="500"
