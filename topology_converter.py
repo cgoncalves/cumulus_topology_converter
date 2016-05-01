@@ -149,8 +149,38 @@ def parse_topology(topology_file):
         if node_name not in inventory:
             inventory[node_name] = {}
             inventory[node_name]['interfaces'] = {}
+
+        node_attr_list=node.get_attributes()
+        print "node_attr_list:"
+        print node_attr_list
+
+        #Define Functional Defaults
+        if 'function' in node_attr_list:
+            value=node.get('function')
+            if value.startswith('"') or value.startswith("'"): value=value[1:]
+            if value.endswith('"') or value.endswith("'"): value=value[:-1]
+
+            if value.lower()=='oob-server':
+                inventory[node_name]['os']="boxcutter/ubuntu1604"
+                inventory[node_name]['memory']="500"
+            if value.lower()=='oob-switch':
+                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory']="300"
+            if value.lower()=='exit':
+                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory']="300"
+            if value.lower()=='spine':
+                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory']="300"
+            if value.lower()=='leaf':
+                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory']="300"
+            if value.lower()=='host':
+                inventory[node_name]['os']="boxcutter/ubuntu1604"
+                inventory[node_name]['memory']="500"
+
         #Add attributes to node inventory
-        for attribute in node.get_attributes():
+        for attribute in node_attr_list:
             #if verbose: print attribute + " = " + node.get(attribute)
             value=node.get(attribute)
             if value.startswith('"') or value.startswith("'"): value=value[1:]
