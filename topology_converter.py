@@ -203,14 +203,8 @@ def parse_topology(topology_file):
         #Set Devices/interfaces/MAC Addresses
         left_device=edge.get_source().split(":")[0].replace('"','')
         left_interface=edge.get_source().split(":")[1].replace('"','')
-        if left_device not in inventory:
-            print " ### ERROR: device " + left_device + " is referred to in list of edges/links but not defined as a node."
-            exit(1)
         right_device=edge.get_destination().split(":")[0].replace('"','')
         right_interface=edge.get_destination().split(":")[1].replace('"','')
-        if right_device not in inventory:
-            print " ### ERROR: device " + right_device + " is referred to in list of edges/links but not defined as a node."
-            exit(1)
 
         left_mac_address=""
         if edge.get('left_mac') != None : left_mac_address=edge.get('left_mac').replace('"','')
@@ -219,15 +213,13 @@ def parse_topology(topology_file):
         if edge.get('right_mac') != None : right_mac_address=edge.get('right_mac').replace('"','')
         else: right_mac_address=mac_fetch(right_device,right_interface)
 
-        #Add left host to inventory
+        #Check to make sure each device in the edge already exists in inventory
         if left_device not in inventory:
-            inventory[left_device] = {}
-            inventory[left_device]['interfaces'] = {}
-
-        #Add right host to inventory
+            print " ### ERROR: device " + left_device + " is referred to in list of edges/links but not defined as a node."
+            exit(1)
         if right_device not in inventory:
-            inventory[right_device] = {}
-            inventory[right_device]['interfaces'] = {}
+            print " ### ERROR: device " + right_device + " is referred to in list of edges/links but not defined as a node."
+            exit(1)
 
         #Add left host switchport to inventory
         if left_interface not in inventory[left_device]['interfaces']:
