@@ -44,7 +44,7 @@ Vagrant.configure("2") do |config|
     device.vm.provider :libvirt do |v|{% endif %}
       v.memory = {{ device.memory }}
     end{% if synced_folder == False %}
-  config.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == True %}
+  config.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == "True" %}
       # UBUNTU DEVICES ONLY: Shorten Boot Process - remove \"Wait for Network
       device.vm.provision :shell , inline: "sudo sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf"{% endif %}
 {% for link in device.interfaces %}
