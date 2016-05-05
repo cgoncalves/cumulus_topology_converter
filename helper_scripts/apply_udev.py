@@ -80,10 +80,10 @@ def parse_interfaces():
         except Exception, e:
             #Method 2
             try:
-                driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver/module)"],shell=True).replace("\n","")
+                driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver/module) &> /dev/null"],shell=True).replace("\n","")
             except Exception, e:
                 try:
-                    driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver)"],shell=True).replace("\n","")
+                    driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver) &> /dev/null"],shell=True).replace("\n","")
                 except Exception, e:
                     print " ### ERROR Tried 3 methods to determine device driver. All Failed."
                     exit(1)
@@ -118,7 +118,7 @@ def add_rule(mac,interface):
     delete_rule(mac)
 
     with open("/etc/udev/rules.d/70-persistent-net.rules","a") as udev_file:
-        udev_file.write("""ACTION=="add", SUBSYSTEM=="net", ATTR{address}==\"""" + mac +"\", NAME=\""+interface+"\" \n")
+        udev_file.write("""ACTION=="add", SUBSYSTEM=="net", ATTR{address}==\"""" + mac +"\", NAME=\""+interface+"\", SUBSYSTEMS=="pci" \n")
     if verbose: show_rules()
 
 def apply_remap():
