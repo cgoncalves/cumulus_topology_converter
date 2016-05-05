@@ -157,25 +157,28 @@ def parse_topology(topology_file):
         #Define Functional Defaults
         if 'function' in node_attr_list:
             value=node.get('function')
-            if value.startswith('"') or value.startswith("'"): value=value[1:]
-            if value.endswith('"') or value.endswith("'"): value=value[:-1]
+            if value.startswith('"') or value.startswith("'"): value=value[1:].lower()
+            if value.endswith('"') or value.endswith("'"): value=value[:-1].lower()
 
-            if value.lower()=='oob-server':
+            if value=='fake':
+                inventory[node_name]['os']="None"
+                inventory[node_name]['memory']="1"
+            if value=='oob-server':
                 inventory[node_name]['os']="boxcutter/ubuntu1604"
                 inventory[node_name]['memory']="500"
-            if value.lower()=='oob-switch':
+            elif value=='oob-switch':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="300"
-            if value.lower()=='exit':
+            elif value=='exit':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="300"
-            if value.lower()=='spine':
+            elif value=='spine':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="300"
-            if value.lower()=='leaf':
+            elif value=='leaf':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="300"
-            if value.lower()=='host':
+            elif value=='host':
                 inventory[node_name]['os']="boxcutter/ubuntu1604"
                 inventory[node_name]['memory']="500"
 
@@ -316,7 +319,8 @@ def clean_datastructure(devices):
     for device in devices:
         print ">> DEVICE: " + device['hostname']
         print "     code: " + device['os']
-        print "     memory: " + device['memory']
+        if 'memory' in device:
+            print "     memory: " + device['memory']
         for attribute in device:
             if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces': continue
             print "     "+str(attribute)+": "+ str(device[attribute])
@@ -324,6 +328,14 @@ def clean_datastructure(devices):
             print "       LINK: " + interface
             for attribute in device['interfaces'][interface]:
                 print "               " + attribute +": " + device['interfaces'][interface][attribute]
+
+    #Remove Fake Devices
+    indexes_to_remove=[]
+    for i in range(0,len(devices)):
+        if 'function' in devices[i]:
+            if devices[i]['function'] == 'fake':
+                indexes_to_remove.append(i)
+    for index in indexes_to_remove: del devices[index]
     return devices
 
 def remove_generated_files():
