@@ -118,7 +118,7 @@ def add_rule(mac,interface):
     delete_rule(mac)
 
     with open("/etc/udev/rules.d/70-persistent-net.rules","a") as udev_file:
-        udev_file.write("""ACTION=="add", SUBSYSTEM=="net", ATTR{address}==\"""" + mac +"\", NAME=\""+interface+"\", SUBSYSTEMS=="pci" \n")
+        udev_file.write("""ACTION=="add", SUBSYSTEM=="net", ATTR{address}==\"""" + mac +"\", NAME=\""+interface+"\", SUBSYSTEMS==\"pci\" \n")
     if verbose: show_rules()
 
 def apply_remap():
