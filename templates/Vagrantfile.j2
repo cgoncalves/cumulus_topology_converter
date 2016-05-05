@@ -44,9 +44,9 @@ Vagrant.configure("2") do |config|
     device.vm.provider :libvirt do |v|{% endif %}
       v.memory = {{ device.memory }}
     end{% if synced_folder == False %}
-  config.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == "True" %}
+    device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == "True" %}
       # UBUNTU DEVICES ONLY: Shorten Boot Process - remove \"Wait for Network
-      device.vm.provision :shell , inline: "sudo sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf"{% endif %}
+      device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf"{% endif %}
 {% for link in device.interfaces %}
       # link for {{ link }} --> {{ device.interfaces[link].remote_device }}:{{ device.interfaces[link].remote_interface }}
       {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "{wbid}_{{ device.interfaces[link].network }}", auto_config: false , :mac => "{{ device.interfaces[link].mac|replace(':', '') }}"
@@ -66,6 +66,9 @@ Vagrant.configure("2") do |config|
 {% for i in range(1, 2+device.interfaces.__len__()) %}      vbox.customize ["modifyvm", :id, "--nictype{{i}}", "virtio"]
 {% endfor %}
     end{% endif %}
+
+      # Fixes "stdin: is not a tty" message --> https://github.com/mitchellh/vagrant/issues/1673
+      device.vm.provision :shell , inline: "(grep -q -E '^mesg n$' /root/.profile && sed -i 's/^mesg n$/tty -s \\&\\& mesg n/g' /root/.profile && echo 'Ignore the previous error \"stdin: is not a tty\" -- fixing this now...') || exit 0;"
 
       # Run Any Extra Config
 {% if device.config is defined %}      device.vm.provision :shell , path: "{{ device.config }}"{% endif %}

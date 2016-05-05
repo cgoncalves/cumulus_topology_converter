@@ -77,14 +77,14 @@ def parse_interfaces():
         try:
             ethtool_output=subprocess.check_output(["ethtool","-i",interface]).split('\n')
             driver = ethtool_output[0].split(":")[1][1:]
-        except Exception, e:
+        except (subprocess.CalledProcessError, OSError), e:
             #Method 2
             try:
-                driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver/module) &> /dev/null"],shell=True).replace("\n","")
-            except Exception, e:
+                driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver/module) > /dev/null 2>&1"],shell=True).replace("\n","")
+            except subprocess.CalledProcessError, e:
                 try:
-                    driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver) &> /dev/null"],shell=True).replace("\n","")
-                except Exception, e:
+                    driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver) > /dev/null 2>&1"],shell=True).replace("\n","")
+                except subprocess.CalledProcessError, e:
                     print " ### ERROR Tried 3 methods to determine device driver. All Failed."
                     exit(1)
         index_map[interface]["driver"]=driver
@@ -137,7 +137,7 @@ def apply_remap():
         elif int(index_map[interface]["index"]) < int(lowest_index):
             #Confirm that it is a physical interface and not a logical device
             try:
-                subprocess.check_call(["udevadm -a -p /sys/class/net/"+interface+""" | grep 'SUBSYSTEMS=="pci"' &> /dev/null"""],shell=True)
+                subprocess.check_call(["udevadm info -a -p /sys/class/net/"+interface+""" | grep 'SUBSYSTEMS=="pci"' > /dev/null"""],shell=True)
             except subprocess.CalledProcessError, e:
                 continue
             lowest_index = index_map[interface]["index"]
@@ -163,8 +163,8 @@ def apply_remap():
 
     global vagrant_name
     if use_vagrant_interface:
-        print lowest_index_interface + " will become the vagrant interface."
         add_rule(index_map[lowest_index_interface]["mac"], vagrant_name)
+        print "          FYI: "+lowest_index_interface + " will become the vagrant interface"
 
     if just_vagrant: return 0
     for driver in drivers:
