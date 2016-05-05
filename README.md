@@ -65,5 +65,6 @@ To see all the possible options use the help syntax "-h"
 * v4\.0\.2 2016\_04\_14: Added UDEV Based Remapping
 * v4\.0\.3 2016\_04\_25: Added link-based passthrough attribute support, disabled zipfile generation-- needs more work, removed use_vagrant_interface_option
 * v4\.0\.4 2016\_05\_01: Added functional defaults and check for node/device existance when parsing edges/links.
+* v4\.0\.5 2016\_05\_05: Fixed UDEV Remap to tie rules to interfaces on the PCI Bus. Fixed Fake Device support. Added check to confirm that future Vagrant interfaces are tied to the PCI bus.
 
 
