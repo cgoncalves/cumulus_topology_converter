@@ -135,6 +135,11 @@ def apply_remap():
             lowest_index = index_map[interface]["index"]
             lowest_index_interface = interface
         elif int(index_map[interface]["index"]) < int(lowest_index):
+            #Confirm that it is a physical interface and not a logical device
+            try:
+                subprocess.check_call(["udevadm -a -p /sys/class/net/"+interface+""" | grep 'SUBSYSTEMS=="pci"' &> /dev/null"""],shell=True)
+            except subprocess.CalledProcessError, e:
+                continue
             lowest_index = index_map[interface]["index"]
             lowest_index_interface = interface
         if verbose:
