@@ -7,10 +7,10 @@
 * [Using Topology Converter](#using-topology-converter)
   * [The Basic Workflow](#the-basic-workflow)
   * [What is it doing?](#what-is-happening-when-you-run-topology-converter)
+  * [Functional Defaults](#functional-defaults)
 * [Optional Features](#optional-features)
   * [Providers](#providers)
   * [Faked Devices](#faked-devices)
-  * [Functional Defaults](#functional-defaults)
   * [Boot Ordering](#boot-ordering)
   * [MAC Address Handout](#mac-handout)
   * [Ansible Hostfile Generation](#ansible-hostfile-generation)
@@ -136,6 +136,23 @@ or if using Libvirt:
 2. This information is stored in a variables datastructure. (View this datastructure using the "python ./topology_converter.py [topology_file] -dd" option)
 3. A jinja2 template "Vagrantfile.j2" (stored in the /templates directory) is used to render a Vagrantfile based on the variables datastructure.
 
+###Functional Defaults
+Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
+
+**For Functions:** "oob-switch" "exit" "spine" "leaf"
+
+**Functional Defaults are:**
+* os="CumulusCommunity/cumulus-vx"
+* memory="300"
+
+**For Functions:** "oob-server" and "host"
+
+**Functional Defaults are:**
+* os="boxcutter/ubuntu1604"
+* memory="500"
+
+Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
+
 
 ##Optional Features (Everything Else)
 
@@ -164,22 +181,6 @@ graph dc1 {
    "leaf1":"swp50" -- "leaf2":"swp50"
 }
 ```
-
-###Functional Defaults
-Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
-
-**For Functions:** "oob-switch" "exit" "spine" "leaf"
-
-**Functional Defaults are:**
-* os="CumulusCommunity/cumulus-vx"
-* memory="300"
-
-**For Functions:** "oob-server" and "host"
-
-**Functional Defaults are:**
-* os="boxcutter/ubuntu1604"
-* memory="500"
-
 
 ###Boot Ordering
 Boot ordering is accomplished in Virtualbox by using the "function" attribute of the node:
