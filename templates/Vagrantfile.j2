@@ -16,7 +16,6 @@ raise "vagrant-libvirt plugin must be installed, try $ vagrant plugin install va
 {% endif %}raise "vagrant-cumulus plugin must be installed, try $ vagrant plugin install vagrant-cumulus" unless Vagrant.has_plugin? "vagrant-cumulus"
 
 Vagrant.configure("2") do |config|
-  wbid = {{ epoch_time }}
 {% if provider == 'virtualbox' %}
   config.vm.provider "virtualbox" do |v|
     v.gui=false
@@ -49,7 +48,7 @@ Vagrant.configure("2") do |config|
       device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf"{% endif %}
 {% for link in device.interfaces %}
       # link for {{ link }} --> {{ device.interfaces[link].remote_device }}:{{ device.interfaces[link].remote_interface }}
-      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "{wbid}_{{ device.interfaces[link].network }}", auto_config: false , :mac => "{{ device.interfaces[link].mac|replace(':', '') }}"
+      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "{{ epoch_time }}_{{ device.interfaces[link].network }}", auto_config: false , :mac => "{{ device.interfaces[link].mac|replace(':', '') }}"
       {% elif provider == 'libvirt' %}device.vm.network "private_network",
             :mac => "{{ device.interfaces[link].mac|replace(':', '') }}",
             :libvirt__tunnel_type => 'udp',
