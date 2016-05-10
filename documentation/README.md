@@ -203,7 +203,7 @@ Order:
 The boot order directly relates to the location of the VM's definition in the generated Vagrantfile... VMs at the top of the Vagrantfile will boot first.
 
 ###MAC Handout
-If a MAC address is not specified using the format shown below then it will be auto assigned starting from the address [ 44:38:39:00:00:00 ] which is Cumulus' private MAC address range.
+If a MAC address is not specified using the format shown below then it will be auto assigned starting from the address [ 44:38:39:00:00:00 ] which is Cumulus' private MAC address range; otherwise MAC addresses are assigned to members of a link using the "left_mac" and "right_mac" syntax. It is not necessary to specify both MAC addresses if only one it known; in other words, one is not required to use both left_mac and right_mac attributes in the same line.
 
 ```
 graph dc1 {
