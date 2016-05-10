@@ -342,6 +342,7 @@ Documentation coming soon!
 
  
 ##Miscellaneous Info
+* Boxcutter box images are used whenver simulation is not performed with a VX device. This is to save on the amount of RAM required to run a simulation. For example, a default ubuntu14.04 image from ubuntu consumes ~324mb of RAM at the time of this testing, a default boxcutter/ubuntu1404 image consumes ~124mb of RAM.
 * When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is unknown at this point in time.
 * When simulating with Ubuntu, specify the "ubuntu=True" node-level attribute in the topology file. This will enable proper handling of network interfaces after a reboot.
 * Point to Multipoint connections are not supported at this time.
