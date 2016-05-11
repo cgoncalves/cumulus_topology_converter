@@ -151,8 +151,6 @@ def parse_topology(topology_file):
             inventory[node_name]['interfaces'] = {}
 
         node_attr_list=node.get_attributes()
-        print "node_attr_list:"
-        print node_attr_list
 
         #Define Functional Defaults
         if 'function' in node_attr_list:
@@ -314,6 +312,9 @@ def parse_topology(topology_file):
 def clean_datastructure(devices):
     #Sort the devices by function
     devices.sort(key=getKeyDevices)
+    for device in devices: 
+        device['interfaces']=sorted_interfaces(device['interfaces'])
+        
 
     if display_datastructures: return devices
     for device in devices:
@@ -324,10 +325,11 @@ def clean_datastructure(devices):
         for attribute in device:
             if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces': continue
             print "     "+str(attribute)+": "+ str(device[attribute])
-        for interface in device['interfaces']:
-            print "       LINK: " + interface
-            for attribute in device['interfaces'][interface]:
-                print "               " + attribute +": " + device['interfaces'][interface][attribute]
+        for interface_entry in device['interfaces']:
+            print "       LINK: " + interface_entry["local_interface"]
+            for attribute in interface_entry:
+                if attribute != "local_interface":
+                    print "               " + attribute +": " + interface_entry[attribute]
 
     #Remove Fake Devices
     indexes_to_remove=[]
@@ -382,8 +384,7 @@ def getKey(item):
     return val + base
 
 def getKeyDevices(device):
-    # Used to sort interfaces alphabetically
-
+    # Used to order the devices for printing into the vagrantfile
     if device['function'] == "oob-server": return 1
     elif device['function'] == "oob-switch": return 2
     elif device['function'] == "exit": return 3
@@ -393,10 +394,14 @@ def getKeyDevices(device):
     else: return 7
 
 def sorted_interfaces(interface_dictionary):
+    sorted_list=[]
     interface_list=[]
     for link in interface_dictionary:
-        interface_list.append(link)
-    interface_list.sort(key=getKey)
+        sorted_list.append(link)
+    sorted_list.sort(key=getKey)
+    for link in sorted_list:
+        interface_dictionary[link]["local_interface"]= link
+        interface_list.append(interface_dictionary[link])
     return interface_list
 
 def generate_dhcp_mac_file(mac_map):
