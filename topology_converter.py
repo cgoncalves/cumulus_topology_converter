@@ -151,8 +151,6 @@ def parse_topology(topology_file):
             inventory[node_name]['interfaces'] = {}
 
         node_attr_list=node.get_attributes()
-        print "node_attr_list:"
-        print node_attr_list
 
         #Define Functional Defaults
         if 'function' in node_attr_list:
