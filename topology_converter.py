@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.0.5"
+version = "4.1.0"
 
 
 import os
@@ -21,6 +21,7 @@ import jinja2
 import argparse
 import importlib
 import pydotplus
+from operator import itemgetter
 
 pp = pprint.PrettyPrinter(depth=6)
 
@@ -376,12 +377,11 @@ def generate_shareable_zip():
             continue
     zf.close()
 
-def getKey(item):
-    # Used to sort interfaces alphabetically
-    base = 10
-    if item[0:3].lower() == "eth": base = 0
-    val = float(item[3:].replace("s","."))
-    return val + base
+_nsre = re.compile('([0-9]+)')
+def natural_sort_key(s):
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(_nsre, s)]  
+
 
 def getKeyDevices(device):
     # Used to order the devices for printing into the vagrantfile
@@ -398,7 +398,7 @@ def sorted_interfaces(interface_dictionary):
     interface_list=[]
     for link in interface_dictionary:
         sorted_list.append(link)
-    sorted_list.sort(key=getKey)
+    sorted_list.sort(key=natural_sort_key)
     for link in sorted_list:
         interface_dictionary[link]["local_interface"]= link
         interface_list.append(interface_dictionary[link])
