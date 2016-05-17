@@ -331,11 +331,16 @@ graph dc1 {
 ```
 ###PXE Booting Hosts
 Vagrant provides the capability to boot an image with no box file specified however the provider which Vagrant uses to control Virtualbox does not support that behavior. To support PXE booting hosts, Topology Converter provides several additional node and link attributes.
+
 The "pxe_config.sh" Configuration/Provisioning script is provided in the helper scripts directory to be used for hosts that require PXE booting. This script destroys the MBR of the image that is being booted using the DD command.
+
 The first attribute is a node attribute 'pxehost="True"' this tells TC the node is to be PXE booted and makes the necessary changes to Virtualbox to support that behavior.
-The second attribute is a link attribute 'pxebootinterface="True"'. This sets the 'nicbootprio' option to "4" within Virtualbox. 
+
+The second attribute is a link attribute 'pxebootinterface="True"'. This sets the 'nicbootprio' option to "1" within Virtualbox for the specified NIC.
+
 From the [virtualbox documentation](https://www.virtualbox.org/manual/ch08.html)
 "--nicbootprio<1-N> <priority>: This specifies the order in which NICs are tried for booting over the network (using PXE). The priority is an integer in the 0 to 4 range. Priority 1 is the highest, priority 4 is low. Priority 0, which is the default unless otherwise specified, is the lowest."
+
 ```
 graph dc1 {
  "server1" [os="boxcutter/ubuntu1404" function="host" config="./helper_scripts/extra_server_config.sh"]

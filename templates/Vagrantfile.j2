@@ -73,7 +73,7 @@ Vagrant.configure("2") do |config|
         vbox.customize ["modifyvm", :id, "--nicbootprio1", "0"]
 {% for link in device.interfaces %}{% if link.pxebootinterface %}{% if link.pxebootinterface == "True" %}
         #Setting Specified interface to highest preference.
-        vbox.customize ["modifyvm", :id, "--nicbootprio{{loop.index+1}}", "4"]{% endif %}{% endif %}{% endfor %}{% endif %}
+        vbox.customize ["modifyvm", :id, "--nicbootprio{{loop.index+1}}", "1"]{% endif %}{% endif %}{% endfor %}{% endif %}
     end{% endif %}
 
     # Fixes "stdin: is not a tty" message --> https://github.com/mitchellh/vagrant/issues/1673

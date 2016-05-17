@@ -304,6 +304,26 @@ def parse_topology(topology_file):
             inventory[right_device]['interfaces'][right_interface][attribute]=edge_attributes[attribute]
         net_number += 1
 
+    #Remove PXEbootinterface attribute from hosts which are not set to PXEboot=True
+    for device in inventory:
+        count=0
+        for link in inventory[device]['interfaces']:
+            if 'pxebootinterface' in inventory[device]['interfaces'][link]:
+                count += 1 #increment count to make sure more than one interface doesn't try to set nicbootprio
+                if 'pxehost' not in inventory[device]: del inventory[device]['interfaces'][link]['pxebootinterface']
+                elif 'pxehost' in inventory[device]:
+                    if inventory[device]['pxehost'] != "True": del inventory[device]['interfaces'][link]['pxebootinterface']
+    #Make sure no host has PXEbootinterface set more than once
+    # Have to make two passes here because doing it in one pass could have
+    # side effects.
+    for device in inventory:
+        count=0
+        for link in inventory[device]['interfaces']:
+            if 'pxebootinterface' in inventory[device]['interfaces'][link]:
+                count += 1 #increment count to make sure more than one interface doesn't try to set nicbootprio
+        if count > 1:
+            print " ### ERROR -- Device " + device + " sets pxebootinterface more than once."
+            exit(1)
     if verbose:
         print "\n\n ### Inventory Datastructure: ###"
         pp.pprint(inventory)
@@ -378,6 +398,7 @@ def generate_shareable_zip():
     zf.close()
 
 _nsre = re.compile('([0-9]+)')
+
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(_nsre, s)]  
