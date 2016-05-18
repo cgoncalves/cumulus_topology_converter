@@ -15,6 +15,35 @@
 raise "vagrant-libvirt plugin must be installed, try $ vagrant plugin install vagrant-libvirt" unless Vagrant.has_plugin? "vagrant-libvirt"
 {% endif %}raise "vagrant-cumulus plugin must be installed, try $ vagrant plugin install vagrant-cumulus" unless Vagrant.has_plugin? "vagrant-cumulus"
 
+$script = <<-SCRIPT
+if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
+    echo "### RUNNING CUMULUS EXTRA CONFIG ###"
+    source /etc/lsb-release
+    if [[ $DISTRIB_RELEASE =~ ^2.* ]]; then
+        echo "  INFO: Detected a 2.5.x Based Release"
+        echo "  adding fake cl-acltool..."
+        echo -e "#!/bin/bash\nexit 0" > /bin/cl-acltool
+        chmod 755 /bin/cl-acltool
+
+        echo "  adding fake cl-license..."
+        echo -e "#!/bin/bash\nexit 0" > /bin/cl-license
+        chmod 755 /bin/cl-license
+
+        echo "  Disabling default remap on Cumulus VX..."
+        mv -v /etc/init.d/rename_eth_swp /etc/init.d/rename_eth_swp.backup
+
+    elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
+        echo "  INFO: Detected a 3.x Based Release"
+
+        echo "  Disabling default remap on Cumulus VX..."
+        mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
+
+    fi
+    echo "### DONE ###"
+fi
+SCRIPT
+
+
 Vagrant.configure("2") do |config|
   wbid = {{ epoch_time }}
 {% if provider == 'virtualbox' %}
@@ -79,13 +108,13 @@ Vagrant.configure("2") do |config|
     # Fixes "stdin: is not a tty" message --> https://github.com/mitchellh/vagrant/issues/1673
     device.vm.provision :shell , inline: "(grep -q -E '^mesg n$' /root/.profile && sed -i 's/^mesg n$/tty -s \\&\\& mesg n/g' /root/.profile && echo 'Ignore the previous error \"stdin: is not a tty\" -- fixing this now...') || exit 0;"
 
+    # Run Extra Cumulus Specific Config
+    device.vm.provision :shell , :inline => $script
 {% if device.config is defined %}
     # Run the Config specified in the Node Attributes
     device.vm.provision :shell , path: "{{ device.config }}"{% endif %}
 
     # Install Rules for the interface re-map
-{% if device.os == 'CumulusCommunity/cumulus-vx' %}      #Disable default remap on Cumulus VX
-      device.vm.provision :shell , inline: "mv /etc/init.d/rename_eth_swp /etc/init.d/rename_eth_swp.old"{% endif %}
       device.vm.provision "file", source: "{{ script_storage }}/apply_udev.py", destination: "/home/vagrant/apply_udev.py"
       device.vm.provision :shell , inline: "chmod 755 /home/vagrant/apply_udev.py"
 {% for link in device.interfaces %}

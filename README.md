@@ -37,9 +37,10 @@ To see all the possible options use the help syntax "-h"
 ```
 
 ## Works In Progress for v4.1.0:
-* PXE boot for Virtualbox (100% -- DONE -- Needs Testing)
 * PXE boot for Libvirt (0%)
+* Add support for VX 3.0 (100% -- DONE -- Needs Testing)
 * Sanity checking for PXE Boot Variables (100% -- DONE)
+* PXE boot for Virtualbox (100% -- DONE -- Needs Testing)
 * Deterministic Interface Ordering -- Using Natural Sort (100% -- DONE)
 
 

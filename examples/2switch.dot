@@ -1,5 +1,5 @@
 graph dc1 {
- "leaf1" [function="leaf" os="cumulus_2.5.3"config="./helper_scripts/extra_switch_config.sh"]
+ "leaf1" [function="leaf" config="./helper_scripts/extra_switch_config.sh"]
  "leaf2" [function="leaf" config="./helper_scripts/extra_switch_config.sh"]
    "leaf1":"swp1" -- "leaf2":"swp1"
    "leaf1":"swp2" -- "leaf2":"swp2"
