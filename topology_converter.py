@@ -220,18 +220,6 @@ def parse_topology(topology_file):
                 parser.print_help()
                 exit(1)
 
-        #Handle Link-based Passthrough Attributes
-        edge_attributes={}
-        for attribute in edge.get_attributes():
-            if attribute=="left_mac" or attribute=="right_mac": continue
-            if attribute in edge_attributes:
-                print " ### WARNING: Attribute \""+attribute+"\" specified twice. Using second value."
-                warning=True
-            value=edge.get(attribute)
-            if value.startswith('"') or value.startswith("'"): value=value[1:]
-            if value.endswith('"') or value.endswith("'"): value=value[:-1]
-            edge_attributes[attribute]=value
-
         #Set Devices/interfaces/MAC Addresses
         left_device=edge.get_source().split(":")[0].replace('"','')
         left_interface=edge.get_source().split(":")[1].replace('"','')
@@ -298,10 +286,25 @@ def parse_topology(topology_file):
             inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
             inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
 
-        #Add link-based passthrough attributes
-        for attribute in edge_attributes:
-            inventory[left_device]['interfaces'][left_interface][attribute]=edge_attributes[attribute]
-            inventory[right_device]['interfaces'][right_interface][attribute]=edge_attributes[attribute]
+        #Handle Link-based Passthrough Attributes
+        edge_attributes={}
+        for attribute in edge.get_attributes():
+            if attribute=="left_mac" or attribute=="right_mac": continue
+            if attribute in edge_attributes:
+                print " ### WARNING: Attribute \""+attribute+"\" specified twice. Using second value."
+                warning=True
+            value=edge.get(attribute)
+            if value.startswith('"') or value.startswith("'"): value=value[1:]
+            if value.endswith('"') or value.endswith("'"): value=value[:-1]
+            if attribute.startswith('left_'):
+                inventory[left_device]['interfaces'][left_interface][attribute[5:]]=value
+            elif attribute.startswith('right_'):
+                inventory[right_device]['interfaces'][right_interface][attribute[6:]]=value
+            else: 
+                inventory[left_device]['interfaces'][left_interface][attribute]=value
+                inventory[right_device]['interfaces'][right_interface][attribute]=value
+                #edge_attributes[attribute]=value
+
         net_number += 1
 
     #Remove PXEbootinterface attribute from hosts which are not set to PXEboot=True
