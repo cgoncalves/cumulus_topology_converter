@@ -298,7 +298,7 @@ graph dc1 {
    "server1":"eth2" -- "leaf2":"swp1"
 }
 ```
-
+**Note: As of v4.1.0 it is now possible to specify which side of the link will receive any custom passthrough attribute by prepending the "left_" or "right_" keywords to the beginning of the attribute.**
 
 ###Provisioning Scripts
 Scripts can be specified for execution on the end host using the "config=" node attribute in a topology file. In the example below, a "custom_script.sh" is used to provision the leaf1 device.

@@ -359,8 +359,8 @@ Vagrant.configure("2") do |config|
           ansible.playbook = "{{ device.playbook }}"
     end{% endif %}
 
-    # Apply the interface re-map /w a Reboot
-    # Run Extra Cumulus Specific Config
+    # Run Any Platform Specific Code and Apply the interface Re-map 
+    #   (may or may not perform a reboot depending on platform)
     device.vm.provision :shell , :inline => $script
 {#    device.vm.provision :shell , inline: "reboot" #}
 {#      device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py --apply" #}

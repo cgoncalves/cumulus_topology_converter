@@ -38,15 +38,16 @@ To see all the possible options use the help syntax "-h"
 
 ## Works In Progress for v4.1.0:
 * PXE boot for Libvirt (0%)
+* Added proper licensing and switchd behavior for VX2.5.x (100% -- DONE -- Needs Testing)
 * Add support for VX 3.0 (100% -- DONE -- Needs Testing)
 * Sanity checking for PXE Boot Variables (100% -- DONE)
 * PXE boot for Virtualbox (100% -- DONE -- Needs Testing)
 * Deterministic Interface Ordering -- Using Natural Sort (100% -- DONE)
-
+* Add support for "left_" and "right_" to any passthrough link attribute (100% -- DONE)
 
 ## Changelog:
 
-* v4\.1\.0 DATE TBD: Added PXEBOOT Support
+* v4\.1\.0 DATE TBD: 
 * v4\.0\.5 2016\_05\_05: Fixed UDEV Remap to tie rules to interfaces on the PCI Bus. Fixed Fake Device support. Added check to confirm that future Vagrant interfaces are tied to the PCI bus.
 * v4\.0\.4 2016\_05\_01: Added functional defaults and check for node/device existance when parsing edges/links.
 * v4\.0\.3 2016\_04\_25: Added link-based passthrough attribute support, disabled zipfile generation-- needs more work, removed use_vagrant_interface_option
