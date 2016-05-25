@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.0.5"
+version = "4.1.0"
 
 
 import os
@@ -21,6 +21,7 @@ import jinja2
 import argparse
 import importlib
 import pydotplus
+from operator import itemgetter
 
 pp = pprint.PrettyPrinter(depth=6)
 
@@ -219,18 +220,6 @@ def parse_topology(topology_file):
                 parser.print_help()
                 exit(1)
 
-        #Handle Link-based Passthrough Attributes
-        edge_attributes={}
-        for attribute in edge.get_attributes():
-            if attribute=="left_mac" or attribute=="right_mac": continue
-            if attribute in edge_attributes:
-                print " ### WARNING: Attribute \""+attribute+"\" specified twice. Using second value."
-                warning=True
-            value=edge.get(attribute)
-            if value.startswith('"') or value.startswith("'"): value=value[1:]
-            if value.endswith('"') or value.endswith("'"): value=value[:-1]
-            edge_attributes[attribute]=value
-
         #Set Devices/interfaces/MAC Addresses
         left_device=edge.get_source().split(":")[0].replace('"','')
         left_interface=edge.get_source().split(":")[1].replace('"','')
@@ -297,12 +286,47 @@ def parse_topology(topology_file):
             inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
             inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
 
-        #Add link-based passthrough attributes
-        for attribute in edge_attributes:
-            inventory[left_device]['interfaces'][left_interface][attribute]=edge_attributes[attribute]
-            inventory[right_device]['interfaces'][right_interface][attribute]=edge_attributes[attribute]
+        #Handle Link-based Passthrough Attributes
+        edge_attributes={}
+        for attribute in edge.get_attributes():
+            if attribute=="left_mac" or attribute=="right_mac": continue
+            if attribute in edge_attributes:
+                print " ### WARNING: Attribute \""+attribute+"\" specified twice. Using second value."
+                warning=True
+            value=edge.get(attribute)
+            if value.startswith('"') or value.startswith("'"): value=value[1:]
+            if value.endswith('"') or value.endswith("'"): value=value[:-1]
+            if attribute.startswith('left_'):
+                inventory[left_device]['interfaces'][left_interface][attribute[5:]]=value
+            elif attribute.startswith('right_'):
+                inventory[right_device]['interfaces'][right_interface][attribute[6:]]=value
+            else: 
+                inventory[left_device]['interfaces'][left_interface][attribute]=value
+                inventory[right_device]['interfaces'][right_interface][attribute]=value
+                #edge_attributes[attribute]=value
+
         net_number += 1
 
+    #Remove PXEbootinterface attribute from hosts which are not set to PXEboot=True
+    for device in inventory:
+        count=0
+        for link in inventory[device]['interfaces']:
+            if 'pxebootinterface' in inventory[device]['interfaces'][link]:
+                count += 1 #increment count to make sure more than one interface doesn't try to set nicbootprio
+                if 'pxehost' not in inventory[device]: del inventory[device]['interfaces'][link]['pxebootinterface']
+                elif 'pxehost' in inventory[device]:
+                    if inventory[device]['pxehost'] != "True": del inventory[device]['interfaces'][link]['pxebootinterface']
+    #Make sure no host has PXEbootinterface set more than once
+    # Have to make two passes here because doing it in one pass could have
+    # side effects.
+    for device in inventory:
+        count=0
+        for link in inventory[device]['interfaces']:
+            if 'pxebootinterface' in inventory[device]['interfaces'][link]:
+                count += 1 #increment count to make sure more than one interface doesn't try to set nicbootprio
+        if count > 1:
+            print " ### ERROR -- Device " + device + " sets pxebootinterface more than once."
+            exit(1)
     if verbose:
         print "\n\n ### Inventory Datastructure: ###"
         pp.pprint(inventory)
@@ -312,6 +336,9 @@ def parse_topology(topology_file):
 def clean_datastructure(devices):
     #Sort the devices by function
     devices.sort(key=getKeyDevices)
+    for device in devices: 
+        device['interfaces']=sorted_interfaces(device['interfaces'])
+        
 
     if display_datastructures: return devices
     for device in devices:
@@ -322,10 +349,11 @@ def clean_datastructure(devices):
         for attribute in device:
             if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces': continue
             print "     "+str(attribute)+": "+ str(device[attribute])
-        for interface in device['interfaces']:
-            print "       LINK: " + interface
-            for attribute in device['interfaces'][interface]:
-                print "               " + attribute +": " + device['interfaces'][interface][attribute]
+        for interface_entry in device['interfaces']:
+            print "       LINK: " + interface_entry["local_interface"]
+            for attribute in interface_entry:
+                if attribute != "local_interface":
+                    print "               " + attribute +": " + interface_entry[attribute]
 
     #Remove Fake Devices
     indexes_to_remove=[]
@@ -372,16 +400,15 @@ def generate_shareable_zip():
             continue
     zf.close()
 
-def getKey(item):
-    # Used to sort interfaces alphabetically
-    base = 10
-    if item[0:3].lower() == "eth": base = 0
-    val = float(item[3:].replace("s","."))
-    return val + base
+_nsre = re.compile('([0-9]+)')
+
+def natural_sort_key(s):
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(_nsre, s)]  
+
 
 def getKeyDevices(device):
-    # Used to sort interfaces alphabetically
-
+    # Used to order the devices for printing into the vagrantfile
     if device['function'] == "oob-server": return 1
     elif device['function'] == "oob-switch": return 2
     elif device['function'] == "exit": return 3
@@ -391,10 +418,14 @@ def getKeyDevices(device):
     else: return 7
 
 def sorted_interfaces(interface_dictionary):
+    sorted_list=[]
     interface_list=[]
     for link in interface_dictionary:
-        interface_list.append(link)
-    interface_list.sort(key=getKey)
+        sorted_list.append(link)
+    sorted_list.sort(key=natural_sort_key)
+    for link in sorted_list:
+        interface_dictionary[link]["local_interface"]= link
+        interface_list.append(interface_dictionary[link])
     return interface_list
 
 def generate_dhcp_mac_file(mac_map):

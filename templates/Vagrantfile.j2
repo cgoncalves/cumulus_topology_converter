@@ -1,9 +1,9 @@
 # Created by Topology-Converter v{{ version }}
 #    using topology data from: {{ topology_file }}
 #    NOTE: in order to use this Vagrantfile you will need:
-#       -Vagrant(v1.7+) installed: http://www.vagrantup.com/downloads 
+#       -Vagrant(v1.8.1+) installed: http://www.vagrantup.com/downloads
 #       -Cumulus Plugin for Vagrant installed: $ vagrant plugin install vagrant-cumulus
-#       -the "helper_scripts" directory that comes packaged with topology-converter.py 
+#       -the "helper_scripts" directory that comes packaged with topology-converter.py
 {% if provider == 'virtualbox' %}#       -Virtualbox installed: https://www.virtualbox.org/wiki/Downloads
 
 {% elif provider == 'libvirt' %}#        -Libvirt Installed -- guide to come
@@ -15,7 +15,268 @@
 raise "vagrant-libvirt plugin must be installed, try $ vagrant plugin install vagrant-libvirt" unless Vagrant.has_plugin? "vagrant-libvirt"
 {% endif %}raise "vagrant-cumulus plugin must be installed, try $ vagrant plugin install vagrant-cumulus" unless Vagrant.has_plugin? "vagrant-cumulus"
 
+$script = <<-SCRIPT
+if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
+    echo "### RUNNING CUMULUS EXTRA CONFIG ###"
+    source /etc/lsb-release
+    if [[ $DISTRIB_RELEASE =~ ^2.* ]]; then
+        echo "  INFO: Detected a 2.5.x Based Release"
+        echo "  adding fake cl-acltool..."
+        echo -e "#!/bin/bash\nexit 0" > /bin/cl-acltool
+        chmod 755 /bin/cl-acltool
+
+        echo "  adding fake cl-license..."
+        cat > /bin/cl-license <<'EOF'
+#! /bin/bash
+#-------------------------------------------------------------------------------
+#
+# Copyright 2013 Cumulus Networks, Inc.  All rights reserved
+#
+
+URL_RE='^http://.*/.*'
+
+#Legacy symlink
+if echo "$0" | grep -q "cl-license-install$"; then
+    exec cl-license -i $*
+fi
+
+LIC_DIR="/etc/cumulus"
+PERSIST_LIC_DIR="/mnt/persist/etc/cumulus"
+
+#Print current license, if any.
+if [ -z "$1" ]; then
+    if [ ! -f "$LIC_DIR/.license.txt" ]; then
+        echo "No license installed!" >&2
+        exit 20
+    fi
+    cat "$LIC_DIR/.license.txt"
+    exit 0
+fi
+
+#Must be root beyond this point
+if (( EUID != 0 )); then
+   echo "You must have root privileges to run this command." 1>&2
+   exit 100
+fi
+
+#Delete license
+if [ x"$1" == "x-d" ]; then
+    rm -f "$LIC_DIR/.license.txt"
+    rm -f "$PERSIST_LIC_DIR/.license.txt"
+
+    echo License file uninstalled.
+    exit 0
+fi
+
+function usage {
+    echo "Usage: $0 (-i (license_file | URL) | -d)" >&2
+    echo "    -i  Install a license, via stdin, file, or URL." >&2
+    echo "    -d  Delete the current installed license." >&2
+    echo >&2
+    echo " cl-license prints, installs or deletes a license on this switch." >&2
+}
+
+if [ x"$1" != 'x-i' ]; then
+    usage
+    exit 100
+fi
+shift
+if [ ! -f "$1" ]; then
+    if [ -n "$1" ]; then
+        if ! echo "$1" | grep -q "$URL_RE"; then
+            usage
+            echo "file $1 not found or not readable." >&2
+            exit 100
+        fi
+    fi
+fi
+
+function clean_tmp {
+    rm $1
+}
+
+if [ -z "$1" ]; then
+    LIC_FILE=`mktemp lic.XXXXXX`
+    trap "clean_tmp $LIC_FILE" EXIT
+    echo "Paste license text here, then hit ctrl-d" >&2
+    cat >$LIC_FILE
+else
+    if echo "$1" | grep -q "$URL_RE"; then
+        LIC_FILE=`mktemp lic.XXXXXX`
+        trap "clean_tmp $LIC_FILE" EXIT
+        if ! wget "$1" -O $LIC_FILE; then
+            echo "Couldn't download $1 via HTTP!" >&2
+            exit 10
+        fi
+    else
+        LIC_FILE="$1"
+    fi
+fi
+
+/usr/sbin/switchd -lic "$LIC_FILE"
+SWITCHD_RETCODE=$?
+if [ $SWITCHD_RETCODE -eq 99 ]; then
+    more /usr/share/cumulus/EULA.txt
+    echo "I (on behalf of the entity who will be using the software) accept"
+    read -p "and agree to the EULA  (yes/no): "
+    if [ "$REPLY" != "yes" -a "$REPLY" != "y" ]; then
+        echo EULA not agreed to, aborting. >&2
+        exit 2
+    fi
+elif [ $SWITCHD_RETCODE -ne 0 ]; then
+    echo '******************************' >&2
+    echo ERROR: License file not valid. >&2
+    echo ERROR: No license installed. >&2
+    echo '******************************' >&2
+    exit 1
+fi
+
+mkdir -p "$LIC_DIR"
+cp "$LIC_FILE" "$LIC_DIR/.license.txt"
+chmod 644 "$LIC_DIR/.license.txt"
+
+mkdir -p "$PERSIST_LIC_DIR"
+cp "$LIC_FILE" "$PERSIST_LIC_DIR/.license.txt"
+chmod 644 "$PERSIST_LIC_DIR/.license.txt"
+
+echo License file installed.
+echo Reboot to enable functionality.
+EOF
+        chmod 755 /bin/cl-license
+
+        echo "  Disabling default remap on Cumulus VX..."
+        mv -v /etc/init.d/rename_eth_swp /etc/init.d/rename_eth_swp.backup
+
+        echo "  Replacing fake switchd"
+        rm -rf /usr/bin/switchd
+        cat > /usr/sbin/switchd <<'EOF'
+#!/bin/bash
+PIDFILE=$1
+LICENSE_FILE=/etc/cumulus/.license
+RC=0
+
+# Make sure we weren't invoked with "-lic"
+if [ "$PIDFILE" == "-lic" ]; then
+  if [ "$2" != "" ]; then
+        LICENSE_FILE=$2
+  fi
+  if [ ! -e $LICENSE_FILE ]; then
+    echo "No license file." >&2
+    RC=1
+  fi
+  RC=0
+else
+  tail -f /dev/null & CPID=$!
+  echo -n $CPID > $PIDFILE
+  wait $CPID
+fi
+
+exit $RC
+EOF
+        chmod 755 /usr/sbin/switchd
+
+        cat > /etc/init.d/switchd <<'EOF'
+#! /bin/bash
+### BEGIN INIT INFO
+# Provides:          switchd
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# X-Start-Before
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: Controls fake switchd process
+### END INIT INFO
+
+# Author: Kristian Van Der Vliet <kristian@cumulusnetworks.com>
+#
+# Please remove the "Author" lines above and replace them
+# with your own name if you copy and modify this script.
+
+PATH=/sbin:/bin:/usr/bin
+
+NAME=switchd
+SCRIPTNAME=/etc/init.d/$NAME
+PIDFILE=/var/run/switchd.pid
+
+. /lib/init/vars.sh
+. /lib/lsb/init-functions
+
+do_start() {
+  echo "[ ok ] Starting Cumulus Networks switch chip daemon: switchd"
+  /usr/sbin/switchd $PIDFILE 2>/dev/null &
+}
+
+do_stop() {
+  if [ -e $PIDFILE ];then
+    kill -TERM $(cat $PIDFILE)
+    rm $PIDFILE
+  fi
+}
+
+do_status() {
+  if [ -e $PIDFILE ];then
+    echo "[ ok ] switchd is running."
+  else
+    echo "[FAIL] switchd is not running ... failed!" >&2
+    exit 3
+  fi
+}
+
+case "$1" in
+  start|"")
+	log_action_begin_msg "Starting switchd"
+	do_start
+	log_action_end_msg 0
+	;;
+  stop)
+  log_action_begin_msg "Stopping switchd"
+  do_stop
+  log_action_end_msg 0
+  ;;
+  status)
+  do_status
+  ;;
+  restart)
+	log_action_begin_msg "Re-starting switchd"
+  do_stop
+	do_start
+	log_action_end_msg 0
+	;;
+  reload|force-reload)
+	echo "Error: argument '$1' not supported" >&2
+	exit 3
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME [start|stop|restart|status]" >&2
+	exit 3
+	;;
+esac
+
+:
+EOF
+        chmod 755 /etc/init.d/switchd
+        echo "### Rebooting to Apply Remap..."
+        reboot
+
+    elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
+        echo "  INFO: Detected a 3.x Based Release"
+
+        echo "  Disabling default remap on Cumulus VX..."
+        mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
+        echo "### Applying Remap without Reboot..."
+        /home/vagrant/apply_udev.py --apply
+    fi
+    echo "### DONE ###"
+else
+    echo "### Rebooting to Apply Remap..."
+    reboot
+fi
+SCRIPT
+
 Vagrant.configure("2") do |config|
+  wbid = {{ epoch_time }}
 {% if provider == 'virtualbox' %}
   config.vm.provider "virtualbox" do |v|
     v.gui=false
@@ -36,6 +297,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "{{ device.hostname }}" do |device|
     device.vm.hostname = "{{ device.hostname }}"
     device.vm.box = "{{ device.os }}"
+    {% if device.version %}device.vm.box_version = "{{ device.version }}"{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
       v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %}    # disabling sync folder support on all VMs
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
@@ -46,49 +308,62 @@ Vagrant.configure("2") do |config|
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == "True" %}
       # UBUNTU DEVICES ONLY: Shorten Boot Process - remove \"Wait for Network
       device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf"{% endif %}
-{% for link in device.interfaces %}
-      # link for {{ link }} --> {{ device.interfaces[link].remote_device }}:{{ device.interfaces[link].remote_interface }}
-      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "{{ epoch_time }}_{{ device.interfaces[link].network }}", auto_config: false , :mac => "{{ device.interfaces[link].mac|replace(':', '') }}"
+
+    # NETWORK INTERFACES{% for link in device.interfaces %}
+      # link for {{ link.local_interface }} --> {{ link.remote_device }}:{{ link.remote_interface }}
+      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "#{wbid}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
       {% elif provider == 'libvirt' %}device.vm.network "private_network",
-            :mac => "{{ device.interfaces[link].mac|replace(':', '') }}",
+            :mac => "{{ link.mac|replace(':', '') }}",
             :libvirt__tunnel_type => 'udp',
-            :libvirt__tunnel_local_ip => '{{ device.interfaces[link].local_ip }}',
-            :libvirt__tunnel_local_port => '{{ device.interfaces[link].local_port }}',
-            :libvirt__tunnel_ip => '{{ device.interfaces[link].remote_ip }}',
-            :libvirt__tunnel_port => '{{ device.interfaces[link].remote_port }}',
-            :libvirt__iface_name => '{{ link }}',
+            :libvirt__tunnel_local_ip => '{{ link.local_ip }}',
+            :libvirt__tunnel_local_port => '{{ link.local_port }}',
+            :libvirt__tunnel_ip => '{{ link.remote_ip }}',
+            :libvirt__tunnel_port => '{{ link.remote_port }}',
+            :libvirt__iface_name => '{{ link.local_interface }}',
             auto_config: false{% endif %}{% endfor %}
 
-{% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |vbox|
-{% for i in range(2, 2+device.interfaces.__len__()) %}      vbox.customize ['modifyvm', :id, '--nicpromisc{{i}}', 'allow-all']
-{% endfor %}
-      vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]
+{% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |vbox|{% for i in range(2, 2+device.interfaces.__len__()) %}
+      vbox.customize ['modifyvm', :id, '--nicpromisc{{i}}', 'allow-vms']{% endfor %}
+      vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]{% if device.pxehost=="True" %}
+
+      #Setup Interfaces for PXEBOOT
+        #Adding network as a boot option.
+        vbox.customize ["modifyvm", :id, "--boot4", "net"]
+
+        #Setting Vagrant interface to lowest boot preference
+        vbox.customize ["modifyvm", :id, "--nicbootprio1", "0"]
+{% for link in device.interfaces %}{% if link.pxebootinterface %}{% if link.pxebootinterface == "True" %}
+        #Setting Specified interface to highest preference.
+        vbox.customize ["modifyvm", :id, "--nicbootprio{{loop.index+1}}", "1"]{% endif %}{% endif %}{% endfor %}{% endif %}
     end{% endif %}
 
-      # Fixes "stdin: is not a tty" message --> https://github.com/mitchellh/vagrant/issues/1673
-      device.vm.provision :shell , inline: "(grep -q -E '^mesg n$' /root/.profile && sed -i 's/^mesg n$/tty -s \\&\\& mesg n/g' /root/.profile && echo 'Ignore the previous error \"stdin: is not a tty\" -- fixing this now...') || exit 0;"
+    # Fixes "stdin: is not a tty" message --> https://github.com/mitchellh/vagrant/issues/1673
+    device.vm.provision :shell , inline: "(grep -q -E '^mesg n$' /root/.profile && sed -i 's/^mesg n$/tty -s \\&\\& mesg n/g' /root/.profile && echo 'Ignore the previous error \"stdin: is not a tty\" -- fixing this now...') || exit 0;"
 
-      # Run Any Extra Config
-{% if device.config is defined %}      device.vm.provision :shell , path: "{{ device.config }}"{% endif %}
+{% if device.config is defined %}
+    # Run the Config specified in the Node Attributes
+    device.vm.provision :shell , path: "{{ device.config }}"{% endif %}
 
-{% if device.playbook is defined %}      device.vm.provision "ansible" do |ansible|
-          ansible.playbook = "{{ device.playbook }}"
-      end{% endif %}
-
-      # Apply the interface re-map
-{% if device.os == 'CumulusCommunity/cumulus-vx' %}        #Disable default remap on Cumulus VX 
-      device.vm.provision :shell , inline: "mv /etc/init.d/rename_eth_swp /etc/init.d/rename_eth_swp.old"{% endif %}
+    # Install Rules for the interface re-map
       device.vm.provision "file", source: "{{ script_storage }}/apply_udev.py", destination: "/home/vagrant/apply_udev.py"
       device.vm.provision :shell , inline: "chmod 755 /home/vagrant/apply_udev.py"
-{% for link in device.interfaces %}      device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py -a {{ device.interfaces[link].mac }} {{ link }}"
-{% endfor %}
-      device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py -vm"
+{% for link in device.interfaces %}
+      device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py -a {{ link.mac }} {{ link.local_interface }}"{% endfor %}
+
+      device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py -vm {% if device.vagrant %}{% if device.vagrant=='eth0' %}-nv{%else%}--vagrant-name={{device.vagrant}}{% endif%}{% endif%}"
       device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py -s"
-      device.vm.provision :shell , inline: "reboot"
+
+{% if device.playbook is defined %}
+    # Ansible Playbook Configuration
+    device.vm.provision "ansible" do |ansible|
+          ansible.playbook = "{{ device.playbook }}"
+    end{% endif %}
+
+    # Run Any Platform Specific Code and Apply the interface Re-map 
+    #   (may or may not perform a reboot depending on platform)
+    device.vm.provision :shell , :inline => $script
+{#    device.vm.provision :shell , inline: "reboot" #}
 {#      device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py --apply" #}
-
-
-
   end
 {% endfor %}
 
