@@ -344,8 +344,8 @@ From the [virtualbox documentation](https://www.virtualbox.org/manual/ch08.html)
 ```
 graph dc1 {
  "server1" [os="boxcutter/ubuntu1404" function="host" config="./helper_scripts/extra_server_config.sh"]
- "pxehost" [function="host" pxehost="True" config="./helper_scripts/pxe_config.sh"]
-   "server1":"eth0" -- "pxehost":"eth0"   [pxebootinterface="True"]
+ "pxehost" [function="host" pxehost="True" config="./helper_scripts/pxe_config.sh" playbook="./helper_scripts/fetch_udev_file.yml"]
+   "server1":"eth0" -- "pxehost":"eth0"   [right_pxebootinterface="True"]
 }
 
 ```
