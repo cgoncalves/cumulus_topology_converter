@@ -177,7 +177,7 @@ def apply_remap():
     if use_vagrant_interface:
         dead_drop=subprocess.check_output(["ifup vagrant"],shell=True)
         time.sleep(1)
-        if use_vagrant_default:
+        if not use_vagrant_default:
             dead_drop=subprocess.check_output(["ip route delete default dev vagrant"],shell=True)
     output=subprocess.check_output(["ip","link","show"]).split('\n')
     print "### PRESENT INTERFACES ###"
