@@ -13,8 +13,8 @@
 #       -Start with \"vagrant up --provider=libvirt --no-parallel\n")
 
 # Check required plugins
-REQUIRED_PLUGINS = %w(vagrant-libvirt vagrant-mutate)
-exit unless REQUIRED_PLUGINS.all? do |plugin|
+REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt vagrant-mutate)
+exit unless REQUIRED_PLUGINS_LIBVIRT.all? do |plugin|
   Vagrant.has_plugin?(plugin) || (
     puts "The #{plugin} plugin is required. Please install it with:"
     puts "$ vagrant plugin install #{plugin}"
