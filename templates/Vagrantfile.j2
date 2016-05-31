@@ -337,8 +337,10 @@ Vagrant.configure("2") do |config|
         vbox.customize ["modifyvm", :id, "--nicbootprio{{loop.index+1}}", "1"]{% endif %}{% endif %}{% endfor %}{% endif %}
     end{% endif %}
 
-    # Fixes "stdin: is not a tty" message --> https://github.com/mitchellh/vagrant/issues/1673
-    device.vm.provision :shell , inline: "(grep -q -E '^mesg n$' /root/.profile && sed -i 's/^mesg n$/tty -s \\&\\& mesg n/g' /root/.profile && echo 'Ignore the previous error \"stdin: is not a tty\" -- fixing this now...') || exit 0;"
+    # Fixes "stdin: is not a tty" and "mesg: ttyname failed : Inappropriate ioctl for device"  messages --> https://github.com/mitchellh/vagrant/issues/1673
+    device.vm.provision :shell , inline: "(grep -q 'mesg n' /root/.profile && sed -i '/mesg n/d' /root/.profile && echo 'Ignore the previous error, fixing this now...') || exit 0;"
+
+
 
 {% if device.config is defined %}
     # Run the Config specified in the Node Attributes
