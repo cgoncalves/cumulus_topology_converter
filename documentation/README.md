@@ -8,6 +8,7 @@
   * [The Basic Workflow](#the-basic-workflow)
   * [What is it doing?](#what-is-happening-when-you-run-topology-converter)
   * [Functional Defaults](#functional-defaults)
+* [Vagrant Box Selection](#vagrant-box-selection)
 * [Optional Features](#optional-features)
   * [Providers](#providers)
   * [Faked Devices](#faked-devices)
@@ -154,6 +155,21 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
 
+###Vagrant Box Selection
+There are a number of different sources of Vagrant box images however there are several that we consistently use in simulations. Here is a list of those commonly used images and why.
+
+For Virtualbox:
+* cumuluscommunity/cumulus-vx
+* boxcutter/ubuntu1404
+* boxcutter/ubuntu1604
+* boxcutter/fedora23
+* boxcutter/debian82
+
+For Libvirt:
+* **Mutated** cumuluscommunity/cumulus-vx
+* **Mutated** boxcutter/ubuntu1404
+* **Mutated** boxcutter/debian82
+* yk0/ubuntu-xenial 
 
 ##Optional Features (Everything Else)
 
