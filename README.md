@@ -36,8 +36,16 @@ To see all the possible options use the help syntax "-h"
     $ python ./topology_converter.py -h
 ```
 
+# Coming in v4.2.0
+* Version Argument for TC
+* Support for Ubuntu1604 Images (Done)
+  * There is an issue with mutating boxes for libvirt (Under Investigation)
+
+
+
 ## Changelog:
 
+* v4\.2\.0 TBD: 
 * v4\.1\.0 2016\_05\_25: Added Support for VX 3.0, Added support for Version as a node Attribute, added support for pxebooting in virtualbox, added determinisic interface ordering in Vagrantfiles. Added Support for prepending "left_" and "right_" to any passthrough link attribute to specify which side of the link the attribute applies to. Added more realistic licensing support and switchd behavior in 2.5.x branches.
 * v4\.0\.5 2016\_05\_05: Fixed UDEV Remap to tie rules to interfaces on the PCI Bus. Fixed Fake Device support. Added check to confirm that future Vagrant interfaces are tied to the PCI bus.
 * v4\.0\.4 2016\_05\_01: Added functional defaults and check for node/device existance when parsing edges/links.
