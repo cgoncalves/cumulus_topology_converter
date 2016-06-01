@@ -184,6 +184,16 @@ def apply_remap():
     for line in output:
         print line
 
+"""
+In case user builds Ubuntu image less than 15.10 using chef/bento.
+Deletes directory created by chef/bento Packer build which messes up the
+apply_udev script.
+See  https://github.com/chef/bento/issues/592 for more details
+"""
+def delete_udev_dir(udev_file):
+    if os.path.isdir(udev_file):
+        os.rmdir(udev_file)
+
 def main():
 
     global verbose
@@ -204,6 +214,7 @@ def main():
     additions=[]
     removals=[]
 
+    delete_udev_dir(udev_file)
     args = parser.parse_args()
     if args.verbose: verbose=args.verbose
     if args.add:
