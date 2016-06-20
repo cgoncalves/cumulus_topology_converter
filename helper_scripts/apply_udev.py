@@ -51,6 +51,7 @@ def show_rules():
 def parse_interfaces():
     #Parse Interfaces
     output=subprocess.check_output(["ip","link","show"]).split('\n')
+    global apply
 
     ifindex=""
     interface=""
@@ -70,25 +71,26 @@ def parse_interfaces():
             if verbose: print "interface: " + interface + " index: " + str(ifindex) + " mac: " + mac
             index_map[interface]={"index":ifindex,"mac":mac}
 
-    for interface in index_map:
-        if verbose: print "determining driver for interface: " + interface
-        success=False
-        #Method1
-        try:
-            ethtool_output=subprocess.check_output(["ethtool","-i",interface]).split('\n')
-            driver = ethtool_output[0].split(":")[1][1:]
-        except (subprocess.CalledProcessError, OSError), e:
-            #Method 2
+    if apply:
+        for interface in index_map:
+            if verbose: print "determining driver for interface: " + interface
+            success=False
+            #Method1
             try:
-                driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver/module) > /dev/null 2>&1"],shell=True).replace("\n","")
-            except subprocess.CalledProcessError, e:
+                ethtool_output=subprocess.check_output(["ethtool","-i",interface]).split('\n')
+                driver = ethtool_output[0].split(":")[1][1:]
+            except (subprocess.CalledProcessError, OSError), e:
+                #Method 2
                 try:
-                    driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver) > /dev/null 2>&1"],shell=True).replace("\n","")
+                    driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver/module) > /dev/null 2>&1"],shell=True).replace("\n","")
                 except subprocess.CalledProcessError, e:
-                    print " ### ERROR Tried 3 methods to determine device driver. All Failed."
-                    exit(1)
-        index_map[interface]["driver"]=driver
-        if verbose: print "interface: " + interface + " driver: " + driver
+                    try:
+                        driver=subprocess.check_output(["basename $(readlink /sys/class/net/"+interface+"/device/driver) > /dev/null 2>&1"],shell=True).replace("\n","")
+                    except subprocess.CalledProcessError, e:
+                        print " ### ERROR Tried 3 methods to determine device driver. All Failed."
+                        exit(1)
+            index_map[interface]["driver"]=driver
+            if verbose: print "interface: " + interface + " driver: " + driver
     return index_map
 
 def delete_rule(mac):
@@ -122,6 +124,7 @@ def add_rule(mac,interface):
     if verbose: show_rules()
 
 def apply_remap():
+    global apply
     global just_vagrant
     index_map=parse_interfaces()
     if not just_vagrant:
@@ -147,8 +150,9 @@ def apply_remap():
             print "    lowest_index: + " + str(lowest_index) + "  --> " + str(lowest_index_interface)
             print "        index: " + index_map[interface]["index"]
             print "        mac: " + index_map[interface]["mac"]
+        if apply:
+            if index_map[interface]["driver"] not in drivers: drivers[index_map[interface]["driver"]]= True
             print "        driver: " + index_map[interface]["driver"]
-        if index_map[interface]["driver"] not in drivers: drivers[index_map[interface]["driver"]]= True
 
     #Leave tunnel and bridge devices alone
     if "tun" in drivers: del drivers["tun"]
@@ -210,6 +214,7 @@ def main():
     global just_vagrant
     just_vagrant=False
     global vagrant_name
+    global apply
     apply=False
     additions=[]
     removals=[]
@@ -226,7 +231,6 @@ def main():
     if args.show: show=True
     if args.no_vagrant_interface: use_vagrant_interface=False
     if args.vagrant_mapping:
-        apply=True
         just_vagrant=True
     if args.no_vagrant_default: use_vagrant_default=False
     if args.apply: apply=True
