@@ -284,6 +284,8 @@ EOF
         mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
         echo "### Applying Remap without Reboot..."
         /home/vagrant/apply_udev.py --apply
+        echo "### Performing IFRELOAD to Apply any Latent Interface Config..."
+        ifreload -a       
     fi
     echo "### DONE ###"
 else
@@ -321,7 +323,7 @@ Vagrant.configure("2") do |config|
     device.vm.synced_folder '.', '/vagrant', :disabled => true
     device.vm.provider :libvirt do |v|{% endif %}
       v.memory = {{ device.memory }}
-    end{% if synced_folder == False %}
+    end{% if synced_folder == "False" %}
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == "True" %}
       # UBUNTU DEVICES ONLY: Shorten Boot Process - remove \"Wait for Network
       device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf"{% endif %}
@@ -340,7 +342,7 @@ Vagrant.configure("2") do |config|
             auto_config: false{% endif %}{% endfor %}
 
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |vbox|{% for i in range(2, 2+device.interfaces.__len__()) %}
-      vbox.customize ['modifyvm', :id, '--nicpromisc{{i}}', 'allow-vms']{% endfor %}
+      vbox.customize ['modifyvm', :id, '--nicpromisc{{i}}', 'allow-all']{% endfor %}
       vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]{% if device.pxehost=="True" %}
 
       #Setup Interfaces for PXEBOOT

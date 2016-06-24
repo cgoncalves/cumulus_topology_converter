@@ -134,7 +134,11 @@ def mac_fetch(hostname,interface):
         new_mac = hex(int(start_mac, 16) + 1)[2:].upper()
         warning=True
     start_mac = new_mac
-    return str(new_mac)
+    return add_mac_colon(new_mac)
+
+def add_mac_colon(mac_address):
+    return str(':'.join(s.encode('hex') for s in mac_address.decode('hex')))
+
 
 def parse_topology(topology_file):
     global provider
@@ -227,10 +231,14 @@ def parse_topology(topology_file):
         right_interface=edge.get_destination().split(":")[1].replace('"','')
 
         left_mac_address=""
-        if edge.get('left_mac') != None : left_mac_address=edge.get('left_mac').replace('"','')
+        if edge.get('left_mac') != None : 
+            temp_left_mac=edge.get('left_mac').replace('"','').replace(':','')
+            left_mac_address=add_mac_colon(temp_left_mac)
         else: left_mac_address=mac_fetch(left_device,left_interface)
         right_mac_address=""
-        if edge.get('right_mac') != None : right_mac_address=edge.get('right_mac').replace('"','')
+        if edge.get('right_mac') != None : 
+            temp_right_mac=edge.get('right_mac').replace('"','').replace(':','')
+            right_mac_address=add_mac_colon(temp_right_mac)
         else: right_mac_address=mac_fetch(right_device,right_interface)
 
         #Check to make sure each device in the edge already exists in inventory
