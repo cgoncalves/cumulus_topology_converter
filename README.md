@@ -1,6 +1,19 @@
 # Topology Converter
 =====================
 
+# Coming in v4.2.0
+* Version Argument for boxes specified in TC (DONE)
+* Support for Ubuntu1604 Images (DONE)
+* Corrected Reference Topology Examples.
+* Integrate MGMT networks into all examples for automation.
+* Shapeways Example Code
+* Bug Fixes for Issue #7, #9, and Other Informally found bugs. (DONE)
+* New version of Apply_Udev (DONE)
+* Better intro Doc --> Simplifying Upfront message
+* Node/Link Attribute List (DONE)
+
+
+
 ## See the [Documentation Section](./documentation) for way more information!!!
 
 
@@ -22,25 +35,14 @@ Topology Converter can help you to simulate a custom network topology built of C
 Topology Converter uses a graphviz topology file to represent the entire topology. Topology Converter will convert this topology file into a Vagrantfile which fully represents the topology. Vagrantfiles are used with the popular simulation tool Vagrant to interconnect VMs. The topology can then be simulated in either Virtualbox or Libvirt (/w KVM) using Vagrant.
 
 
-## Quick Examples: 
-Run topology_converter against a topology file: 
+## How to Contribute
+PRs are actively welcomed.
 
-```
-    $ python ./topology_converter.py ./examples/2switch.dot
-```
+1. Fork the Project
 
+2. Make your Changes
 
-To see all the possible options use the help syntax "-h"
-
-```
-    $ python ./topology_converter.py -h
-```
-
-# Coming in v4.2.0
-* Version Argument for TC
-* Support for Ubuntu1604 Images (Done)
-  * There is an issue with mutating boxes for libvirt (Under Investigation)
-
+3. Submit a PR on the Development Branch
 
 
 ## Changelog:

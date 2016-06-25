@@ -9,6 +9,7 @@
   * [What is it doing?](#what-is-happening-when-you-run-topology-converter)
   * [Functional Defaults](#functional-defaults)
 * [Vagrant Box Selection](#vagrant-box-selection)
+* [Supported Attributes](#supported-attributes
 * [Optional Features](#optional-features)
   * [Providers](#providers)
   * [Faked Devices](#faked-devices)
@@ -44,9 +45,12 @@
 ```
 
 ##Glossary:
-* **Topology File** -- Usually a file ending in the ".dot" suffix. This file describes the network topology link-by-link. Written in https://en.wikipedia.org/wiki/DOT_(graph_description_language). This file can be the same one used as part of the [Perscriptive Topology Manager (PTM) feature](https://docs.cumulusnetworks.com/display/DOCS/Prescriptive+Topology+Manager+-+PTM) in Cumulus Linux.
-* **Provider** -- similar to a hypervisor, providers are Vagrant's term for the device that is either directoy hosting the VM (virtualbox) or the subsystem that vagrant is communicating with to further orchestratrate the creation of the VM (libvirt)
-* **Interface Remapping** -- Interface remapping is the process by which interfaces are renamed to match the interfaces specified in the topology file. Interface Remapping uses UDEV rules that are orchestrated in the Vagrantfile and applied by the apply_udev.py script on the machines under simulation. This process allows a device in a topologyfile to simulate ports like "swp49" without having to simulate ports swp1-48. See the "[Miscellaneous Info](#miscellaneous-info)" Section for additional information.
+###Topology File
+Usually a file ending in the ".dot" suffix. This file describes the network topology link-by-link. Written in https://en.wikipedia.org/wiki/DOT_(graph_description_language). This file can be the same one used as part of the [Perscriptive Topology Manager (PTM) feature](https://docs.cumulusnetworks.com/display/DOCS/Prescriptive+Topology+Manager+-+PTM) in Cumulus Linux.
+###Provider
+Similar to a hypervisor, providers are Vagrant's term for the device that is either directoy hosting the VM (virtualbox) or the subsystem that vagrant is communicating with to further orchestratrate the creation of the VM (libvirt)
+###Interface Remapping
+Interface remapping is the process by which interfaces are renamed to match the interfaces specified in the topology file. Interface Remapping uses UDEV rules that are orchestrated in the Vagrantfile and applied by the apply_udev.py script on the machines under simulation. This process allows a device in a topologyfile to simulate ports like "swp49" without having to simulate ports swp1-48. See the "[Miscellaneous Info](#miscellaneous-info)" Section for additional information.
 
 
 ##Features
@@ -170,6 +174,27 @@ For Libvirt:
 * **Mutated** boxcutter/ubuntu1404
 * **Mutated** boxcutter/debian82
 * yk0/ubuntu-xenial 
+
+
+###Supported Attributes
+Note: This list cannot be exhaustive because users can define new [passthrough attributes](#passthrough-attributes) and use them with custom templates. These are simply the attributes that the default template (Vagrantfile.j2) has support for.
+
+####Node(Device) Level Attributes
+* os -- Sets the Operating System (i.e. the vagrant box) to be booted.
+* memory -- (optional) Sets the amount of memory (in MB) to be provided to the VM.
+* version -- (optional) Sets the version of the Box to be used.
+* function -- (optional) Corespondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM.
+* config -- (optional) This defines a provisioning script to be called on the VM during the initial boot process. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
+* playbook -- (optional) Defines the provisioning playbook to be run on the device. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
+* tunnelip -- (optional) Defines the IP address to be used as a source address for UDP tunnel building in libvirt.
+* pxehost -- (optional) Defines the VM as requiring PXEboot, sets the Network as a boot target alongside the Harddrive of the VM.
+* ubuntu -- (optional) Used to identify ubuntu14.04 boxes in order to apply special configuration to the /etc/failsafe.conf file to expediate reboots.
+
+####Link Level Attributes
+* left_ and right_ -- These arguments can be prepended to any link attribute to map the attribute to a single side of the link.
+* left_mac and right_mac -- (optional) Defines the mac addresses on either side of the link.
+* pxebootinterface -- (optional) Defines which interface will be used for pxeboot. (In the future multiple interfaces may be allowed but for now, only one primary interface can be defined for pxeboot)
+
 
 ##Optional Features (Everything Else)
 
@@ -420,4 +445,9 @@ This topology can be linear if you shut one of the links somewhere in the topolo
 
 
 ![3 Switch Circular Topology](3switch_circular.png)
+
+## Shapeways Topology
+This topology is provided by [Shapeways](http://www.shapeways.com/) as a reference for their datacenter deployment with Cumulus.
+
+![Shapeways Topology](Shapeways.png)
 
