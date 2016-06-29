@@ -43,7 +43,7 @@ def show_rules():
     #Show Existing Rules
     print "#### UDEV Rules (/etc/udev/rules.d/70-persistent-net.rules) ####"
     if not os.path.isfile(udev_file):
-        if verbose: print " >>> No Rules Present or File Does Not Exist <<<"
+        print "\n >>> No Rules Present or File Does Not Exist <<<"
         return
     rules=subprocess.check_output(["cat",udev_file]).split('\n')
     for line in rules: print line
@@ -95,7 +95,7 @@ def parse_interfaces():
 
 def delete_rule(mac):
     if not os.path.isfile(udev_file):
-        if verbose: print "WARN: delete of rule not possible, udev file does not exist."
+        print "WARNING: delete of rule not possible, udev file does not exist."
         return
     #Delete rule with MAC address
     if verbose:
@@ -107,6 +107,7 @@ def delete_rule(mac):
         show_rules()
 
 def add_rule(mac,interface):
+    global udev_file
     index_map=parse_interfaces()
     print "  INFO: Adding UDEV Rule: " + mac + " --> " + interface
     mac_found=False
@@ -119,8 +120,8 @@ def add_rule(mac,interface):
         print "deleting any matching rules to be safe..."
     delete_rule(mac)
 
-    with open("/etc/udev/rules.d/70-persistent-net.rules","a") as udev_file:
-        udev_file.write("""ACTION=="add", SUBSYSTEM=="net", ATTR{address}==\"""" + mac +"\", NAME=\""+interface+"\", SUBSYSTEMS==\"pci\" \n")
+    with open(udev_file,"a") as output_file:
+        output_file.write("""ACTION=="add", SUBSYSTEM=="net", ATTR{address}==\"""" + mac +"\", NAME=\""+interface+"\", SUBSYSTEMS==\"pci\" \n")
     if verbose: show_rules()
 
 def apply_remap():
