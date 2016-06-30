@@ -316,16 +316,19 @@ Vagrant.configure("2") do |config|
 {% for device in devices %}
   ##### DEFINE VM for {{ device.hostname }} #####
   config.vm.define "{{ device.hostname }}" do |device|
-    device.vm.hostname = "{{ device.hostname }}"
-    device.vm.box = "{{ device.os }}"
-    {% if device.version %}device.vm.box_version = "{{ device.version }}"{% endif %}
+    device.vm.hostname = "{{ device.hostname }}" {% if device.pxehost=="True" and provider == 'libvirt'%}
+    #NO BOX USED FOR PXE DEVICE{% else %}
+    device.vm.box = "{{ device.os }}"{% if device.version %}
+    device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
-      v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %}    # disabling sync folder support on all VMs
-    #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
-    device.vm.synced_folder '.', '/vagrant', :disabled => true
-    device.vm.provider :libvirt do |v|{% endif %}
+      v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %} 
+    device.vm.provider :libvirt do |v|{% if device.pxehost=="True" %}
+      v.storage :file, :size => '100G', :type => 'qcow2', :bus => 'sata', :device => 'sda'
+      v.boot 'hd'
+      v.boot 'network'{% endif %}{% endif %}
       v.memory = {{ device.memory }}
     end{% if synced_folder == "False" %}
+    #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == "True" %}
       # UBUNTU DEVICES ONLY: Shorten Boot Process - remove \"Wait for Network
       device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf"{% endif %}
@@ -361,13 +364,13 @@ Vagrant.configure("2") do |config|
     # Fixes "stdin: is not a tty" and "mesg: ttyname failed : Inappropriate ioctl for device"  messages --> https://github.com/mitchellh/vagrant/issues/1673
     device.vm.provision :shell , inline: "(grep -q 'mesg n' /root/.profile && sed -i '/mesg n/d' /root/.profile && echo 'Ignore the previous error, fixing this now...') || exit 0;"
 
-
-
 {% if device.config is defined %}
     # Run the Config specified in the Node Attributes
-    device.vm.provision :shell , path: "{{ device.config }}"{% endif %}
+    device.vm.provision :shell , path: "{{ device.config }}"
+{% endif %}
 
-    # Install Rules for the interface re-map
+    # Install Rules for the interface re-map{% if device.pxehost=="True" and provider == 'libvirt'%}
+    #NO REMAP for LIBVIRT PXE DEVICE{% else %}
       device.vm.provision "file", source: "{{ script_storage }}/apply_udev.py", destination: "/home/vagrant/apply_udev.py"
       device.vm.provision :shell , inline: "chmod 755 /home/vagrant/apply_udev.py"
 {% for link in device.interfaces %}
@@ -376,15 +379,17 @@ Vagrant.configure("2") do |config|
       device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py -vm {% if device.vagrant %}{% if device.vagrant=='eth0' %}-nv{%else%}--vagrant-name={{device.vagrant}}{% endif%}{% endif%}"
       device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py -s"
 
-{% if device.playbook is defined %}
+{% endif %}{% if device.playbook is defined %}
     # Ansible Playbook Configuration
     device.vm.provision "ansible" do |ansible|
           ansible.playbook = "{{ device.playbook }}"
     end{% endif %}
 
+    {% if device.pxehost=="True" and provider == 'libvirt'%}
+    #NO REMAP APPLICATION for LIBVIRT PXE DEVICE{% else %}
     # Run Any Platform Specific Code and Apply the interface Re-map 
     #   (may or may not perform a reboot depending on platform)
-    device.vm.provision :shell , :inline => $script
+    device.vm.provision :shell , :inline => $script{% endif %}
 {#    device.vm.provision :shell , inline: "reboot" #}
 {#      device.vm.provision :shell , inline: "/home/vagrant/apply_udev.py --apply" #}
   end
