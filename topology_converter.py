@@ -185,6 +185,9 @@ def parse_topology(topology_file):
                 inventory[node_name]['os']="boxcutter/ubuntu1604"
                 inventory[node_name]['memory']="500"
 
+            if provider == 'libvirt' and 'pxehost' in node_attr_list:
+                    if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"
+
         #Add attributes to node inventory
         for attribute in node_attr_list:
             #if verbose: print attribute + " = " + node.get(attribute)
