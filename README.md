@@ -33,14 +33,15 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
-## Changelog:
 
-### New Features in v4.2.0
+## New Features in v4.2.0
 * Added new node attribute for specifying the Version of a Vagrant box.
 * Improved support for Ubuntu1604 Images -- the Ubuntu=true comment is only required as a node attribute for Ubuntu 14.04
 * Various Bug Fixes for Issue #7, #9, and Other Informally found bugs.
 * New version of Apply_Udev.py to support more vagrant boxes used in host settings.
 * Node/Link Attribute List provided in the Documentation
+
+## Changelog:
 
 * v4\.2\.0 2016\_06\_29: Improved support for VX 3.0, Improvements to the Apply_udev.py script to support more vagrant boxes used in host settings, Various Bug fixes for issues #7, #9, and other minor issues. Version node attribute support.
 * v4\.1\.0 2016\_05\_25: Added Support for VX 3.0, Added support for Version as a node Attribute, added support for pxebooting in virtualbox, added determinisic interface ordering in Vagrantfiles. Added Support for prepending "left_" and "right_" to any passthrough link attribute to specify which side of the link the attribute applies to. Added more realistic licensing support and switchd behavior in 2.5.x branches.
