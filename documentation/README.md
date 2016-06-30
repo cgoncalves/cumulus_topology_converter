@@ -9,7 +9,7 @@
   * [What is it doing?](#what-is-happening-when-you-run-topology-converter)
   * [Functional Defaults](#functional-defaults)
 * [Vagrant Box Selection](#vagrant-box-selection)
-* [Supported Attributes](#supported-attributes
+* [Supported Attributes](#supported-attributes)
 * [Optional Features](#optional-features)
   * [Providers](#providers)
   * [Faked Devices](#faked-devices)
@@ -160,7 +160,7 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
 
 ###Vagrant Box Selection
-There are a number of different sources of Vagrant box images however there are several that we consistently use in simulations. Here is a list of those commonly used images and why.
+There are a number of different sources of Vagrant box images however there are several that we consistently use in simulations. Here is a list of those commonly used images.
 
 For Virtualbox:
 * cumuluscommunity/cumulus-vx
@@ -418,7 +418,7 @@ Documentation coming soon!
 These topologies can be used to get started with topology converter.
 
 ## The Reference Topology
-This topology can be used to simulate any feature offered by Cumulus Linux. It is not necessary to turn on each device in this topology, only those which you intend to use (to keep the simulation more manageable on a laptop). For more information on the reference topology see the [internal wiki page](https://wiki.cumulusnetworks.com/display/SAL/Reference+Topology), public documentation on the Reference Topology is coming soon!
+This topology can be used to simulate any feature offered by Cumulus Linux. It is not necessary to turn on each device in this topology, only those which you intend to use (to keep the simulation more manageable on a laptop). For more information on the reference topology see the [cldemo-vagrant](https://github.com/CumulusNetworks/cldemo-vagrant) Github repository.
 
 ![Reference Topology](reference_topology.png)
 
@@ -446,8 +446,8 @@ This topology can be linear if you shut one of the links somewhere in the topolo
 
 ![3 Switch Circular Topology](3switch_circular.png)
 
-## Shapeways Topology
-This topology is provided by [Shapeways](http://www.shapeways.com/) as a reference for their datacenter deployment with Cumulus.
+## Routing on the Host /w FW/LB Mobility
+This topology is provided by a Cumulus customer as a reference for their datacenter deployment with Cumulus.
 
-![Shapeways Topology](Shapeways.png)
+![Customer Topology](customer_topology.png)
 

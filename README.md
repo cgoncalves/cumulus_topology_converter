@@ -1,18 +1,6 @@
 # Topology Converter
 =====================
 
-# Coming in v4.2.0
-* Version Argument for boxes specified in TC (DONE)
-* Support for Ubuntu1604 Images (DONE)
-* Corrected Reference Topology Examples.
-* Integrate MGMT networks into all examples for automation.
-* Shapeways Example Code
-* Bug Fixes for Issue #7, #9, and Other Informally found bugs. (DONE)
-* New version of Apply_Udev (DONE)
-* Better intro Doc --> Simplifying Upfront message
-* Node/Link Attribute List (DONE)
-
-
 
 ## See the [Documentation Section](./documentation) for way more information!!!
 
@@ -31,7 +19,7 @@
 ```
 
 ## What is it?
-Topology Converter can help you to simulate a custom network topology built of Cumulus VX devices and any other linux-based devices you so choose.
+Topology Converter can help you to simulate a custom network topology directly on your laptop or on a dedicated server. This topology can be extremely complete allowing for the capability to simulate hosts as well as network equipment. Cumulus Vx (which is the VM of Cumulus Linux) can be leveraged as real routers and switches would be to interconnect hosts. As long as the device is using Linux and has a vagrant box image available, it should be possible to simulate it here as part of a larger topology.
 Topology Converter uses a graphviz topology file to represent the entire topology. Topology Converter will convert this topology file into a Vagrantfile which fully represents the topology. Vagrantfiles are used with the popular simulation tool Vagrant to interconnect VMs. The topology can then be simulated in either Virtualbox or Libvirt (/w KVM) using Vagrant.
 
 
@@ -47,7 +35,14 @@ PRs are actively welcomed.
 
 ## Changelog:
 
-* v4\.2\.0 TBD: 
+### New Features in v4.2.0
+* Added new node attribute for specifying the Version of a Vagrant box.
+* Improved support for Ubuntu1604 Images -- the Ubuntu=true comment is only required as a node attribute for Ubuntu 14.04
+* Various Bug Fixes for Issue #7, #9, and Other Informally found bugs.
+* New version of Apply_Udev.py to support more vagrant boxes used in host settings.
+* Node/Link Attribute List provided in the Documentation
+
+* v4\.2\.0 2016\_06\_29: Improved support for VX 3.0, Improvements to the Apply_udev.py script to support more vagrant boxes used in host settings, Various Bug fixes for issues #7, #9, and other minor issues. Version node attribute support.
 * v4\.1\.0 2016\_05\_25: Added Support for VX 3.0, Added support for Version as a node Attribute, added support for pxebooting in virtualbox, added determinisic interface ordering in Vagrantfiles. Added Support for prepending "left_" and "right_" to any passthrough link attribute to specify which side of the link the attribute applies to. Added more realistic licensing support and switchd behavior in 2.5.x branches.
 * v4\.0\.5 2016\_05\_05: Fixed UDEV Remap to tie rules to interfaces on the PCI Bus. Fixed Fake Device support. Added check to confirm that future Vagrant interfaces are tied to the PCI bus.
 * v4\.0\.4 2016\_05\_01: Added functional defaults and check for node/device existance when parsing edges/links.
