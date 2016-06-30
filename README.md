@@ -1,6 +1,11 @@
 # Topology Converter
 =====================
 
+## Coming in v4.3.0
+* Corrected Reference Topology Examples.
+* Integrate MGMT networks into all examples for automation.
+* Better intro Doc --> Simplifying Upfront message
+* PXEBOOT Libvirt Support
 
 ## See the [Documentation Section](./documentation) for way more information!!!
 
@@ -42,7 +47,7 @@ PRs are actively welcomed.
 * Node/Link Attribute List provided in the Documentation
 
 ## Changelog:
-
+* v4\.3\.0 TBD
 * v4\.2\.0 2016\_06\_29: Improved support for VX 3.0, Improvements to the Apply_udev.py script to support more vagrant boxes used in host settings, Various Bug fixes for issues #7, #9, and other minor issues. Version node attribute support.
 * v4\.1\.0 2016\_05\_25: Added Support for VX 3.0, Added support for Version as a node Attribute, added support for pxebooting in virtualbox, added determinisic interface ordering in Vagrantfiles. Added Support for prepending "left_" and "right_" to any passthrough link attribute to specify which side of the link the attribute applies to. Added more realistic licensing support and switchd behavior in 2.5.x branches.
 * v4\.0\.5 2016\_05\_05: Fixed UDEV Remap to tie rules to interfaces on the PCI Bus. Fixed Fake Device support. Added check to confirm that future Vagrant interfaces are tied to the PCI bus.
