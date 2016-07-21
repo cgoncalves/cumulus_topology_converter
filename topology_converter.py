@@ -167,23 +167,23 @@ def parse_topology(topology_file):
                 inventory[node_name]['os']="None"
                 inventory[node_name]['memory']="1"
             if value=='oob-server':
-                inventory[node_name]['os']="boxcutter/ubuntu1604"
-                inventory[node_name]['memory']="500"
+                inventory[node_name]['os']="boxcutter/ubuntu1404"
+                inventory[node_name]['memory']="512"
             elif value=='oob-switch':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="300"
+                inventory[node_name]['memory']="512"
             elif value=='exit':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="300"
+                inventory[node_name]['memory']="512"
             elif value=='spine':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="300"
+                inventory[node_name]['memory']="512"
             elif value=='leaf':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="300"
+                inventory[node_name]['memory']="512"
             elif value=='host':
-                inventory[node_name]['os']="boxcutter/ubuntu1604"
-                inventory[node_name]['memory']="500"
+                inventory[node_name]['os']="boxcutter/ubuntu1404"
+                inventory[node_name]['memory']="512"
 
             if provider == 'libvirt' and 'pxehost' in node_attr_list:
                     if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"

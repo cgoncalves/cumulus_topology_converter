@@ -149,13 +149,13 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 
 **Functional Defaults are:**
 * os="CumulusCommunity/cumulus-vx"
-* memory="300"
+* memory="512"
 
 **For Functions:** "oob-server" and "host"
 
 **Functional Defaults are:**
-* os="boxcutter/ubuntu1604"
-* memory="500"
+* os="boxcutter/ubuntu1404"
+* memory="512"
 
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
 
@@ -175,6 +175,7 @@ For Libvirt:
 * **Mutated** boxcutter/debian82
 * yk0/ubuntu-xenial 
 
+*Note: to learn how to mutate a box that was built for the virtualbox provider to use the libvirt provider check out this [community post](https://community.cumulusnetworks.com/cumulus/topics/converting-cumulus-vx-virtualbox-vagrant-box-gt-libvirt-vagrant-box).
 
 ###Supported Attributes
 Note: This list cannot be exhaustive because users can define new [passthrough attributes](#passthrough-attributes) and use them with custom templates. These are simply the attributes that the default template (Vagrantfile.j2) has support for.
