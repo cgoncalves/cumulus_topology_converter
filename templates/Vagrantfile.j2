@@ -327,7 +327,7 @@ Vagrant.configure("2") do |config|
       v.boot 'hd'
       v.boot 'network'{% endif %}{% endif %}
       v.memory = {{ device.memory }}
-    end{% if synced_folder == "False" %}
+    end{% if synced_folder == False %}
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == "True" %}
       # UBUNTU DEVICES ONLY: Shorten Boot Process - remove \"Wait for Network
