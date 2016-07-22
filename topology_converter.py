@@ -535,6 +535,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-    print "\nVagrantfile has been generated!\n"
+    print "\n############\nSUCCESS: Vagrantfile has been generated!\n############"
     print "\nDONE!\n"
 exit(0)
