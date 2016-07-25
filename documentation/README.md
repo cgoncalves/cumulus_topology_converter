@@ -181,15 +181,15 @@ For Libvirt:
 Note: This list cannot be exhaustive because users can define new [passthrough attributes](#passthrough-attributes) and use them with custom templates. These are simply the attributes that the default template (Vagrantfile.j2) has support for.
 
 ####Node(Device) Level Attributes
-* os -- Sets the Operating System (i.e. the vagrant box) to be booted.
+* os -- Sets the Operating System (i.e. the vagrant box) to be booted. This can also be provided indirectly when using a "function" as discussed below.
 * memory -- (optional) Sets the amount of memory (in MB) to be provided to the VM.
 * version -- (optional) Sets the version of the Box to be used.
-* function -- (optional) Corespondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM.
+* function -- (optional) Correspondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM. This can specify other attributes like OS and Memory.
 * config -- (optional) This defines a provisioning script to be called on the VM during the initial boot process. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
 * playbook -- (optional) Defines the provisioning playbook to be run on the device. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
 * tunnelip -- (optional) Defines the IP address to be used as a source address for UDP tunnel building in libvirt.
 * pxehost -- (optional) Defines the VM as requiring PXEboot, sets the Network as a boot target alongside the Harddrive of the VM.
-* ubuntu -- (optional) Used to identify ubuntu14.04 boxes in order to apply special configuration to the /etc/failsafe.conf file to expediate reboots.
+* ubuntu -- (optional -- deprecated in v4.3.0) Used to identify ubuntu14.04 boxes in order to apply special configuration to the /etc/failsafe.conf file to expediate reboots.
 
 ####Link Level Attributes
 * left_ and right_ -- These arguments can be prepended to any link attribute to map the attribute to a single side of the link.

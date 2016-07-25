@@ -329,9 +329,9 @@ Vagrant.configure("2") do |config|
       v.memory = {{ device.memory }}
     end{% if synced_folder == False %}
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
-    device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if device.ubuntu == "True" %}
-      # UBUNTU DEVICES ONLY: Shorten Boot Process - remove \"Wait for Network
-      device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf"{% endif %}
+    device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if "ubuntu" in device.os.lower() %}
+      # Shorten Boot Process - Applies to Ubuntu Only - remove \"Wait for Network\"
+      device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf || true"{% endif %}
 
     # NETWORK INTERFACES{% for link in device.interfaces %}
       # link for {{ link.local_interface }} --> {{ link.remote_device }}:{{ link.remote_interface }}
