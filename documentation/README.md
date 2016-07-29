@@ -99,9 +99,9 @@ In this example, we'll work with the topology_converter / examples / 2switch_1se
 
 ```
 graph dc1 {
- "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" config="./helper_scripts/extra_switch_config.sh"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" config="./helper_scripts/extra_switch_config.sh"]
- "server1" [function="host" os="boxcutter/ubuntu1404" memory="400" ubuntu=True config="./helper_scripts/extra_server_config.sh"]
+ "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="512" config="./helper_scripts/extra_switch_config.sh"]
+ "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="512" config="./helper_scripts/extra_switch_config.sh"]
+ "server1" [function="host" os="boxcutter/ubuntu1404" memory="512" ubuntu=True config="./helper_scripts/extra_server_config.sh"]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50"
    "server1":"eth1" -- "leaf1":"swp1"
@@ -175,6 +175,8 @@ For Libvirt:
 * **Mutated** boxcutter/debian82
 * yk0/ubuntu-xenial 
 
+*Note: When using Ubuntu1604 with the libvirt provider, an image that was natively built for libvirt must be used like yk0/ubuntu-xenial otherwise the machine will fail to boot. See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607 , https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609
+
 *Note: to learn how to mutate a box that was built for the virtualbox provider to use the libvirt provider check out this [community post](https://community.cumulusnetworks.com/cumulus/topics/converting-cumulus-vx-virtualbox-vagrant-box-gt-libvirt-vagrant-box).
 
 ###Supported Attributes
@@ -209,6 +211,28 @@ To use Libvirt/KVM specify the "-p libvirt" option
                       specifies the provider to be used in the Vagrantfile,
                       script supports "virtualbox" or "libvirt", default is
                       virtualbox.
+```
+
+When running multiple libvirt simulations at the same time, default UDP port numbers will need to be altered so simulations will not overlap and potentially interfere with one another. To modify libvirt tunnel port values use the start-port and port-gap arguments shown below.
+
+```
+  -s START_PORT, --start-port START_PORT
+                        FOR LIBVIRT PROVIDER: this option overrides the
+                        default starting-port 8000 with a new value. Use ports
+                        over 1024 to avoid permissions issues. If using this
+                        option with the virtualbox provider it will be
+                        ignored.
+  -g PORT_GAP, --port-gap PORT_GAP
+                        FOR LIBVIRT PROVIDER: this option overrides the
+                        default port-gap of 1000 with a new value. This number
+                        is added to the start-port value to determine the port
+                        to be used by the remote-side. Port-gap also defines
+                        the max number of links that can exist in the
+                        topology. EX. If start-port is 8000 and port-gap is
+                        1000 the first link will use ports 8001 and 9001 for
+                        the construction of the UDP tunnel. If using this
+                        option with the virtualbox provider it will be
+                        ignored.
 ```
 
 
@@ -419,7 +443,7 @@ Documentation coming soon!
 These topologies can be used to get started with topology converter.
 
 ## The Reference Topology
-This topology can be used to simulate any feature offered by Cumulus Linux. It is not necessary to turn on each device in this topology, only those which you intend to use (to keep the simulation more manageable on a laptop). For more information on the reference topology see the [cldemo-vagrant](https://github.com/CumulusNetworks/cldemo-vagrant) Github repository.
+This topology can be used to simulate any feature offered by Cumulus Linux. It is not necessary to turn on each device in this topology, only those which you intend to use (to keep the simulation more manageable on a laptop). This topology is not actually included in this repository but can be found at the [cldemo-vagrant](https://github.com/CumulusNetworks/cldemo-vagrant) Github repository which is built using Topology Converter.
 
 ![Reference Topology](reference_topology.png)
 
