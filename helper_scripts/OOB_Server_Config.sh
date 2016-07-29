@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#This file is transferred to a Debian/Ubuntu Host and executed to re-map interfaces
-#Extra config COULD be added here but I would recommend against that to keep this file standard.
 echo "#################################"
 echo "  Running OOB_Server_Config.sh"
 echo "#################################"
