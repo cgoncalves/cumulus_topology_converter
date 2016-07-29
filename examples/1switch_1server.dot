@@ -1,7 +1,7 @@
 
 graph dc1 {
- "leaf1" [os="CumulusCommunity/cumulus-vx" function="leaf" memory="300" config="./helper_scripts/extra_switch_config.sh"]
- "server1" [os="boxcutter/ubuntu1404" function="host"  memory="400" ubuntu=True config="./helper_scripts/extra_server_config.sh"]
+ "leaf1" [function="leaf" config="./helper_scripts/extra_switch_config.sh"]
+ "server1" [function="host" config="./helper_scripts/extra_server_config.sh"]
    "leaf1":"eth0" -- "server1":"eth0"   
    "leaf1":"swp1" -- "server1":"eth1" 
    "leaf1":"swp2" -- "server1":"eth2" 

@@ -1,6 +1,6 @@
 graph dc {
    "oob"       [function="oob-switch"]
-   "mgmt"      [function="oob-server" os="boxcutter/ubuntu1404"]
+   "mgmt"      [function="oob-server"]
    "internet"  [function="exit"]
    "r1-spine"  [function="spine"]
    "r2-spine"  [function="spine"]
@@ -8,12 +8,12 @@ graph dc {
    "r1-leaf-b" [function="leaf"]
    "r2-leaf-a" [function="leaf"]
    "r2-leaf-b" [function="leaf"]
-   "fw1"       [function="host" os="boxcutter/ubuntu1404"]
-   "fw2"       [function="host" os="boxcutter/ubuntu1404"]
-   "lb1"       [function="host" os="boxcutter/ubuntu1404"]
-   "lb2"       [function="host" os="boxcutter/ubuntu1404"]
-   "server1"   [function="host" os="boxcutter/ubuntu1204"]
-   "server2"   [function="host" os="boxcutter/ubuntu1404"]
+   "fw1"       [function="host"]
+   "fw2"       [function="host"]
+   "lb1"       [function="host"]
+   "lb2"       [function="host"]
+   "server1"   [function="host"]
+   "server2"   [function="host"]
    "internet":"swp1" -- "r1-spine":"swp48"
    "internet":"swp2" -- "r2-spine":"swp48"
    "r1-spine":"swp1" -- "r1-leaf-a":"swp49"
