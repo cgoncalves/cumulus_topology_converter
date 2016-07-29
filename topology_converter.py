@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.3.0"
+version = "4.4.0_dev"
 
 
 import os

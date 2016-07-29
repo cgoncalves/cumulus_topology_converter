@@ -1,6 +1,15 @@
 # Topology Converter
 =====================
 
+## Coming in v4.4.0
+* Enhanced PXEBOOT Libvirt Support -- Blank OS value should be allowed
+* ZTP -R Fixes for initial boot
+* Null Audio Driver
+* os.path.abspath("./helper_scripts")
+* Apply Udev enhancement for IF index of vagrant interface (cleaner)
+* Libvirt Epoch Hostname so there are no domain collisions
+* Investigate Random Hostnames
+
 
 ## See the [Documentation Section](./documentation) for way more information!!!
 
@@ -45,6 +54,7 @@ Mostly a bugfix release to smooth rough edges.
 * Updated Documentation for Libvirt provider options
 
 ## Changelog:
+* v4\.4\.0 TBD
 * v4\.3\.0 2016\_07\_29: Added Initial PXEboot for Libvirt Support. Deprecated ubuntu=true node attribute, it is handled automatically now for images with ubuntu in the name. Modified Functional Defaults to use Ubuntu 14.04 as the host default instead of ubuntu1604 for wider compatability. Fixed Broken Synced Folders flag. Fixed /root/.profile error message output on unsupported platforms. Added Error handling for use of incompatible Ubuntu 1604 images with Libvirt. Updated Example topologies for v4.3.0 supported attributes. Removed Reference Topology. Updated Documentation for Libvirt provider options.
 * v4\.2\.0 2016\_06\_29: Improved support for VX 3.0, Improvements to the Apply_udev.py script to support more vagrant boxes used in host settings, Various Bug fixes for issues #7, #9, and other minor issues. Version node attribute support.
 * v4\.1\.0 2016\_05\_25: Added Support for VX 3.0, Added support for Version as a node Attribute, added support for pxebooting in virtualbox, added determinisic interface ordering in Vagrantfiles. Added Support for prepending "left_" and "right_" to any passthrough link attribute to specify which side of the link the attribute applies to. Added more realistic licensing support and switchd behavior in 2.5.x branches.
