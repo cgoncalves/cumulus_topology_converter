@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.3.0_dev"
+version = "4.3.0"
 
 
 import os
@@ -97,17 +97,9 @@ dhcp_mac_file="./dhcp_mac_map"
 synced_folder=False
 
 #Hardcoded Variables
-script_storage="./helper_scripts" #Location for our generated remap files
-ZIPFILE="./virtual_topology.zip"
+script_storage="./helper_scripts" 
 epoch_time = str(int(time.time()))
 mac_map={}
-
-#LIBvirt Provider Settings
-# start_port and port_gap are only relevant to the libvirt provider. These settings provide the basis
-#   for the UDP tunnel construction which is used by libvirt. Since UDP tunnels only make sense in a 
-#   point-to-point fashion, there is additional error checking when using the libvirt provider to make
-#   sure that interfaces are not reused for a point-to-multipoint configuration.
-
 
 #Static Variables -- #Do not change!
 warning=False
@@ -154,7 +146,6 @@ def parse_topology(topology_file):
         if node_name not in inventory:
             inventory[node_name] = {}
             inventory[node_name]['interfaces'] = {}
-
         node_attr_list=node.get_attributes()
 
         #Define Functional Defaults
@@ -185,8 +176,22 @@ def parse_topology(topology_file):
                 inventory[node_name]['os']="boxcutter/ubuntu1404"
                 inventory[node_name]['memory']="512"
 
-            if provider == 'libvirt' and 'pxehost' in node_attr_list:
-                    if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"
+        if provider == 'libvirt' and 'pxehost' in node_attr_list:
+            if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"
+
+        if provider == 'libvirt':
+            value=node.get('os')
+            if value.startswith('"') or value.startswith("'"): value=value[1:]
+            if value.endswith('"') or value.endswith("'"): value=value[:-1]
+            if value=='boxcutter/ubuntu1604' or value=='bento/ubuntu-16.04':
+                print " ### ERROR: device " + node_name + " -- Incompatible OS for libvirt provider."
+                print "              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt"
+                print "              use an ubuntu1604 image which is natively built for libvirt"
+                print "              like yk0/ubuntu-xenial."
+                print "              See https://github.com/CumulusNetworks/topology_converter/tree/master/documentation#vagrant-box-selection"
+                print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607"
+                print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609"
+                exit(1)
 
         #Add attributes to node inventory
         for attribute in node_attr_list:
@@ -347,9 +352,8 @@ def parse_topology(topology_file):
 def clean_datastructure(devices):
     #Sort the devices by function
     devices.sort(key=getKeyDevices)
-    for device in devices: 
+    for device in devices:
         device['interfaces']=sorted_interfaces(device['interfaces'])
-        
 
     if display_datastructures: return devices
     for device in devices:
@@ -380,42 +384,11 @@ def remove_generated_files():
     if verbose: print "Removing existing DHCP FILE..."
     if os.path.isfile(dhcp_mac_file):  os.remove(dhcp_mac_file)
 
-def generate_shareable_zip():
-    import zipfile
-    topology_dir="./"+os.path.split(topology_file)[0]
-    template_dir="./"+os.path.split(VAGRANTFILE_template)[0]
-    topo_file=os.path.split(topology_file)[1]
-    vagrantfile=os.path.split(VAGRANTFILE)[1]
-
-    folders_to_zip=["./","./helper_scripts",]
-    if topology_dir not in folders_to_zip: folders_to_zip.append(topology_dir)
-    if template_dir not in folders_to_zip: folders_to_zip.append(template_dir)
-
-    if verbose: print "Creating ZIP..."
-    if verbose: print "  Folders_to_Zip: ["+", ".join(folders_to_zip)+"]"
-
-    zf = zipfile.ZipFile(ZIPFILE, "w")
-    for dirname, subdirs, files in os.walk("./"):
-        if dirname in folders_to_zip:
-            if verbose: print "  adding directory %s to zip..." % (dirname)
-            zf.write(dirname)
-            for filename in files:
-                if filename.endswith("~") or filename.lower().endswith(".zip") or filename.startswith(".git"): continue
-                elif dirname == topology_dir:
-                    if filename != topo_file: continue
-                file_to_add=os.path.join(dirname, filename)
-                if verbose:
-                    print "  adding %s to zip..." % (file_to_add)
-                zf.write(file_to_add)
-        else:
-            continue
-    zf.close()
 
 _nsre = re.compile('([0-9]+)')
-
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, s)]  
+            for text in re.split(_nsre, s)]
 
 
 def getKeyDevices(device):
@@ -529,9 +502,6 @@ def main():
     generate_dhcp_mac_file(mac_map)
 
     generate_ansible_files()
-
-    #generate_shareable_zip() #Disabled because it is unreliable
-
 
 if __name__ == "__main__":
     main()
