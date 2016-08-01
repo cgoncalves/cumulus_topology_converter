@@ -284,10 +284,13 @@ EOF
 
         echo "  Disabling default remap on Cumulus VX..."
         mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
-        echo "### Applying Remap without Reboot..."
-        /home/vagrant/apply_udev.py --apply
-        echo "### Performing IFRELOAD to Apply any Latent Interface Config..."
-        ifreload -a       
+        echo "### Disabling ztp service..."
+        systemctl stop ztp.service
+        ztp -d
+        echo "### Reseting ZTP to work next boot..."
+        ztp -R
+        echo "### Rebooting switch..."
+        reboot
     fi
     echo "### DONE ###"
 else
