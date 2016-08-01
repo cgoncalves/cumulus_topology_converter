@@ -14,6 +14,9 @@
 #            https://community.cumulusnetworks.com/cumulus/topics/converting-cumulus-vx-virtualbox-vagrant-box-gt-libvirt-vagrant-box
 #       -Start with \"vagrant up --provider=libvirt --no-parallel\n")
 
+#Set the default provider to libvirt in the case they forget --provider=libvirt or if someone destroys a machine it reverts to virtualbox
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
+
 # Check required plugins
 REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt vagrant-mutate)
 exit unless REQUIRED_PLUGINS_LIBVIRT.all? do |plugin|
