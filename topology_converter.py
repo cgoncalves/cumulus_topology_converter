@@ -179,20 +179,6 @@ def parse_topology(topology_file):
         if provider == 'libvirt' and 'pxehost' in node_attr_list:
             if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"
 
-        if provider == 'libvirt':
-            value=node.get('os')
-            if value.startswith('"') or value.startswith("'"): value=value[1:]
-            if value.endswith('"') or value.endswith("'"): value=value[:-1]
-            if value=='boxcutter/ubuntu1604' or value=='bento/ubuntu-16.04':
-                print " ### ERROR: device " + node_name + " -- Incompatible OS for libvirt provider."
-                print "              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt"
-                print "              use an ubuntu1604 image which is natively built for libvirt"
-                print "              like yk0/ubuntu-xenial."
-                print "              See https://github.com/CumulusNetworks/topology_converter/tree/master/documentation#vagrant-box-selection"
-                print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607"
-                print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609"
-                exit(1)
-
         #Add attributes to node inventory
         for attribute in node_attr_list:
             #if verbose: print attribute + " = " + node.get(attribute)
@@ -200,6 +186,18 @@ def parse_topology(topology_file):
             if value.startswith('"') or value.startswith("'"): value=value[1:]
             if value.endswith('"') or value.endswith("'"): value=value[:-1]
             inventory[node_name][attribute] = value
+
+        if provider == 'libvirt':
+            if 'os' in inventory[node_name]:
+                if inventory[node_name]['os'] =='boxcutter/ubuntu1604' or inventory[node_name]['os'] =='bento/ubuntu-16.04':
+                    print " ### ERROR: device " + node_name + " -- Incompatible OS for libvirt provider."
+                    print "              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt"
+                    print "              use an ubuntu1604 image which is natively built for libvirt"
+                    print "              like yk0/ubuntu-xenial."
+                    print "              See https://github.com/CumulusNetworks/topology_converter/tree/master/documentation#vagrant-box-selection"
+                    print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607"
+                    print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609"
+                    exit(1)
 
         #Make sure mandatory attributes are present.
         mandatory_attributes=['os',]
