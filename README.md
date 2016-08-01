@@ -33,6 +33,9 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
+## New Features in v4.3.1
+Bugfix to fix regression in handling libvirt topologies.
+
 ## New Features in v4.3.0
 Mostly a bugfix release to smooth rough edges.
 * Added Initial PXEboot for Libvirt Support.
