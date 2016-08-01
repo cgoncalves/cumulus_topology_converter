@@ -281,13 +281,16 @@ EOF
 
     elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
         echo "  INFO: Detected a 3.x Based Release"
-
         echo "  Disabling default remap on Cumulus VX..."
         mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
         echo "### Applying Remap without Reboot..."
         /home/vagrant/apply_udev.py --apply
         echo "### Performing IFRELOAD to Apply any Latent Interface Config..."
-        ifreload -a       
+        ifreload -a 2>&1
+        echo "### Resetting ZTP service..."
+        systemctl stop ztp.service
+        ztp -d 2>&1
+        ztp -R 2>&1
     fi
     echo "### DONE ###"
 else
