@@ -334,9 +334,9 @@ Vagrant.configure("2") do |config|
     device.vm.provider :libvirt do |v|{% if device.pxehost=="True" %}
       v.storage :file, :size => '100G', :type => 'qcow2', :bus => 'sata', :device => 'sda'
       v.boot 'hd'
-      v.boot 'network'{% endif %}{% endif %}
-      v.memory = {{ device.memory }}{% if device.function == 'host' %}
-      v.nic_model_type = 'e1000' {% endif %}
+      v.boot 'network'{% endif %}{% if device.function == 'host' %}
+      v.nic_model_type = 'e1000' {% endif %}{% endif %}
+      v.memory = {{ device.memory }}
     end{% if synced_folder == False %}
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if "ubuntu" in device.os.lower() %}
