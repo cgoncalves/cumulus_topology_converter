@@ -183,11 +183,11 @@ For Libvirt:
 Note: This list cannot be exhaustive because users can define new [passthrough attributes](#passthrough-attributes) and use them with custom templates. These are simply the attributes that the default template (Vagrantfile.j2) has support for.
 
 ####Node(Device) Level Attributes
-* os -- Sets the Operating System (i.e. the vagrant box) to be booted. This can also be provided indirectly when using a "function" as discussed below.
+* os -- Sets the Operating System (i.e. the vagrant box) to be booted. This can also be provided indirectly when using a "function" as discussed in the [Functional Defaults](#functional-defaults) section or in the "function" attribute below.
+* config -- This defines a provisioning script to be called on the VM during the initial boot process. This script applies a basic interface configuration so the machine will be able to be controlled by vagrant after the interface remap. This can be overloaded with whatever additional configuration you may want your devices to have but keep in mind this script will be executed prior to having [interfaces remapped](#interface-remapping) so any configuration that requires the presence of particular interfaces (like running "ifreload -a") will not be able to complete here.
 * memory -- (optional) Sets the amount of memory (in MB) to be provided to the VM.
-* version -- (optional) Sets the version of the Box to be used.
+* version -- (optional) Sets the version of the vagrant box to be used.
 * function -- (optional) Correspondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM. This can specify other attributes like OS and Memory.
-* config -- (optional) This defines a provisioning script to be called on the VM during the initial boot process. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
 * playbook -- (optional) Defines the provisioning playbook to be run on the device. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
 * tunnelip -- (optional) Defines the IP address to be used as a source address for UDP tunnel building in libvirt.
 * pxehost -- (optional) Defines the VM as requiring PXEboot, sets the Network as a boot target alongside the Harddrive of the VM.
