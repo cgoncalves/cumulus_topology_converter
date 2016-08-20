@@ -330,8 +330,9 @@ Vagrant.configure("2") do |config|
       "exit" => [{% for device in devices %}{% if device.function == "exit" %}"{{device.hostname}}",{% endif %}{% endfor %}],
       "spine" => [{% for device in devices %}{% if device.function == "spine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
       "leaf" => [{% for device in devices %}{% if device.function == "leaf" %}"{{device.hostname}}",{% endif %}{% endfor %}],
+      "tor" => [{% for device in devices %}{% if device.function == "tor" %}"{{device.hostname}}",{% endif %}{% endfor %}],
       "host" => [{% for device in devices %}{% if device.function == "host" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "network" => ["oob-switch","exit","spine","leaf"]
+      "network" => ["oob-switch","exit","spine","leaf","tor"]
     }
   end{% endif %}
 

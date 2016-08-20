@@ -172,6 +172,9 @@ def parse_topology(topology_file):
             elif value=='leaf':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="512"
+            elif value=='tor':
+                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory']="512"
             elif value=='host':
                 inventory[node_name]['os']="boxcutter/ubuntu1404"
                 inventory[node_name]['memory']="512"
