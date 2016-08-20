@@ -145,7 +145,7 @@ or if using Libvirt:
 ###Functional Defaults
 Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
 
-**For Functions:** "oob-switch" "exit" "spine" "leaf" "tor"
+**For Functions:** "oob-switch" "exit" "superspine" "spine" "leaf" "tor"
 
 **Functional Defaults are:**
 * os="CumulusCommunity/cumulus-vx"
@@ -259,15 +259,17 @@ Order:
 
 3). function="exit"
 
-4). function="spine"
+4). function="superspine"
 
-5). function="leaf"
+5). function="spine"
 
-6). function="tor"
+6). function="leaf"
 
-7). function="host"
+7). function="tor"
 
-8). function= ANYTHING ELSE
+8). function="host"
+
+9). function= ANYTHING ELSE
 
 The boot order directly relates to the location of the VM's definition in the generated Vagrantfile... VMs at the top of the Vagrantfile will boot first.
 

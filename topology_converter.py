@@ -166,6 +166,9 @@ def parse_topology(topology_file):
             elif value=='exit':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="512"
+            elif value=='superspine':
+                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory']="512"
             elif value=='spine':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="512"
