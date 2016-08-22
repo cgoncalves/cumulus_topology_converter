@@ -1,0 +1,47 @@
+#!/bin/bash
+# Created by Topology-Converter v{{ version }}
+#    https://github.com/cumulusnetworks/topology_converter
+#    using topology data from: {{ topology_file }}
+
+sudo su
+
+echo "################################################"
+echo "  Running Automatic Management Server Setup..."
+echo "################################################"
+echo -e "\n This script assumes an Ubuntu16.04 server."
+
+cat <<EOT > /etc/network/interfaces
+auto lo
+iface lo inet loopback
+
+auto vagrant
+iface vagrant inet dhcp
+
+auto mgmt_net
+iface mgmt_net inet static
+    address {{ devices[0].mgmt_ip }}/24
+EOT
+
+echo " ### Overwriting DNS Server to 8.8.8.8 ###"
+#Required because the installation of DNSmasq throws off DNS momentarily
+echo "nameserver 8.8.8.8" >> /etc/resolvconf/resolv.conf.d/head
+
+echo " ### Updating APT Repository... ###"
+apt-get update -y
+
+echo " ### Installing Packages... ###"
+apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng
+modprobe 8021q
+#modprobe bonding
+sudo su -c 'echo "8021q" >> /etc/modules'
+
+echo " ### Setting Up DHCP ###"
+sudo cp /home/vagrant/dhcpd.conf /etc/dhcp/dhcpd.conf
+sudo cp /home/vagrant/dhcpd.hosts /etc/dhcp/dhcpd.hosts
+sudo chmod 755 -R /etc/dhcp/*
+sudo /etc/init.d/isc-dhcp-server restart
+
+echo " ### Setting Up Hostfile ###"
+#sudo cp /home/hosts /etc/hosts
+sudo chmod 777 -R /var/www/html/*
+
