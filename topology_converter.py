@@ -356,15 +356,20 @@ def parse_topology(topology_file):
             print " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n"
             parser.print_help()
             exit(1)
-
-        if verbose: print " ADDING MGMT-Server, MGMT Switch link"
+        left_mac=mac_fetch(mgmt_switch,"swp1")
+        right_mac=mac_fetch(mgmt_server,"mgmt_net")
+        print "  adding mgmt links:"
+        if provider=="virtualbox":
+            print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,"swp1",left_mac,mgmt_server,"mgmt_net",right_mac,network_string)
+        elif provider=="libvirt":
+            print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,"swp1",left_mac,PortA,mgmt_server,"mgmt_net",PortB,right_mac)
         add_link(inventory,
                  mgmt_switch,
                  mgmt_server,
                  "swp1",
                  "mgmt_net",
-                 mac_fetch(mgmt_switch,"swp1"),
-                 mac_fetch(mgmt_server,"mgmt_net"),
+                 left_mac,
+                 right_mac,
                  network_string,
                  PortA,
                  PortB)
@@ -387,7 +392,6 @@ def parse_topology(topology_file):
             mgmt_switch_swp_val="swp"+str(mgmt_switch_swp)
             left_mac=mac_fetch(mgmt_switch,mgmt_switch_swp_val)
             right_mac=mac_fetch(device,"eth0")
-            print "  adding mgmt link:"
             if provider=="virtualbox":
                 print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,network_string)
             elif provider=="libvirt":
