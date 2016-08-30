@@ -177,7 +177,7 @@ def parse_topology(topology_file):
 
         #Add attributes to node inventory
         for attribute in node_attr_list:
-            #if verbose: print attribute + " = " + node.get(attribute)
+            if verbose: print attribute + " = " + node.get(attribute)
             value=node.get(attribute)
             if value.startswith('"') or value.startswith("'"): value=value[1:]
             if value.endswith('"') or value.endswith("'"): value=value[:-1]
@@ -330,6 +330,8 @@ def parse_topology(topology_file):
                 inventory[mgmt_server]["mgmt_ip"] = "192.168.200.254"
     
         inventory[mgmt_server]["os"] = "boxcutter/ubuntu1604"
+        if provider=="libvirt":
+            inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
         inventory[mgmt_server]["memory"] = "512"
         inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
 
