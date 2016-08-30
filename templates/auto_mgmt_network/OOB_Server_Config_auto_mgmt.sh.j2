@@ -17,9 +17,12 @@ iface lo inet loopback
 auto vagrant
 iface vagrant inet dhcp
 
+{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
+{% for mgmt_ip in mgmt_ips %}
 auto mgmt_net
 iface mgmt_net inet static
-    address {{ devices[0].mgmt_ip }}/24
+    address {{ mgmt_ip }}/24
+{% endfor %}
 EOT
 
 echo " ### Overwriting DNS Server to 8.8.8.8 ###"
@@ -30,18 +33,30 @@ echo " ### Updating APT Repository... ###"
 apt-get update -y
 
 echo " ### Installing Packages... ###"
-apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng
+apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng ansible python-dev sshpass lldpd
+pip install pip --upgrade 
+pip install setuptools --upgrade
+pip install ansible --upgrade
 modprobe 8021q
 #modprobe bonding
-sudo su -c 'echo "8021q" >> /etc/modules'
+echo "8021q" >> /etc/modules
 
 echo " ### Setting Up DHCP ###"
-sudo cp /home/vagrant/dhcpd.conf /etc/dhcp/dhcpd.conf
-sudo cp /home/vagrant/dhcpd.hosts /etc/dhcp/dhcpd.hosts
-sudo chmod 755 -R /etc/dhcp/*
-sudo /etc/init.d/isc-dhcp-server restart
+mv /home/vagrant/dhcpd.conf /etc/dhcp/dhcpd.conf
+mv /home/vagrant/dhcpd.hosts /etc/dhcp/dhcpd.hosts
+chmod 755 -R /etc/dhcp/*
+systemctl restart isc-dhcp-server
 
 echo " ### Setting Up Hostfile ###"
-#sudo cp /home/hosts /etc/hosts
-sudo chmod 777 -R /var/www/html/*
+mv /home/vagrant/hosts /etc/hosts
+
+echo " ### Moving Ansible Hostfile into place ###"
+mkdir -p /etc/ansible
+mv /home/vagrant/ansible_hostfile /etc/ansible/hosts
+
+chmod 777 -R /var/www/html/*
+
+echo "############################################"
+echo "      DONE!"
+echo "############################################"
 

@@ -20,7 +20,7 @@
 [host]{% for device in devices %}{% if device.function == "host" %}
 {{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
 
-[network]
+[network:children]
 oob-switch
 exit
 superspine

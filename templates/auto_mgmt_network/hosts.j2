@@ -3,16 +3,16 @@
 {% if devices[0].function == "oob-server" %}
 127.0.0.1 localhost 
 127.0.1.1 {{ devices[0].hostname }}
-{{ devices[0].mgmt_ip }} {{ devices[0].hostname }} puppet puppet.athena.test
 
+{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
+{% for mgmt_ip in mgmt_ips %}
+{{ mgmt_ip }} {{ devices[0].hostname }} puppet {% endfor %}
 
 {% for device in devices %}{% if device.mgmt_ip is defined %}{% if device.function != "oob-server" %}
 {{ device.mgmt_ip }} {{ device.hostname }}{% endif %}{% endif %}{% endfor %}{% else %}
     #### HOSTS CANNOT BE WRITTEN BECAUSE
             NO DEVICE has FUNCTION="oob-server"
 {% endif %}
-10.4.255.201 dfw-oob-cr1
-10.4.255.202 dfw-oob-cr2
 
 
 # The following lines are desirable for IPv6 capable hosts
