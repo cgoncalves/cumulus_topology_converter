@@ -406,7 +406,7 @@ graph dc1 {
 *Note: this will also create ansible groups in the inventory file based on the functions to which nodes belong. So for instance it is possible to run an ad-hoc command like so $ ansible -m ping leaf*
 
 ###Automatically Building A Management Network
-One of the useful options in Topology Converter that is new as of version v4.5 is the ability to automatically create a management network. The documentation for this feature is extensive and located in its own [Automated Management Network Section](./documentation/auto_mgmt_network).
+One of the useful options in Topology Converter that is new as of version v4.5 is the ability to automatically create a management network. The documentation for this feature is extensive and located in its own [Automated Management Network Section](./auto_mgmt_network).
 
 
 ###PXE Booting Hosts
