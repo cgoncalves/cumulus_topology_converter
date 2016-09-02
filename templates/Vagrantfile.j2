@@ -394,7 +394,12 @@ Vagrant.configure("2") do |config|
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "/home/vagrant/dhcpd.hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/hosts", destination: "/home/vagrant/hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ansible_hostfile", destination: "/home/vagrant/ansible_hostfile"
+{% endif %}
 
+{% if create_mgmt_network and device.function != "oob-server" and device.function != "host"%}
+    #Copy over Topology.dot File
+    device.vm.provision "file", source: "{{ topology_file }}", destination: "/home/vagrant/topology.dot"
+    device.vm.provision :shell , inline: "mv /home/vagrant/topology.dot /etc/ptm.d/topology.dot"
 {% endif %}
 
 {% if device.config is defined %}
