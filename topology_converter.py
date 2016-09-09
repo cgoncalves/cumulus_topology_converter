@@ -317,6 +317,9 @@ def parse_topology(topology_file):
             print "          mgmt_switch: %s" % mgmt_switch
         #Hardcode mgmt server parameters
         if mgmt_server == None:
+            if "oob-mgmt-server" in inventory:
+                print ' ### ERROR: oob-mgmt-server must be set to function = "oob-server"'
+                exit(1)
             inventory["oob-mgmt-server"] = {}
             inventory["oob-mgmt-server"]["function"] = "oob-server"
             inventory["oob-mgmt-server"]["mgmt_ip"] = "192.168.200.254"
@@ -337,6 +340,9 @@ def parse_topology(topology_file):
 
         #Hardcode mgmt switch parameters       
         if mgmt_switch == None:
+            if "oob-mgmt-switch" in inventory:
+                print ' ### ERROR: oob-mgmt-switch must be set to function = "oob-switch"'
+                exit(1)
             inventory["oob-mgmt-switch"] = {}
             inventory["oob-mgmt-switch"]["function"] = "oob-switch"
             inventory["oob-mgmt-switch"]["interfaces"] = {}
@@ -397,7 +403,6 @@ def parse_topology(topology_file):
             
             half1_exists=False
             half2_exists=False
-            link_exists=False
             #Check to see if components of the link already exist
             if "eth0" in inventory[device]['interfaces']:
                 if inventory[device]['interfaces']['eth0']['remote_interface'] != mgmt_switch_swp_val:
