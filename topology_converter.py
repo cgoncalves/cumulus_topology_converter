@@ -349,7 +349,7 @@ def parse_topology(topology_file):
         inventory[mgmt_switch]["memory"] = "512"
         inventory[mgmt_switch]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Switch_Config.sh"
 
-        #Add Links to oob-mgmt-switch
+        #Add Link between oob-mgmt-switch oob-mgmt-server
         net_number+=1
         network_string="net"+str(net_number)
         PortA=str(start_port+net_number)
@@ -394,20 +394,48 @@ def parse_topology(topology_file):
             mgmt_switch_swp_val="swp"+str(mgmt_switch_swp)
             left_mac=mac_fetch(mgmt_switch,mgmt_switch_swp_val)
             right_mac=mac_fetch(device,"eth0")
-            if provider=="virtualbox":
-                print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,network_string)
-            elif provider=="libvirt":
-                print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,left_mac,PortA,device,"eth0",PortB,right_mac)
-            add_link(inventory,
-                     mgmt_switch,
-                     device,
-                     mgmt_switch_swp_val,
-                     "eth0",
-                     left_mac,
-                     right_mac,
-                     network_string,
-                     PortA,
-                     PortB)
+            
+            half1_exists=False
+            half2_exists=False
+            link_exists=False
+            #Check to see if components of the link already exist
+            if "eth0" in inventory[device]['interfaces']:
+                if inventory[device]['interfaces']['eth0']['remote_interface'] != mgmt_switch_swp_val:
+                    print " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val)
+                    exit(1)
+                if inventory[device]['interfaces']['eth0']['remote_device'] != mgmt_switch:
+                    print " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val)
+                    exit(1)
+                if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
+                half1_exists=True
+
+            if mgmt_switch_swp_val in inventory[mgmt_switch]['interfaces']:
+                if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_interface'] != "eth0":
+                    print " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device)
+                    exit(1)
+                if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_device'] != device:
+                    print " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device)
+                    exit(1)
+                if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
+                half2_exists=True
+
+            if not half1_exists and not half2_exists:
+                #Display add message
+                if provider=="virtualbox":
+                    print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,network_string)
+                elif provider=="libvirt":
+                    print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,left_mac,PortA,device,"eth0",PortB,right_mac)
+
+                add_link(inventory,
+                         mgmt_switch,
+                         device,
+                         mgmt_switch_swp_val,
+                         "eth0",
+                         left_mac,
+                         right_mac,
+                         network_string,
+                         PortA,
+                         PortB)
     if verbose:
         print "\n\n ### Inventory Datastructure: ###"
         pp.pprint(inventory)
