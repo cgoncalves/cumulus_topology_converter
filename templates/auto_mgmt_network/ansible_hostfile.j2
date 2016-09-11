@@ -1,0 +1,32 @@
+# Created by Topology-Converter v{{ version }}
+#    https://github.com/cumulusnetworks/topology_converter
+#    using topology data from: {{ topology_file }}
+
+[oob-switch]{% for device in devices %}{% if device.function == "oob-switch" %}
+{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
+
+[exit]{% for device in devices %}{% if device.function == "exit" %}
+{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
+
+[spine]{% for device in devices %}{% if device.function == "spine" %}
+{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
+
+[leaf]{% for device in devices %}{% if device.function == "leaf" %}
+{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
+
+[tor]{% for device in devices %}{% if device.function == "tor" %}
+{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
+
+[host]{% for device in devices %}{% if device.function == "host" %}
+{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
+
+[network:children]
+oob-switch
+exit
+superspine
+spine
+leaf
+tor
+
+
+

@@ -1,0 +1,62 @@
+#!/bin/bash
+# Created by Topology-Converter v{{ version }}
+#    https://github.com/cumulusnetworks/topology_converter
+#    using topology data from: {{ topology_file }}
+
+sudo su
+
+echo "################################################"
+echo "  Running Automatic Management Server Setup..."
+echo "################################################"
+echo -e "\n This script assumes an Ubuntu16.04 server."
+
+cat <<EOT > /etc/network/interfaces
+auto lo
+iface lo inet loopback
+
+auto vagrant
+iface vagrant inet dhcp
+
+{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
+{% for mgmt_ip in mgmt_ips %}
+auto mgmt_net
+iface mgmt_net inet static
+    address {{ mgmt_ip }}/24
+{% endfor %}
+EOT
+
+echo " ### Overwriting DNS Server to 8.8.8.8 ###"
+#Required because the installation of DNSmasq throws off DNS momentarily
+echo "nameserver 8.8.8.8" >> /etc/resolvconf/resolv.conf.d/head
+
+echo " ### Updating APT Repository... ###"
+apt-get update -y
+
+echo " ### Installing Packages... ###"
+apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng ansible python-dev sshpass lldpd libssl-dev
+pip install pip --upgrade 
+pip install setuptools --upgrade
+pip install ansible --upgrade
+modprobe 8021q
+#modprobe bonding
+echo "8021q" >> /etc/modules
+
+echo " ### Setting Up DHCP ###"
+mv /home/vagrant/dhcpd.conf /etc/dhcp/dhcpd.conf
+mv /home/vagrant/dhcpd.hosts /etc/dhcp/dhcpd.hosts
+chmod 755 -R /etc/dhcp/*
+systemctl restart isc-dhcp-server
+
+echo " ### Setting Up Hostfile ###"
+mv /home/vagrant/hosts /etc/hosts
+
+echo " ### Moving Ansible Hostfile into place ###"
+mkdir -p /etc/ansible
+mv /home/vagrant/ansible_hostfile /etc/ansible/hosts
+
+chmod 777 -R /var/www/html/*
+
+echo "############################################"
+echo "      DONE!"
+echo "############################################"
+

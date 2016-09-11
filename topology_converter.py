@@ -9,7 +9,8 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.3.1"
+
+version = "4.5.0"
 
 
 import os
@@ -35,6 +36,8 @@ parser.add_argument('-p','--provider', choices=["libvirt","virtualbox"],
                    help='specifies the provider to be used in the Vagrantfile, script supports "virtualbox" or "libvirt", default is virtualbox.')
 parser.add_argument('-a','--ansible-hostfile', action='store_true',
                    help='When specified, ansible hostfile will be generated from a dummy playbook run.')
+parser.add_argument('-c','--create-mgmt-network', action='store_true',
+                   help='When specified, a mgmt switch and server will be created. A /24 is assumed for the mgmt network. mgmt_ip=X.X.X.X will be read from each device to create a Static DHCP mapping for the oob-mgmt-server.')
 parser.add_argument('-t','--template', action='append', nargs=2,
                    help='Specify an additional jinja2 template and a destination for that file to be rendered to.')
 parser.add_argument('-s','--start-port', type=int,
@@ -50,6 +53,7 @@ args = parser.parse_args()
 #Parse Arguments
 provider="virtualbox"
 generate_ansible_hostfile=False
+create_mgmt_network=False
 verbose=False
 start_port=8000
 port_gap=1000
@@ -62,6 +66,7 @@ if args.topology_file: topology_file=args.topology_file
 if args.verbose: verbose=args.verbose
 if args.provider: provider=args.provider
 if args.ansible_hostfile: generate_ansible_hostfile=True
+if args.create_mgmt_network: create_mgmt_network=True
 if args.template:
     for templatefile,destination in args.template:
         TEMPLATES.append([templatefile,destination])
@@ -136,6 +141,7 @@ def parse_topology(topology_file):
     global provider
     global verbose
     global warning
+    network_functions=['oob-switch','exit','superspine','spine','leaf','tor']
     topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
     inventory = {}
     nodes=topology.get_node_list()
@@ -160,16 +166,7 @@ def parse_topology(topology_file):
             if value=='oob-server':
                 inventory[node_name]['os']="boxcutter/ubuntu1404"
                 inventory[node_name]['memory']="512"
-            elif value=='oob-switch':
-                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="512"
-            elif value=='exit':
-                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="512"
-            elif value=='spine':
-                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="512"
-            elif value=='leaf':
+            elif value in network_functions:
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="512"
             elif value=='host':
@@ -181,7 +178,7 @@ def parse_topology(topology_file):
 
         #Add attributes to node inventory
         for attribute in node_attr_list:
-            #if verbose: print attribute + " = " + node.get(attribute)
+            if verbose: print attribute + " = " + node.get(attribute)
             value=node.get(attribute)
             if value.startswith('"') or value.startswith("'"): value=value[1:]
             if value.endswith('"') or value.endswith("'"): value=value[:-1]
@@ -219,16 +216,16 @@ def parse_topology(topology_file):
 
     net_number = 1
     for edge in edges:
-        if provider=="virtualbox":
-            network_string="net"+str(net_number)
+        #if provider=="virtualbox":
+        network_string="net"+str(net_number)
 
-        elif provider=="libvirt":
-            PortA=str(start_port+net_number)
-            PortB=str(start_port+port_gap+net_number)
-            if int(PortA) > int(start_port+port_gap):
-                print " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n"
-                parser.print_help()
-                exit(1)
+        #elifprovider=="libvirt":
+        PortA=str(start_port+net_number)
+        PortB=str(start_port+port_gap+net_number)
+        if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
+            print " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n"
+            parser.print_help()
+            exit(1)
 
         #Set Devices/interfaces/MAC Addresses
         left_device=edge.get_source().split(":")[0].replace('"','')
@@ -255,50 +252,17 @@ def parse_topology(topology_file):
             print " ### ERROR: device " + right_device + " is referred to in list of edges/links but not defined as a node."
             exit(1)
 
-        #Add left host switchport to inventory
-        if left_interface not in inventory[left_device]['interfaces']:
-            inventory[left_device]['interfaces'][left_interface] = {}
-            inventory[left_device]['interfaces'][left_interface]['mac']=left_mac_address
-            if left_mac_address in mac_map:
-                print " ### ERROR -- MAC Address Collision - tried to use "+left_mac_address+" on "+left_device+":"+left_interface+"\n                 but it is already in use. Check your Topology File!"
-                exit(1)
-            mac_map[left_mac_address]=left_device+","+left_interface
-            if provider=="virtualbox":
-                inventory[left_device]['interfaces'][left_interface]['network'] = network_string
-            elif provider=="libvirt":
-                inventory[left_device]['interfaces'][left_interface]['local_port'] = PortA
-                inventory[left_device]['interfaces'][left_interface]['remote_port'] = PortB
-        else:
-            print " ### ERROR -- Interface " + left_interface + " Already used on device: " + left_device
-            exit(1)
-
-        #Add right host switchport to inventory
-        if right_interface not in inventory[right_device]['interfaces']:
-            inventory[right_device]['interfaces'][right_interface] = {}
-            inventory[right_device]['interfaces'][right_interface]['mac']=right_mac_address
-            if right_mac_address in mac_map:
-                print " ### ERROR -- MAC Address Collision - tried to use "+right_mac_address+" on "+right_device+":"+right_interface+"\n                 but it is already in use. Check your Topology File!"
-                exit(1)
-            mac_map[right_mac_address]=right_device+","+right_interface
-            if provider=="virtualbox":
-                inventory[right_device]['interfaces'][right_interface]['network'] = network_string
-            elif provider=="libvirt":
-                inventory[right_device]['interfaces'][right_interface]['local_port'] = PortB
-                inventory[right_device]['interfaces'][right_interface]['remote_port'] = PortA
-        else:
-            print " ### ERROR -- Interface " + right_interface + " Already used on device: " + right_device
-            exit(1)
-
-        inventory[left_device]['interfaces'][left_interface]['remote_interface'] = right_interface
-        inventory[left_device]['interfaces'][left_interface]['remote_device'] = right_device
-
-        inventory[right_device]['interfaces'][right_interface]['remote_interface'] = left_interface
-        inventory[right_device]['interfaces'][right_interface]['remote_device'] = left_device
-        if provider == 'libvirt':
-            inventory[left_device]['interfaces'][left_interface]['local_ip'] = inventory[left_device]['tunnel_ip']
-            inventory[left_device]['interfaces'][left_interface]['remote_ip'] = inventory[right_device]['tunnel_ip']
-            inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
-            inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
+        #Adds link to inventory datastructure
+        add_link(inventory,
+                 left_device,
+                 right_device,
+                 left_interface,
+                 right_interface,
+                 left_mac_address,
+                 right_mac_address,
+                 network_string,
+                 PortA,
+                 PortB)
 
         #Handle Link-based Passthrough Attributes
         edge_attributes={}
@@ -314,11 +278,10 @@ def parse_topology(topology_file):
                 inventory[left_device]['interfaces'][left_interface][attribute[5:]]=value
             elif attribute.startswith('right_'):
                 inventory[right_device]['interfaces'][right_interface][attribute[6:]]=value
-            else: 
+            else:
                 inventory[left_device]['interfaces'][left_interface][attribute]=value
                 inventory[right_device]['interfaces'][right_interface][attribute]=value
                 #edge_attributes[attribute]=value
-
         net_number += 1
 
     #Remove PXEbootinterface attribute from hosts which are not set to PXEboot=True
@@ -341,11 +304,198 @@ def parse_topology(topology_file):
         if count > 1:
             print " ### ERROR -- Device " + device + " sets pxebootinterface more than once."
             exit(1)
+
+    #Add Mgmt Network Links
+    if create_mgmt_network:
+        mgmt_server=None
+        mgmt_switch=None
+        for device in inventory:
+            if inventory[device]["function"] == "oob-switch": mgmt_switch=device
+            elif inventory[device]["function"] == "oob-server": mgmt_server=device
+
+        if verbose:
+            print " detected mgmt_server: %s" % mgmt_server
+            print "          mgmt_switch: %s" % mgmt_switch
+        #Hardcode mgmt server parameters
+        if mgmt_server == None:
+            if "oob-mgmt-server" in inventory:
+                print ' ### ERROR: oob-mgmt-server must be set to function = "oob-server"'
+                exit(1)
+            inventory["oob-mgmt-server"] = {}
+            inventory["oob-mgmt-server"]["function"] = "oob-server"
+            inventory["oob-mgmt-server"]["mgmt_ip"] = "192.168.200.254"
+            inventory["oob-mgmt-server"]["interfaces"] = {}
+            mgmt_server="oob-mgmt-server"
+            if provider == "libvirt":
+                if 'tunnel_ip' not in inventory["oob-mgmt-server"]: inventory["oob-mgmt-server"]['tunnel_ip']='127.0.0.1'
+
+        else:
+            if "mgmt_ip" not in inventory[mgmt_server]:
+                inventory[mgmt_server]["mgmt_ip"] = "192.168.200.254"
+    
+        inventory[mgmt_server]["os"] = "boxcutter/ubuntu1604"
+        if provider=="libvirt":
+            inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
+        inventory[mgmt_server]["memory"] = "512"
+        inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
+
+        #Hardcode mgmt switch parameters       
+        if mgmt_switch == None:
+            if "oob-mgmt-switch" in inventory:
+                print ' ### ERROR: oob-mgmt-switch must be set to function = "oob-switch"'
+                exit(1)
+            inventory["oob-mgmt-switch"] = {}
+            inventory["oob-mgmt-switch"]["function"] = "oob-switch"
+            inventory["oob-mgmt-switch"]["interfaces"] = {}
+            if provider == "libvirt":
+                if 'tunnel_ip' not in inventory["oob-mgmt-switch"]: inventory["oob-mgmt-switch"]['tunnel_ip']='127.0.0.1'
+
+            mgmt_switch="oob-mgmt-switch"
+
+        inventory[mgmt_switch]["os"] = "CumulusCommunity/cumulus-vx"
+        inventory[mgmt_switch]["memory"] = "512"
+        inventory[mgmt_switch]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Switch_Config.sh"
+
+        #Add Link between oob-mgmt-switch oob-mgmt-server
+        net_number+=1
+        network_string="net"+str(net_number)
+        PortA=str(start_port+net_number)
+        PortB=str(start_port+port_gap+net_number)
+        if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
+            print " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n"
+            parser.print_help()
+            exit(1)
+        left_mac=mac_fetch(mgmt_switch,"swp1")
+        right_mac=mac_fetch(mgmt_server,"mgmt_net")
+        print "  adding mgmt links:"
+        if provider=="virtualbox":
+            print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,"swp1",left_mac,mgmt_server,"mgmt_net",right_mac,network_string)
+        elif provider=="libvirt":
+            print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,"swp1",left_mac,PortA,mgmt_server,"mgmt_net",PortB,right_mac)
+        add_link(inventory,
+                 mgmt_switch,
+                 mgmt_server,
+                 "swp1",
+                 "mgmt_net",
+                 left_mac,
+                 right_mac,
+                 network_string,
+                 PortA,
+                 PortB)
+        mgmt_switch_swp=1
+
+        #Add Eth0 MGMT Link for every device that is is not oob-switch or oob-server
+        for device in inventory:
+            if inventory[device]["function"]=="oob-server" or inventory[device]["function"]=="oob-switch": continue
+            elif inventory[device]["function"] in network_functions:
+                inventory[device]["config"] = "./helper_scripts/auto_mgmt_network/Extra_Switch_Config_auto_mgmt.sh"
+            mgmt_switch_swp+=1
+            net_number+=1
+            network_string="net"+str(net_number)
+            PortA=str(start_port+net_number)
+            PortB=str(start_port+port_gap+net_number)
+            if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
+                print " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n"
+                parser.print_help()
+                exit(1)
+            mgmt_switch_swp_val="swp"+str(mgmt_switch_swp)
+            left_mac=mac_fetch(mgmt_switch,mgmt_switch_swp_val)
+            right_mac=mac_fetch(device,"eth0")
+            
+            half1_exists=False
+            half2_exists=False
+            #Check to see if components of the link already exist
+            if "eth0" in inventory[device]['interfaces']:
+                if inventory[device]['interfaces']['eth0']['remote_interface'] != mgmt_switch_swp_val:
+                    print " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val)
+                    exit(1)
+                if inventory[device]['interfaces']['eth0']['remote_device'] != mgmt_switch:
+                    print " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val)
+                    exit(1)
+                if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
+                half1_exists=True
+
+            if mgmt_switch_swp_val in inventory[mgmt_switch]['interfaces']:
+                if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_interface'] != "eth0":
+                    print " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device)
+                    exit(1)
+                if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_device'] != device:
+                    print " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device)
+                    exit(1)
+                if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
+                half2_exists=True
+
+            if not half1_exists and not half2_exists:
+                #Display add message
+                if provider=="virtualbox":
+                    print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,network_string)
+                elif provider=="libvirt":
+                    print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,left_mac,PortA,device,"eth0",PortB,right_mac)
+
+                add_link(inventory,
+                         mgmt_switch,
+                         device,
+                         mgmt_switch_swp_val,
+                         "eth0",
+                         left_mac,
+                         right_mac,
+                         network_string,
+                         PortA,
+                         PortB)
     if verbose:
         print "\n\n ### Inventory Datastructure: ###"
         pp.pprint(inventory)
 
     return inventory
+
+def add_link(inventory,left_device,right_device,left_interface,right_interface,left_mac_address,right_mac_address,network_string,PortA,PortB):
+    global mac_map
+    #Add a Link to the Inventory for both switches
+
+    #Add left host switchport to inventory
+    if left_interface not in inventory[left_device]['interfaces']:
+        inventory[left_device]['interfaces'][left_interface] = {}
+        inventory[left_device]['interfaces'][left_interface]['mac']=left_mac_address
+        if left_mac_address in mac_map:
+            print " ### ERROR -- MAC Address Collision - tried to use "+left_mac_address+" on "+left_device+":"+left_interface+"\n                 but it is already in use. Check your Topology File!"
+            exit(1)
+        mac_map[left_mac_address]=left_device+","+left_interface
+        if provider=="virtualbox":
+            inventory[left_device]['interfaces'][left_interface]['network'] = network_string
+        elif provider=="libvirt":
+            inventory[left_device]['interfaces'][left_interface]['local_port'] = PortA
+            inventory[left_device]['interfaces'][left_interface]['remote_port'] = PortB
+    else:
+        print " ### ERROR -- Interface " + left_interface + " Already used on device: " + left_device
+        exit(1)
+
+    #Add right host switchport to inventory
+    if right_interface not in inventory[right_device]['interfaces']:
+        inventory[right_device]['interfaces'][right_interface] = {}
+        inventory[right_device]['interfaces'][right_interface]['mac']=right_mac_address
+        if right_mac_address in mac_map:
+            print " ### ERROR -- MAC Address Collision - tried to use "+right_mac_address+" on "+right_device+":"+right_interface+"\n                 but it is already in use. Check your Topology File!"
+            exit(1)
+        mac_map[right_mac_address]=right_device+","+right_interface
+        if provider=="virtualbox":
+            inventory[right_device]['interfaces'][right_interface]['network'] = network_string
+        elif provider=="libvirt":
+            inventory[right_device]['interfaces'][right_interface]['local_port'] = PortB
+            inventory[right_device]['interfaces'][right_interface]['remote_port'] = PortA
+    else:
+        print " ### ERROR -- Interface " + right_interface + " Already used on device: " + right_device
+        exit(1)
+    inventory[left_device]['interfaces'][left_interface]['remote_interface'] = right_interface
+    inventory[left_device]['interfaces'][left_interface]['remote_device'] = right_device
+
+    inventory[right_device]['interfaces'][right_interface]['remote_interface'] = left_interface
+    inventory[right_device]['interfaces'][right_interface]['remote_device'] = left_device
+    if provider == 'libvirt':
+        inventory[left_device]['interfaces'][left_interface]['local_ip'] = inventory[left_device]['tunnel_ip']
+        inventory[left_device]['interfaces'][left_interface]['remote_ip'] = inventory[right_device]['tunnel_ip']
+        inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
+        inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
+
 
 def clean_datastructure(devices):
     #Sort the devices by function
@@ -394,10 +544,12 @@ def getKeyDevices(device):
     if device['function'] == "oob-server": return 1
     elif device['function'] == "oob-switch": return 2
     elif device['function'] == "exit": return 3
-    elif device['function'] == "spine": return 4
-    elif device['function'] == "leaf": return 5
-    elif device['function'] == "host": return 6
-    else: return 7
+    elif device['function'] == "superspine": return 4
+    elif device['function'] == "spine": return 5
+    elif device['function'] == "leaf": return 6
+    elif device['function'] == "tor": return 7
+    elif device['function'] == "host": return 8
+    else: return 9
 
 def sorted_interfaces(interface_dictionary):
     sorted_list=[]
@@ -429,10 +581,55 @@ def populate_data_structures(inventory):
         devices.append(inventory[device])
     return clean_datastructure(devices)
 
-
 def render_jinja_templates(devices):
-    if display_datastructures: print_datastructures(devices)
     if verbose: print "RENDERING JINJA TEMPLATES..."
+
+    #Render the MGMT Network stuff
+    if create_mgmt_network:
+        #Check that MGMT Template Dir exists
+        mgmt_template_dir="./templates/auto_mgmt_network/"
+        if not os.path.isdir("./templates/auto_mgmt_network"):
+            print "ERROR: " + mgmt_template_dir + " does not exist. Cannot populate templates!"
+            exit(1)
+
+        #Scan MGMT Template Dir for .j2 files
+        mgmt_templates=[]
+        for file in os.listdir(mgmt_template_dir):
+            if file.endswith(".j2"): mgmt_templates.append(file)
+        if verbose:
+            print " detected mgmt_templates:"
+            print mgmt_templates
+
+        #Create output location for MGMT template files
+        mgmt_destination_dir="./helper_scripts/auto_mgmt_network/"
+        if not os.path.isdir(mgmt_destination_dir):
+            if verbose: print "Making Directory for MGMT Helper Files: " + mgmt_destination_dir
+            try:
+                os.mkdir(mgmt_destination_dir)
+            except:
+                print "ERROR: Could not create output directory for mgmt template renders!"
+                exit(1)
+
+        #Render out the templates
+        for template in mgmt_templates:
+            render_destination=os.path.join(mgmt_destination_dir,template[0:-3])
+            template_source=os.path.join(mgmt_template_dir,template)
+            if verbose: print "    Rendering: " + template + " --> " + render_destination
+            template = jinja2.Template(open(template_source).read())
+            with open(render_destination, 'w') as outfile:
+                outfile.write(template.render(devices=devices,
+                                              synced_folder=synced_folder,
+                                              provider=provider,
+                                              version=version,
+                                              topology_file=topology_file,
+                                              epoch_time=epoch_time,
+                                              script_storage=script_storage,
+                                              generate_ansible_hostfile=generate_ansible_hostfile,
+                                              create_mgmt_network=create_mgmt_network,)
+                             )
+
+    #Render the main Vagrantfile
+    if display_datastructures: print_datastructures(devices)
     for templatefile,destination in TEMPLATES:
         if verbose: print "    Rendering: " + templatefile + " --> " + destination
         template = jinja2.Template(open(templatefile).read())
@@ -444,9 +641,9 @@ def render_jinja_templates(devices):
                                           topology_file=topology_file,
                                           epoch_time=epoch_time,
                                           script_storage=script_storage,
-                                          generate_ansible_hostfile=generate_ansible_hostfile,)
+                                          generate_ansible_hostfile=generate_ansible_hostfile,
+                                          create_mgmt_network=create_mgmt_network,)
                          )
-
 
 def print_datastructures(devices):
     print "\n\n######################################"
@@ -459,6 +656,7 @@ def print_datastructures(devices):
     print "epoch_time=" + str(epoch_time)
     print "script_storage=" + script_storage
     print "generate_ansible_hostfile=" + str(generate_ansible_hostfile)
+    print "create_mgmt_network=" + str(create_mgmt_network)
     print "devices="
     pp.pprint(devices)
     exit(0)

@@ -93,7 +93,7 @@ def parse_interfaces():
             if verbose: print "interface: " + interface + " driver: " + driver
     return index_map
 
-def delete_rule(mac):
+def delete_rule(search_string):
     if not os.path.isfile(udev_file):
         print "WARNING: delete of rule not possible, udev file does not exist."
         return
@@ -101,12 +101,12 @@ def delete_rule(mac):
     if verbose:
         print ">>> BEFORE"
         show_rules()
-    remove_rule=subprocess.check_output(["sed -i '/"+mac+"/d' " + udev_file],shell=True).split('\n')
+    remove_rule=subprocess.check_output(["sed -i '/"+search_string+"/d' " + udev_file],shell=True).split('\n')
     if verbose:
         print "<<< AFTER"
         show_rules()
 
-def add_rule(mac,interface):
+def add_mac_rule(mac,interface):
     global udev_file
     index_map=parse_interfaces()
     print "  INFO: Adding UDEV Rule: " + mac + " --> " + interface
@@ -119,9 +119,23 @@ def add_rule(mac,interface):
     if verbose:
         print "deleting any matching rules to be safe..."
     delete_rule(mac)
+    delete_rule(interface)
 
     with open(udev_file,"a") as output_file:
         output_file.write("""ACTION=="add", SUBSYSTEM=="net", ATTR{address}==\"""" + mac +"\", NAME=\""+interface+"\", SUBSYSTEMS==\"pci\" \n")
+    if verbose: show_rules()
+
+def add_ifindex_rule(ifindex,interface):
+    global udev_file
+    index_map=parse_interfaces()
+    print "  INFO: Adding UDEV Rule: ifindex " + str(ifindex) + " --> " + interface
+
+    if verbose:
+        print "deleting any matching rules to be safe..."
+    delete_rule(interface)
+
+    with open(udev_file,"a") as output_file:
+        output_file.write("""ACTION=="add", SUBSYSTEM=="net", ATTR{ifindex}==\""""+str(ifindex)+"""\", NAME=\""""+interface+"""\", SUBSYSTEMS=="pci" \n""")
     if verbose: show_rules()
 
 def apply_remap():
@@ -168,8 +182,12 @@ def apply_remap():
 
     global vagrant_name
     if use_vagrant_interface:
-        add_rule(index_map[lowest_index_interface]["mac"], vagrant_name)
+        add_mac_rule(index_map[lowest_index_interface]["mac"], vagrant_name)
         print "          FYI: "+lowest_index_interface + " will become the vagrant interface"
+#        add_ifindex_rule("2", vagrant_name)
+#        for interface in index_map:
+#            if index_map[interface]['index'] == '2':
+#                print "          FYI: "+interface + " will become the vagrant interface"
 
     if just_vagrant: return 0
     for driver in drivers:
@@ -246,7 +264,7 @@ def main():
         for mac in removals: delete_rule(mac)
     elif add == False: apply_remap()
     elif add == True:
-        for mac,interface in additions: add_rule(mac,interface)
+        for mac,interface in additions: add_mac_rule(mac,interface)
 
 
 if __name__ == "__main__":

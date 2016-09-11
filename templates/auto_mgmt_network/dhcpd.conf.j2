@@ -1,0 +1,63 @@
+# /etc/dhcp/dhcpd.conf
+# Created by Topology-Converter v{{ version }}
+#    https://github.com/cumulusnetworks/topology_converter
+#    using topology data from: {{ topology_file }}
+
+ddns-update-style none;
+
+authoritative;
+
+log-facility local7;
+
+option www-server code 72 = ip-address;
+option cumulus-provision-url code 239 = text;
+
+# Create an option namespace called ONIE
+# See: https://github.com/opencomputeproject/onie/wiki/Quick-Start-Guide#advanced-dhcp-2-vivsoonie/onie/
+option space onie code width 1 length width 1;
+# Define the code names and data types within the ONIE namespace
+option onie.installer_url code 1 = text;
+option onie.updater_url   code 2 = text;
+option onie.machine       code 3 = text;
+option onie.arch          code 4 = text;
+option onie.machine_rev   code 5 = text;
+# Package the ONIE namespace into option 125
+option space vivso code width 4 length width 1;
+option vivso.onie code 42623 = encapsulate onie;
+option vivso.iana code 0 = string;
+option op125 code 125 = encapsulate vivso;
+class "onie-vendor-classes" {
+  # Limit the matching to a request we know originated from ONIE
+  match if substring(option vendor-class-identifier, 0, 11) = "onie_vendor";
+  # Required to use VIVSO
+  option vivso.iana 01:01:01;
+
+  ### Example how to match a specific machine type ###
+  #if option onie.machine = "" {
+  #  option onie.installer_url = "";
+  #  option onie.updater_url = "";
+  #}
+}
+
+# OOB Management subnet
+{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
+shared-network LOCAL-NET{
+{% for mgmt_ip in mgmt_ips %}
+{% set octets = mgmt_ip.split('.') -%}
+{% set subnet = octets[0]+"."+octets[1]+"."+octets[2] -%}
+subnet {{ subnet }}.0 netmask 255.255.255.0 {
+  range {{ subnet }}.201 {{ subnet }}.250;
+  option domain-name-servers {{ mgmt_ip }};
+  option domain-name "simulation";
+  default-lease-time 172800;  #2 days
+  max-lease-time 345600;      #4 days
+  option www-server {{ mgmt_ip }};
+  option default-url = "http://{{ mgmt_ip }}/onie-installer";
+  option cumulus-provision-url "http://{{ mgmt_ip }}/ztp_oob.sh";
+  option ntp-servers {{ mgmt_ip }};
+}
+{% endfor %}
+}
+
+#include "/etc/dhcp/dhcpd.pools";
+include "/etc/dhcp/dhcpd.hosts";
