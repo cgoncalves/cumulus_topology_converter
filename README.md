@@ -40,7 +40,6 @@ This is a feature release:
 - Fixed interface driver configuration in host images to use E1000 driver to allow getting link speed to setup bonds.
 - Corrected and enhanced documentation for new features and the "config" attribute.
 
-
 ## Changelog:
 * v4\.5\.0 2016\_09\_10: Added [Create Management Network](documentation/auto_mgmt_network) option, this can automatically add a management network connected to eth0 port of all devices. Also builds a mgmt switch and ubuntu 1604 mgmt server. Added a TOR and SuperSpine function group. Added Group support for Ansible based on functions. Fixed interface driver configuration in host images to use E1000 driver to allow getting link speed to setup bonds. Corrected and enhanced documentation for new features and the "config" attribute.
 * v4\.3\.1 2016\_08\_07: Bugfix to fix regression in handling libvirt topologies. 
