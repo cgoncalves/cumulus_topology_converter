@@ -193,6 +193,7 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 * tunnelip -- (optional) Defines the IP address to be used as a source address for UDP tunnel building in libvirt.
 * pxehost -- (optional) Defines the VM as requiring PXEboot, sets the Network as a boot target alongside the Harddrive of the VM.
 * ubuntu -- (optional -- deprecated in v4.3.0) Used to identify ubuntu14.04 boxes in order to apply special configuration to the /etc/failsafe.conf file to expediate reboots.
+* vagrant -- (optional) This option controls the name of the vagrant interface which vagrant will use to communicate with the guest. The default name of the vagrant interface is set to "vagrant". When using this option it will be necessary to modify the config=./helper_script/xxx.sh" script to reflect the name that has been choosen.
 
 ####Link Level Attributes
 * left_ and right_ -- These arguments can be prepended to any link attribute to map the attribute to a single side of the link.
