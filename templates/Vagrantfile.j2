@@ -353,9 +353,7 @@ Vagrant.configure("2") do |config|
       v.memory = {{ device.memory }}
     end{% if synced_folder == False %}
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
-    device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}{% if "ubuntu" in device.os.lower() %}
-      # Shorten Boot Process - Applies to Ubuntu Only - remove \"Wait for Network\"
-      device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf || true"{% endif %}
+    device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}
 
     # NETWORK INTERFACES{% for link in device.interfaces %}
       # link for {{ link.local_interface }} --> {{ link.remote_device }}:{{ link.remote_interface }}
@@ -386,7 +384,11 @@ Vagrant.configure("2") do |config|
     end{% endif %}
 
     # Fixes "stdin: is not a tty" and "mesg: ttyname failed : Inappropriate ioctl for device"  messages --> https://github.com/mitchellh/vagrant/issues/1673
-    device.vm.provision :shell , inline: "(grep -q 'mesg n' /root/.profile 2>/dev/null && sed -i '/mesg n/d' /root/.profile && echo 'Ignore the previous error, fixing this now...') || true;"
+    device.vm.provision :shell , inline: "(grep -q 'mesg n' /root/.profile 2>/dev/null && sed -i '/mesg n/d' /root/.profile  2>/dev/null && echo 'Ignore the previous error, fixing this now...') || true;"
+
+    {% if "ubuntu" in device.os.lower() -%}
+    # Shorten Boot Process - Applies to Ubuntu Only - remove \"Wait for Network\"
+    device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf || true"{% endif %}
 
 {% if device.function == "oob-server" and create_mgmt_network %}
     #Copy over DHCP files and MGMT Network Files
