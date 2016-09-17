@@ -514,7 +514,7 @@ def clean_datastructure(devices):
 
     if display_datastructures: return devices
     for device in devices:
-        print ">> DEVICE: " + device['hostname']
+        print styles.GREEN + styles.BOLD + ">> DEVICE: " + device['hostname'] + styles.ENDC
         print "     code: " + device['os']
         if 'memory' in device:
             print "     memory: " + device['memory']
@@ -692,9 +692,10 @@ callback_whitelist = profile_tasks""")
 
 def main():
     global mac_map
-    print "\n######################################"
-    print "          Topology Converter"
-    print "######################################"
+    print styles.HEADER + "\n######################################"
+    print styles.HEADER + "          Topology Converter"
+    print styles.HEADER + "######################################"
+    print styles.BLUE + "           originally written by Eric Pulvino"
 
     inventory = parse_topology(topology_file)
 
