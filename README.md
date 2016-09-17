@@ -1,6 +1,12 @@
 # Topology Converter
 =====================
 
+## Coming in v4.5.1
+* Colored output --> DONE
+* Investigate Ruby Vagrantfile Segmentation
+* Investigate removing 2.5.x simulation measures
+
+
 ## See the [Documentation Section](./documentation) for way more information!
 
 
