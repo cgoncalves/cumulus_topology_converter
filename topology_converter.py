@@ -106,10 +106,6 @@ dhcp_mac_file="./dhcp_mac_map"
 #############    Everything Else     #################
 ######################################################
 
-# By default, Vagrant will share the directory with the Vagrantfile to /vagrant on the host
-#  use this knob to enable or disable that ability.
-synced_folder=False
-
 #Hardcoded Variables
 script_storage="./helper_scripts" 
 epoch_time = str(int(time.time()))
