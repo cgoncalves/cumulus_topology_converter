@@ -388,7 +388,7 @@ Vagrant.configure("2") do |config|
 
     {% if "ubuntu" in device.os.lower() -%}
     # Shorten Boot Process - Applies to Ubuntu Only - remove \"Wait for Network\"
-    device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf || true"{% endif %}
+    device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf 2>/dev/null || true"{% endif %}
 
 {% if device.function == "oob-server" and create_mgmt_network %}
     #Copy over DHCP files and MGMT Network Files
