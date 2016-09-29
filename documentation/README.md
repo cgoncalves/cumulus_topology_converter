@@ -237,6 +237,7 @@ When running multiple libvirt simulations at the same time, default UDP port num
                         ignored.
 ```
 
+Vagrantfiles written for the libvirt provider will come up in parallel by default regardless of the order specified in the Vagrantfile this give libvirt an obvious advantage for simulations with many nodes. To avoid this use "vagrant up --provider=libvirt --no-parallel
 
 ###Faked Devices
 In virtual environments it may not always be possible to simulate every single device due to memory restrictions, interest, proprietary OSes etc. Faked devices give Topology Converter a way to know that a device in a topology.dot file is not actually going to be simulated. However when a faked device is connected to a real device the real device MUST create an interface as if the faked device was actually present.
@@ -445,11 +446,9 @@ Documentation coming soon!
  
 ##Miscellaneous Info
 * Boxcutter box images are used whenver simulation is not performed with a VX device. This is to save on the amount of RAM required to run a simulation. For example, a default ubuntu14.04 image from ubuntu consumes ~324mb of RAM at the time of this testing, a default boxcutter/ubuntu1404 image consumes ~124mb of RAM.
-* When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is unknown at this point in time.
-* When simulating with Ubuntu, specify the "ubuntu=True" node-level attribute in the topology file. This will enable proper handling of network interfaces after a reboot.
+* When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is related to Vagrant #7286 https://github.com/mitchellh/vagrant/issues/7286.
 * Point to Multipoint connections are not supported at this time.
-* Vagrantfiles written for the libvirt provider will come up in parallel by default regardless of the order specified in the Vagrantfile this give libvirt an obvious advantage for simulations with many nodes. To avoid this use "vagrant up --provider=libvirt --no-parallel
-* The Virtualbox provider supports a maximum of 36 interfaces of which one is consumed by the vagrant interface giving an end-user 35 interfaces to interconnect in the topology. (I am not aware of any such interface limitation on libvirt)
+* The Virtualbox provider supports a maximum of 36 interfaces of which one is consumed by the vagrant interface giving an end-user 35 interfaces to interconnect in the topology. (I am not aware of any such interface limitation on libvirt although boot time for nodes is severly impacted with interfaces > 150)
 * **Note that topology converter requires that python be installed on whatever system is to be simulated so that interface remapping can be performed via the apply_udev.py script.** This is especially important for devices running Fedora (which does not ship with python installed by default)
 
 
