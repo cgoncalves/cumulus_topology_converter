@@ -102,7 +102,7 @@ In this example, we'll work with the topology_converter / examples / 2switch_1se
 graph dc1 {
  "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="512" config="./helper_scripts/extra_switch_config.sh"]
  "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="512" config="./helper_scripts/extra_switch_config.sh"]
- "server1" [function="host" os="boxcutter/ubuntu1404" memory="512" ubuntu=True config="./helper_scripts/extra_server_config.sh"]
+ "server1" [function="host" os="boxcutter/ubuntu1404" memory="512" config="./helper_scripts/extra_server_config.sh"]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50"
    "server1":"eth1" -- "leaf1":"swp1"
@@ -395,9 +395,9 @@ Similar to the above option, provisioning and configuration can be performed by 
 
 ```
 graph dc1 {
- "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" playbook="main.yml"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" ]
- "server1" [function="host" os="boxcutter/ubuntu1404" memory="400" ubuntu=True ]
+ "leaf1" [function="leaf" config="./helper_scripts/extra_switch_config.sh" playbook="main.yml" ]
+ "leaf2" [function="leaf" config="./helper_scripts/extra_switch_config.sh"]
+ "server1" [function="host" config="./helper_scripts/extra_server_config.sh"]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50"
    "server1":"eth1" -- "leaf1":"swp1"
