@@ -146,7 +146,7 @@ def parse_topology(topology_file):
     global provider
     global verbose
     global warning
-    network_functions=['oob-switch','exit','superspine','spine','leaf','tor']
+    network_functions=['internet','exit','superspine','spine','leaf','tor']
     topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
     inventory = {}
     nodes=topology.get_node_list()
@@ -171,12 +171,18 @@ def parse_topology(topology_file):
             if value=='oob-server':
                 inventory[node_name]['os']="boxcutter/ubuntu1404"
                 inventory[node_name]['memory']="512"
+            if value=='oob-switch':
+                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory']="512"
+                inventory[node_name]["config"] = "./helper_scripts/oob_switch_config.sh"
             elif value in network_functions:
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="512"
+                inventory[node_name]["config"] = "./helper_scripts/extra_switch_config.sh"
             elif value=='host':
                 inventory[node_name]['os']="boxcutter/ubuntu1404"
                 inventory[node_name]['memory']="512"
+                inventory[node_name]["config"] = "./helper_scripts/extra_server_config.sh"
 
         if provider == 'libvirt' and 'pxehost' in node_attr_list:
             if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"
@@ -354,7 +360,7 @@ def parse_topology(topology_file):
 
         inventory[mgmt_switch]["os"] = "CumulusCommunity/cumulus-vx"
         inventory[mgmt_switch]["memory"] = "512"
-        inventory[mgmt_switch]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Switch_Config.sh"
+        inventory[mgmt_switch]["config"] = "./helper_scripts/oob_switch_config.sh"
 
         #Add Link between oob-mgmt-switch oob-mgmt-server
         net_number+=1
@@ -384,7 +390,7 @@ def parse_topology(topology_file):
         for device in inventory:
             if inventory[device]["function"]=="oob-server" or inventory[device]["function"]=="oob-switch": continue
             elif inventory[device]["function"] in network_functions:
-                inventory[device]["config"] = "./helper_scripts/auto_mgmt_network/Extra_Switch_Config_auto_mgmt.sh"
+                inventory[device]["config"] = "./helper_scripts/extra_switch_config.sh"
             mgmt_switch_swp+=1
             net_number+=1
             if int(PortA) > int(start_port+port_gap) and provider=="libvirt":

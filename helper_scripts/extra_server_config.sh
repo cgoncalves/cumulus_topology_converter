@@ -22,8 +22,8 @@ if [ "$?" == "0" ]; then
     echo -e "\n\nauto vagrant" > /etc/network/interfaces.d/vagrant.cfg
     echo -e "iface vagrant inet dhcp\n\n" >> /etc/network/interfaces.d/vagrant.cfg
 
-    #echo -e "\n\nauto eth0" > /etc/network/interfaces.d/eth0.cfg
-    #echo -e "iface eth0 inet dhcp\n\n" >> /etc/network/interfaces.d/eth0.cfg
+    echo -e "\n\nauto eth0" > /etc/network/interfaces.d/eth0.cfg
+    echo -e "iface eth0 inet dhcp\n\n" >> /etc/network/interfaces.d/eth0.cfg
 fi
 
 #Test for Fedora-Based Host
@@ -32,6 +32,7 @@ if [ "$?" == "0" ]; then
     echo -e "note: fedora-based device detected"
     /usr/bin/dnf install python -y
     echo -e "DEVICE=vagrant\nBOOTPROTO=dhcp\nONBOOT=yes" > /etc/sysconfig/network-scripts/ifcfg-vagrant
+    echo -e "DEVICE=eth0\nBOOTPROTO=dhcp\nONBOOT=yes" > /etc/sysconfig/network-scripts/ifcfg-eth0
 fi
 
 
