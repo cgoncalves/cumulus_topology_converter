@@ -227,10 +227,7 @@ def parse_topology(topology_file):
         #elifprovider=="libvirt":
         PortA=str(start_port+net_number)
         PortB=str(start_port+port_gap+net_number)
-        if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
-            print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
-            parser.print_help()
-            exit(1)
+
 
         #Set Devices/interfaces/MAC Addresses
         left_device=edge.get_source().split(":")[0].replace('"','')
@@ -265,9 +262,7 @@ def parse_topology(topology_file):
                  right_interface,
                  left_mac_address,
                  right_mac_address,
-                 network_string,
-                 PortA,
-                 PortB)
+                 net_number,)
 
         #Handle Link-based Passthrough Attributes
         edge_attributes={}
@@ -363,9 +358,7 @@ def parse_topology(topology_file):
 
         #Add Link between oob-mgmt-switch oob-mgmt-server
         net_number+=1
-        network_string="net"+str(net_number)
-        PortA=str(start_port+net_number)
-        PortB=str(start_port+port_gap+net_number)
+
         if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
             print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
             parser.print_help()
@@ -384,9 +377,7 @@ def parse_topology(topology_file):
                  "mgmt_net",
                  left_mac,
                  right_mac,
-                 network_string,
-                 PortA,
-                 PortB)
+                 net_number)
         mgmt_switch_swp=1
 
         #Add Eth0 MGMT Link for every device that is is not oob-switch or oob-server
@@ -396,9 +387,6 @@ def parse_topology(topology_file):
                 inventory[device]["config"] = "./helper_scripts/auto_mgmt_network/Extra_Switch_Config_auto_mgmt.sh"
             mgmt_switch_swp+=1
             net_number+=1
-            network_string="net"+str(net_number)
-            PortA=str(start_port+net_number)
-            PortB=str(start_port+port_gap+net_number)
             if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
                 print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
                 parser.print_help()
@@ -444,16 +432,38 @@ def parse_topology(topology_file):
                          "eth0",
                          left_mac,
                          right_mac,
-                         network_string,
-                         PortA,
-                         PortB)
+                         net_number,)
+    else:
+        #Add Dummy Eth0 Linkt
+        for device in inventory:
+            #Check to see if components of the link already exist
+            if "eth0" not in inventory[device]['interfaces']:
+                net_number+=1
+
+                add_link(inventory,
+                         device,
+                         "NOTHING",
+                         "eth0",
+                         "NOTHING",
+                         mac_fetch(device,"eth0"),
+                         "NOTHING",
+                         net_number,)
+
     if verbose:
         print "\n\n ### Inventory Datastructure: ###"
         pp.pprint(inventory)
 
     return inventory
 
-def add_link(inventory,left_device,right_device,left_interface,right_interface,left_mac_address,right_mac_address,network_string,PortA,PortB):
+def add_link(inventory,left_device,right_device,left_interface,right_interface,left_mac_address,right_mac_address,net_number):
+    network_string="net"+str(net_number)
+    PortA=str(start_port+net_number)
+    PortB=str(start_port+port_gap+net_number)
+    if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
+        print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
+        parser.print_help()
+        exit(1)
+
     global mac_map
     #Add a Link to the Inventory for both switches
 
@@ -475,7 +485,9 @@ def add_link(inventory,left_device,right_device,left_interface,right_interface,l
         exit(1)
 
     #Add right host switchport to inventory
-    if right_interface not in inventory[right_device]['interfaces']:
+    if right_device == "NOTHING":
+        pass
+    elif right_interface not in inventory[right_device]['interfaces']:
         inventory[right_device]['interfaces'][right_interface] = {}
         inventory[right_device]['interfaces'][right_interface]['mac']=right_mac_address
         if right_mac_address in mac_map:
@@ -493,13 +505,19 @@ def add_link(inventory,left_device,right_device,left_interface,right_interface,l
     inventory[left_device]['interfaces'][left_interface]['remote_interface'] = right_interface
     inventory[left_device]['interfaces'][left_interface]['remote_device'] = right_device
 
-    inventory[right_device]['interfaces'][right_interface]['remote_interface'] = left_interface
-    inventory[right_device]['interfaces'][right_interface]['remote_device'] = left_device
+    if right_device != "NOTHING":
+        inventory[right_device]['interfaces'][right_interface]['remote_interface'] = left_interface
+        inventory[right_device]['interfaces'][right_interface]['remote_device'] = left_device
+
     if provider == 'libvirt':
-        inventory[left_device]['interfaces'][left_interface]['local_ip'] = inventory[left_device]['tunnel_ip']
-        inventory[left_device]['interfaces'][left_interface]['remote_ip'] = inventory[right_device]['tunnel_ip']
-        inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
-        inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
+        if right_device != "NOTHING":
+            inventory[left_device]['interfaces'][left_interface]['local_ip'] = inventory[left_device]['tunnel_ip']
+            inventory[left_device]['interfaces'][left_interface]['remote_ip'] = inventory[right_device]['tunnel_ip']
+            inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
+            inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
+        elif right_device == "NOTHING":
+            inventory[left_device]['interfaces'][left_interface]['local_ip'] = "127.0.0.1"
+            inventory[left_device]['interfaces'][left_interface]['remote_ip'] = "127.0.0.1"
 
 
 def clean_datastructure(devices):
