@@ -3,6 +3,7 @@
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
+username="$USER"
 sudo su
 
 echo "################################################"
@@ -42,17 +43,17 @@ modprobe 8021q
 echo "8021q" >> /etc/modules
 
 echo " ### Setting Up DHCP ###"
-mv /home/vagrant/dhcpd.conf /etc/dhcp/dhcpd.conf
-mv /home/vagrant/dhcpd.hosts /etc/dhcp/dhcpd.hosts
+mv /home/$username/dhcpd.conf /etc/dhcp/dhcpd.conf
+mv /home/$username/dhcpd.hosts /etc/dhcp/dhcpd.hosts
 chmod 755 -R /etc/dhcp/*
 systemctl restart isc-dhcp-server
 
 echo " ### Setting Up Hostfile ###"
-mv /home/vagrant/hosts /etc/hosts
+mv /home/$username/hosts /etc/hosts
 
 echo " ### Moving Ansible Hostfile into place ###"
 mkdir -p /etc/ansible
-mv /home/vagrant/ansible_hostfile /etc/ansible/hosts
+mv /home/$username/ansible_hostfile /etc/ansible/hosts
 
 chmod 777 -R /var/www/html/*
 
