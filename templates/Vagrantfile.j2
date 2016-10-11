@@ -164,38 +164,55 @@ Vagrant.configure("2") do |config|
 
     {% if "ubuntu" in device.os.lower() -%}
     # Shorten Boot Process - Applies to Ubuntu Only - remove \"Wait for Network\"
-    device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf 2>/dev/null || true"{% endif %}
+    device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf 2>/dev/null || true"
 
-{% if device.function == "oob-server" and create_mgmt_network %}
+    {% endif -%}
+{% if device.function == "oob-server" and create_mgmt_network -%}
     #Copy over DHCP files and MGMT Network Files
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.conf", destination: "~/dhcpd.conf"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "~/dhcpd.hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/hosts", destination: "~/hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ansible_hostfile", destination: "~/ansible_hostfile"
-{% endif %}
+{% endif -%}
+{% if create_mgmt_network and device.function != "oob-server" and device.function != "host" -%}
 
-{% if create_mgmt_network and device.function != "oob-server" and device.function != "host"%}
     #Copy over Topology.dot File
     device.vm.provision "file", source: "{{ topology_file }}", destination: "~/topology.dot"
     device.vm.provision :shell , inline: "mv ~/topology.dot /etc/ptm.d/topology.dot"
-{% endif %}
 
+{% endif -%}
 {% if device.config is defined %}
     # Run the Config specified in the Node Attributes
     device.vm.provision :shell , path: "{{ device.config }}"
 {% endif %}
 
-    # Install Rules for the interface re-map{% if device.pxehost=="True" and provider == 'libvirt'%}
-    #NO REMAP for LIBVIRT PXE DEVICE{% else %}
-      device.vm.provision "file", source: "{{ script_storage }}/apply_udev.py", destination: "~/apply_udev.py"
-      device.vm.provision :shell , inline: "chmod 755 ~/apply_udev.py"
-{% for link in device.interfaces %}
-      device.vm.provision :shell , inline: "~/apply_udev.py -a {{ link.mac }} {{ link.local_interface }}"{% endfor %}
+    # Install Rules for the interface re-map
+    {% if device.pxehost=="True" and provider == 'libvirt' -%}
+      # NO REMAP for LIBVIRT PXE DEVICE
+    {% elif device.remap=="False" -%}
+      # REMAP Disabled for this node
+    {% else -%}
+    device.vm.provision :shell , privileged: false, :inline => <<-delete_udev_directory
+if [ -d "/etc/udev/rules.d/70-persistent-net.rules" ]; then
+    rm -rfv /etc/udev/rules.d/70-persistent-net.rules &> /dev/null
+fi
+delete_udev_directory
 
-      device.vm.provision :shell , inline: "~/apply_udev.py -vm {% if device.vagrant %}{% if device.vagrant=='eth0' %}-nv{%else%}--vagrant-name={{device.vagrant}}{% endif%}{% endif%}"
-      device.vm.provision :shell , inline: "~/apply_udev.py -s"
-
-{% endif %}{% if device.playbook is defined %}
+{% for link in device.interfaces -%}
+      device.vm.provision :shell , :inline => <<-udev_rule
+echo "  INFO: Adding UDEV Rule: {{ link.mac }} --> {{ link.local_interface }}"
+echo 'ACTION=="add", SUBSYSTEM=="net", ATTR{address}=="{{ link.mac }}", NAME="{{ link.local_interface }}", SUBSYSTEMS=="pci"' >> /etc/udev/rules.d/70-persistent-net.rules
+udev_rule
+     {% endfor %}
+      device.vm.provision :shell , :inline => <<-vagrant_interface_rule
+echo "  INFO: Adding UDEV Rule: Vagrant interface = {% if device.vagrant %}{{ device.vagrant }}{%else%}vagrant{% endif%}"
+echo 'ACTION=="add", SUBSYSTEM=="net", ATTR{ifindex}=="2", NAME="{% if device.vagrant %}{{ device.vagrant }}{%else%}vagrant{% endif%}", SUBSYSTEMS=="pci"' >> /etc/udev/rules.d/70-persistent-net.rules
+echo "#### UDEV Rules (/etc/udev/rules.d/70-persistent-net.rules) ####"
+cat /etc/udev/rules.d/70-persistent-net.rules
+vagrant_interface_rule
+     
+{% endif -%}
+{% if device.playbook is defined -%}
     # Ansible Playbook Configuration
     device.vm.provision "ansible" do |ansible|
           ansible.playbook = "{{ device.playbook }}"
@@ -211,15 +228,16 @@ Vagrant.configure("2") do |config|
             "host" => [{% for device in devices %}{% if device.function == "host" %}"{{device.hostname}}",{% endif %}{% endfor %}],
             "network:children" => ["oob-switch","exit","superspine","spine","leaf","tor"]
           }
-    end{% endif %}
+    end
+{% endif -%}
+{% if device.pxehost=="True" and provider == 'libvirt' -%}
 
-    {% if device.pxehost=="True" and provider == 'libvirt'%}
     #NO REMAP APPLICATION for LIBVIRT PXE DEVICE{% else %}
     # Run Any Platform Specific Code and Apply the interface Re-map 
     #   (may or may not perform a reboot depending on platform)
-    device.vm.provision :shell , :inline => $script{% endif %}
-{#    device.vm.provision :shell , inline: "reboot" #}
-{#      device.vm.provision :shell , inline: "~/apply_udev.py --apply" #}
+    device.vm.provision :shell , :inline => $script
+
+{% endif -%}
   end
 {% endfor %}
 
