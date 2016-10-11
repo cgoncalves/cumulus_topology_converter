@@ -3,13 +3,14 @@
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
-username="$USER"
-sudo su
+username=$(cat /tmp/normal_user)
+
 
 echo "################################################"
 echo "  Running Automatic Management Server Setup..."
 echo "################################################"
 echo -e "\n This script assumes an Ubuntu16.04 server."
+echo " Detected vagrant user is: $username"
 
 cat <<EOT > /etc/network/interfaces
 auto lo
