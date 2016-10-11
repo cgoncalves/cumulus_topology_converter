@@ -174,15 +174,15 @@ def parse_topology(topology_file):
             if value=='oob-switch':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="512"
-                inventory[node_name]["config"] = "./helper_scripts/oob_switch_config.sh"
+                inventory[node_name]['config'] = "./helper_scripts/oob_switch_config.sh"
             elif value in network_functions:
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="512"
-                inventory[node_name]["config"] = "./helper_scripts/extra_switch_config.sh"
+                inventory[node_name]['config'] = "./helper_scripts/extra_switch_config.sh"
             elif value=='host':
                 inventory[node_name]['os']="boxcutter/ubuntu1404"
                 inventory[node_name]['memory']="512"
-                inventory[node_name]["config"] = "./helper_scripts/extra_server_config.sh"
+                inventory[node_name]['config'] = "./helper_scripts/extra_server_config.sh"
 
         if provider == 'libvirt' and 'pxehost' in node_attr_list:
             if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"
@@ -197,7 +197,7 @@ def parse_topology(topology_file):
 
         if provider == 'libvirt':
             if 'os' in inventory[node_name]:
-                if inventory[node_name]['os'] =='boxcutter/ubuntu1604' or inventory[node_name]['os'] =='bento/ubuntu-16.04':
+                if inventory[node_name]['os'] =='boxcutter/ubuntu1604' or inventory[node_name]['os'] =='bento/ubuntu-16.04' or inventory[node_name]['os'] =='ubuntu/xenial64':
                     print styles.FAIL + styles.BOLD + " ### ERROR: device " + node_name + " -- Incompatible OS for libvirt provider."
                     print "              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt"
                     print "              use an ubuntu1604 image which is natively built for libvirt"
@@ -339,7 +339,7 @@ def parse_topology(topology_file):
             if "mgmt_ip" not in inventory[mgmt_server]:
                 inventory[mgmt_server]["mgmt_ip"] = "192.168.200.254"
     
-        inventory[mgmt_server]["os"] = "boxcutter/ubuntu1604"
+        inventory[mgmt_server]["os"] = "ubuntu/xenial64"
         if provider=="libvirt":
             inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
         inventory[mgmt_server]["memory"] = "512"
@@ -427,7 +427,7 @@ def parse_topology(topology_file):
             if not half1_exists and not half2_exists:
                 #Display add message
                 if provider=="virtualbox":
-                    print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,network_string)
+                    print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:net%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,net_number)
                 elif provider=="libvirt":
                     print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,left_mac,PortA,device,"eth0",PortB,right_mac)
 
