@@ -3,8 +3,13 @@
 
 ## Coming in v4.5.1
 * Colored output --> DONE
-* Investigate Ruby Vagrantfile Segmentation
-* Investigate removing 2.5.x simulation measures
+* Investigate removing 2.5.x simulation measures --> DONE
+* Updated for Vagrant v1.8.6 and boxes that can specify their own username/password --> DONE
+* Added knob to avoid the Udev Remapping Operations for other boxes --> DONE
+* Removed dependency on Apply_udev.py --> DONE
+  * Did this to better support COREos and Fedora, cleaner overall solution
+* Investigate Ruby Vagrantfile Segmentation (based on yaml)
+
 
 
 ## See the [Documentation Section](./documentation) for way more information!
