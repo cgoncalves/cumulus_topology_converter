@@ -165,6 +165,7 @@ There are a number of different sources of Vagrant box images however there are 
 
 For Virtualbox:
 * cumuluscommunity/cumulus-vx
+* ubuntu/xenial64
 * boxcutter/ubuntu1404
 * boxcutter/ubuntu1604
 * boxcutter/fedora23
@@ -186,13 +187,15 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 ####Node(Device) Level Attributes
 * os -- Sets the Operating System (i.e. the vagrant box) to be booted. This can also be provided indirectly when using a "function" as discussed in the [Functional Defaults](#functional-defaults) section or in the "function" attribute below.
 * config -- This defines a provisioning script to be called on the VM during the initial boot process. This script applies a basic interface configuration so the machine will be able to be controlled by vagrant after the interface remap. This can be overloaded with whatever additional configuration you may want your devices to have but keep in mind this script will be executed prior to having [interfaces remapped](#interface-remapping) so any configuration that requires the presence of particular interfaces (like running "ifreload -a") will not be able to complete here.
-* memory -- (optional) Sets the amount of memory (in MB) to be provided to the VM.
+* memory -- (mostly optional) Sets the amount of memory (in MB) to be provided to the VM.
 * version -- (optional) Sets the version of the vagrant box to be used.
 * function -- (optional) Correspondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM. This can specify other attributes like OS and Memory.
 * playbook -- (optional) Defines the provisioning playbook to be run on the device. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
 * tunnelip -- (optional) Defines the IP address to be used as a source address for UDP tunnel building in libvirt.
 * pxehost -- (optional) Defines the VM as requiring PXEboot, sets the Network as a boot target alongside the Harddrive of the VM.
+* remap -- (optional) Can be set to False to avoid all udev based remapping operations. For use with other boxes that are not linux based etc.
 * ubuntu -- (optional -- deprecated in v4.3.0) Used to identify ubuntu14.04 boxes in order to apply special configuration to the /etc/failsafe.conf file to expediate reboots.
+* mgmt_ip -- (optional) Used with the [Automated Management Network](./auto_mgmt_network) feature.
 * vagrant -- (optional) This option controls the name of the vagrant interface which vagrant will use to communicate with the guest. The default name of the vagrant interface is set to "vagrant". When using this option it will be necessary to modify the config=./helper_script/xxx.sh" script to reflect the name that has been choosen.
 
 ####Link Level Attributes
