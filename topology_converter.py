@@ -553,7 +553,8 @@ def clean_datastructure(devices):
         if 'function' in devices[i]:
             if devices[i]['function'] == 'fake':
                 indexes_to_remove.append(i)
-    for index in indexes_to_remove: del devices[index]
+    for index in sorted(indexes_to_remove, reverse=True):
+        del devices[index]
     return devices
 
 def remove_generated_files():
