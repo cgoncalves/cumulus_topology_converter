@@ -196,6 +196,7 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 * remap -- (optional) Can be set to False to avoid all udev based remapping operations. For use with other boxes that are not linux based etc.
 * ubuntu -- (optional -- deprecated in v4.3.0) Used to identify ubuntu14.04 boxes in order to apply special configuration to the /etc/failsafe.conf file to expediate reboots.
 * mgmt_ip -- (optional) Used with the [Automated Management Network](./auto_mgmt_network) feature.
+* ssh_port -- (optional) Specify a port (greater than 1024) to be used for SSH to a specific node.
 * vagrant -- (optional) This option controls the name of the vagrant interface which vagrant will use to communicate with the guest. The default name of the vagrant interface is set to "vagrant". When using this option it will be necessary to modify the config=./helper_script/xxx.sh" script to reflect the name that has been choosen.
 
 ####Link Level Attributes

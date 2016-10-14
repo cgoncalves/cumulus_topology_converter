@@ -131,6 +131,10 @@ Vagrant.configure("2") do |config|
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}
 
+{% if device.ssh_port is defined %}    # SSH Port
+    device.vm.network :forwarded_port, guest: 22, host: {{ device.ssh_port }}, host_ip: "0.0.0.0", id: "ssh", auto_correct:true
+{%- endif %}
+
     # NETWORK INTERFACES{% for link in device.interfaces %}
       # link for {{ link.local_interface }} --> {{ link.remote_device }}:{{ link.remote_interface }}
       {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "#{wbid}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
