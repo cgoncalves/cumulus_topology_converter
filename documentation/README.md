@@ -102,7 +102,7 @@ In this example, we'll work with the topology_converter / examples / 2switch_1se
 graph dc1 {
  "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="512" config="./helper_scripts/extra_switch_config.sh"]
  "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="512" config="./helper_scripts/extra_switch_config.sh"]
- "server1" [function="host" os="boxcutter/ubuntu1404" memory="512" ubuntu=True config="./helper_scripts/extra_server_config.sh"]
+ "server1" [function="host" os="boxcutter/ubuntu1404" memory="512" config="./helper_scripts/extra_server_config.sh"]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50"
    "server1":"eth1" -- "leaf1":"swp1"
@@ -165,6 +165,7 @@ There are a number of different sources of Vagrant box images however there are 
 
 For Virtualbox:
 * cumuluscommunity/cumulus-vx
+* ubuntu/xenial64
 * boxcutter/ubuntu1404
 * boxcutter/ubuntu1604
 * boxcutter/fedora23
@@ -186,13 +187,17 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 ####Node(Device) Level Attributes
 * os -- Sets the Operating System (i.e. the vagrant box) to be booted. This can also be provided indirectly when using a "function" as discussed in the [Functional Defaults](#functional-defaults) section or in the "function" attribute below.
 * config -- This defines a provisioning script to be called on the VM during the initial boot process. This script applies a basic interface configuration so the machine will be able to be controlled by vagrant after the interface remap. This can be overloaded with whatever additional configuration you may want your devices to have but keep in mind this script will be executed prior to having [interfaces remapped](#interface-remapping) so any configuration that requires the presence of particular interfaces (like running "ifreload -a") will not be able to complete here.
-* memory -- (optional) Sets the amount of memory (in MB) to be provided to the VM.
+* memory -- (mostly optional) Sets the amount of memory (in MB) to be provided to the VM.
 * version -- (optional) Sets the version of the vagrant box to be used.
 * function -- (optional) Correspondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM. This can specify other attributes like OS and Memory.
 * playbook -- (optional) Defines the provisioning playbook to be run on the device. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
 * tunnelip -- (optional) Defines the IP address to be used as a source address for UDP tunnel building in libvirt.
 * pxehost -- (optional) Defines the VM as requiring PXEboot, sets the Network as a boot target alongside the Harddrive of the VM.
+* remap -- (optional) Can be set to False to avoid all udev based remapping operations. For use with other boxes that are not linux based etc.
 * ubuntu -- (optional -- deprecated in v4.3.0) Used to identify ubuntu14.04 boxes in order to apply special configuration to the /etc/failsafe.conf file to expediate reboots.
+* mgmt_ip -- (optional) Used with the [Automated Management Network](./auto_mgmt_network) feature.
+* ssh_port -- (optional) Specify a port (greater than 1024) to be used for SSH to a specific node.
+* vagrant -- (optional) This option controls the name of the vagrant interface which vagrant will use to communicate with the guest. The default name of the vagrant interface is set to "vagrant". When using this option it will be necessary to modify the config=./helper_script/xxx.sh" script to reflect the name that has been choosen.
 
 ####Link Level Attributes
 * left_ and right_ -- These arguments can be prepended to any link attribute to map the attribute to a single side of the link.
@@ -236,6 +241,7 @@ When running multiple libvirt simulations at the same time, default UDP port num
                         ignored.
 ```
 
+Vagrantfiles written for the libvirt provider will come up in parallel by default regardless of the order specified in the Vagrantfile this give libvirt an obvious advantage for simulations with many nodes. To avoid this use "vagrant up --provider=libvirt --no-parallel
 
 ###Faked Devices
 In virtual environments it may not always be possible to simulate every single device due to memory restrictions, interest, proprietary OSes etc. Faked devices give Topology Converter a way to know that a device in a topology.dot file is not actually going to be simulated. However when a faked device is connected to a real device the real device MUST create an interface as if the faked device was actually present.
@@ -393,9 +399,9 @@ Similar to the above option, provisioning and configuration can be performed by 
 
 ```
 graph dc1 {
- "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" playbook="main.yml"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" ]
- "server1" [function="host" os="boxcutter/ubuntu1404" memory="400" ubuntu=True ]
+ "leaf1" [function="leaf" config="./helper_scripts/extra_switch_config.sh" playbook="main.yml" ]
+ "leaf2" [function="leaf" config="./helper_scripts/extra_switch_config.sh"]
+ "server1" [function="host" config="./helper_scripts/extra_server_config.sh"]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50"
    "server1":"eth1" -- "leaf1":"swp1"
@@ -444,11 +450,9 @@ Documentation coming soon!
  
 ##Miscellaneous Info
 * Boxcutter box images are used whenver simulation is not performed with a VX device. This is to save on the amount of RAM required to run a simulation. For example, a default ubuntu14.04 image from ubuntu consumes ~324mb of RAM at the time of this testing, a default boxcutter/ubuntu1404 image consumes ~124mb of RAM.
-* When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is unknown at this point in time.
-* When simulating with Ubuntu, specify the "ubuntu=True" node-level attribute in the topology file. This will enable proper handling of network interfaces after a reboot.
+* When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is related to Vagrant #7286 https://github.com/mitchellh/vagrant/issues/7286.
 * Point to Multipoint connections are not supported at this time.
-* Vagrantfiles written for the libvirt provider will come up in parallel by default regardless of the order specified in the Vagrantfile this give libvirt an obvious advantage for simulations with many nodes. To avoid this use "vagrant up --provider=libvirt --no-parallel
-* The Virtualbox provider supports a maximum of 36 interfaces of which one is consumed by the vagrant interface giving an end-user 35 interfaces to interconnect in the topology. (I am not aware of any such interface limitation on libvirt)
+* The Virtualbox provider supports a maximum of 36 interfaces of which one is consumed by the vagrant interface giving an end-user 35 interfaces to interconnect in the topology. (I am not aware of any such interface limitation on libvirt although boot time for nodes is severly impacted with interfaces > 150)
 * **Note that topology converter requires that python be installed on whatever system is to be simulated so that interface remapping can be performed via the apply_udev.py script.** This is especially important for devices running Fedora (which does not ship with python installed by default)
 
 

@@ -10,7 +10,7 @@
 #
 #
 
-version = "4.5.0"
+version = "4.5.1"
 
 
 import os
@@ -26,6 +26,16 @@ from operator import itemgetter
 
 pp = pprint.PrettyPrinter(depth=6)
 
+class styles:
+    # Use these for text colors
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    ENDC = '\033[0m'
 
 parser = argparse.ArgumentParser(description='Topology Converter -- Convert topology.dot files into Vagrantfiles')
 parser.add_argument('topology_file',
@@ -72,7 +82,7 @@ if args.template:
         TEMPLATES.append([templatefile,destination])
 for templatefile,destination in TEMPLATES:
     if not os.path.isfile(templatefile):
-        print " ### ERROR: provided template file-- \"" + templatefile + "\" does not exist!"
+        print styles.FAIL + styles.BOLD + " ### ERROR: provided template file-- \"" + templatefile + "\" does not exist!" + styles.ENDC
         exit(1)
 if args.start_port: start_port=args.start_port
 if args.port_gap: port_gap=args.port_gap
@@ -96,10 +106,6 @@ dhcp_mac_file="./dhcp_mac_map"
 ######################################################
 #############    Everything Else     #################
 ######################################################
-
-# By default, Vagrant will share the directory with the Vagrantfile to /vagrant on the host
-#  use this knob to enable or disable that ability.
-synced_folder=False
 
 #Hardcoded Variables
 script_storage="./helper_scripts" 
@@ -141,7 +147,7 @@ def parse_topology(topology_file):
     global provider
     global verbose
     global warning
-    network_functions=['oob-switch','exit','superspine','spine','leaf','tor']
+    network_functions=['internet','exit','superspine','spine','leaf','tor']
     topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
     inventory = {}
     nodes=topology.get_node_list()
@@ -166,12 +172,18 @@ def parse_topology(topology_file):
             if value=='oob-server':
                 inventory[node_name]['os']="boxcutter/ubuntu1404"
                 inventory[node_name]['memory']="512"
+            if value=='oob-switch':
+                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory']="512"
+                inventory[node_name]['config'] = "./helper_scripts/oob_switch_config.sh"
             elif value in network_functions:
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory']="512"
+                inventory[node_name]['config'] = "./helper_scripts/extra_switch_config.sh"
             elif value=='host':
                 inventory[node_name]['os']="boxcutter/ubuntu1404"
                 inventory[node_name]['memory']="512"
+                inventory[node_name]['config'] = "./helper_scripts/extra_server_config.sh"
 
         if provider == 'libvirt' and 'pxehost' in node_attr_list:
             if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"
@@ -186,21 +198,21 @@ def parse_topology(topology_file):
 
         if provider == 'libvirt':
             if 'os' in inventory[node_name]:
-                if inventory[node_name]['os'] =='boxcutter/ubuntu1604' or inventory[node_name]['os'] =='bento/ubuntu-16.04':
-                    print " ### ERROR: device " + node_name + " -- Incompatible OS for libvirt provider."
+                if inventory[node_name]['os'] =='boxcutter/ubuntu1604' or inventory[node_name]['os'] =='bento/ubuntu-16.04' or inventory[node_name]['os'] =='ubuntu/xenial64':
+                    print styles.FAIL + styles.BOLD + " ### ERROR: device " + node_name + " -- Incompatible OS for libvirt provider."
                     print "              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt"
                     print "              use an ubuntu1604 image which is natively built for libvirt"
                     print "              like yk0/ubuntu-xenial."
                     print "              See https://github.com/CumulusNetworks/topology_converter/tree/master/documentation#vagrant-box-selection"
                     print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607"
-                    print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609"
+                    print "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609" + styles.ENDC
                     exit(1)
 
         #Make sure mandatory attributes are present.
         mandatory_attributes=['os',]
         for attribute in mandatory_attributes:
             if attribute not in inventory[node_name]:
-                print " ### ERROR: MANDATORY DEVICE ATTRIBUTE \""+attribute+"\" not specified for "+ node_name
+                print styles.FAIL + styles.BOLD + " ### ERROR: MANDATORY DEVICE ATTRIBUTE \""+attribute+"\" not specified for "+ node_name + styles.ENDC
                 exit(1)
 
         #Extra Massaging for specific attributes.
@@ -208,7 +220,7 @@ def parse_topology(topology_file):
         if 'function' not in inventory[node_name]: inventory[node_name]['function'] = "Unknown"
         if 'memory' in inventory[node_name]:
             if int(inventory[node_name]['memory']) <= 0:
-                print " ### ERROR -- Memory must be greater than 0mb on " + node_name
+                print styles.FAIL + styles.BOLD + " ### ERROR -- Memory must be greater than 0mb on " + node_name + styles.ENDC
                 exit(1)
         if provider == "libvirt":
             if 'tunnel_ip' not in inventory[node_name]: inventory[node_name]['tunnel_ip']='127.0.0.1'
@@ -222,10 +234,7 @@ def parse_topology(topology_file):
         #elifprovider=="libvirt":
         PortA=str(start_port+net_number)
         PortB=str(start_port+port_gap+net_number)
-        if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
-            print " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n"
-            parser.print_help()
-            exit(1)
+
 
         #Set Devices/interfaces/MAC Addresses
         left_device=edge.get_source().split(":")[0].replace('"','')
@@ -246,10 +255,10 @@ def parse_topology(topology_file):
 
         #Check to make sure each device in the edge already exists in inventory
         if left_device not in inventory:
-            print " ### ERROR: device " + left_device + " is referred to in list of edges/links but not defined as a node."
+            print styles.FAIL + styles.BOLD + " ### ERROR: device " + left_device + " is referred to in list of edges/links but not defined as a node." + styles.ENDC
             exit(1)
         if right_device not in inventory:
-            print " ### ERROR: device " + right_device + " is referred to in list of edges/links but not defined as a node."
+            print styles.FAIL + styles.BOLD + " ### ERROR: device " + right_device + " is referred to in list of edges/links but not defined as a node." + styles.ENDC
             exit(1)
 
         #Adds link to inventory datastructure
@@ -260,9 +269,7 @@ def parse_topology(topology_file):
                  right_interface,
                  left_mac_address,
                  right_mac_address,
-                 network_string,
-                 PortA,
-                 PortB)
+                 net_number,)
 
         #Handle Link-based Passthrough Attributes
         edge_attributes={}
@@ -302,7 +309,7 @@ def parse_topology(topology_file):
             if 'pxebootinterface' in inventory[device]['interfaces'][link]:
                 count += 1 #increment count to make sure more than one interface doesn't try to set nicbootprio
         if count > 1:
-            print " ### ERROR -- Device " + device + " sets pxebootinterface more than once."
+            print styles.FAIL + styles.BOLD + " ### ERROR -- Device " + device + " sets pxebootinterface more than once." + styles.ENDC
             exit(1)
 
     #Add Mgmt Network Links
@@ -319,7 +326,7 @@ def parse_topology(topology_file):
         #Hardcode mgmt server parameters
         if mgmt_server == None:
             if "oob-mgmt-server" in inventory:
-                print ' ### ERROR: oob-mgmt-server must be set to function = "oob-server"'
+                print styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-server must be set to function = "oob-server"' + styles.ENDC
                 exit(1)
             inventory["oob-mgmt-server"] = {}
             inventory["oob-mgmt-server"]["function"] = "oob-server"
@@ -333,7 +340,7 @@ def parse_topology(topology_file):
             if "mgmt_ip" not in inventory[mgmt_server]:
                 inventory[mgmt_server]["mgmt_ip"] = "192.168.200.254"
     
-        inventory[mgmt_server]["os"] = "boxcutter/ubuntu1604"
+        inventory[mgmt_server]["os"] = "ubuntu/xenial64"
         if provider=="libvirt":
             inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
         inventory[mgmt_server]["memory"] = "512"
@@ -342,7 +349,7 @@ def parse_topology(topology_file):
         #Hardcode mgmt switch parameters       
         if mgmt_switch == None:
             if "oob-mgmt-switch" in inventory:
-                print ' ### ERROR: oob-mgmt-switch must be set to function = "oob-switch"'
+                print styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-switch must be set to function = "oob-switch"' + styles.ENDC
                 exit(1)
             inventory["oob-mgmt-switch"] = {}
             inventory["oob-mgmt-switch"]["function"] = "oob-switch"
@@ -354,15 +361,13 @@ def parse_topology(topology_file):
 
         inventory[mgmt_switch]["os"] = "CumulusCommunity/cumulus-vx"
         inventory[mgmt_switch]["memory"] = "512"
-        inventory[mgmt_switch]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Switch_Config.sh"
+        inventory[mgmt_switch]["config"] = "./helper_scripts/oob_switch_config.sh"
 
         #Add Link between oob-mgmt-switch oob-mgmt-server
         net_number+=1
-        network_string="net"+str(net_number)
-        PortA=str(start_port+net_number)
-        PortB=str(start_port+port_gap+net_number)
+
         if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
-            print " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n"
+            print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
             parser.print_help()
             exit(1)
         left_mac=mac_fetch(mgmt_switch,"swp1")
@@ -379,23 +384,18 @@ def parse_topology(topology_file):
                  "mgmt_net",
                  left_mac,
                  right_mac,
-                 network_string,
-                 PortA,
-                 PortB)
+                 net_number)
         mgmt_switch_swp=1
 
         #Add Eth0 MGMT Link for every device that is is not oob-switch or oob-server
         for device in inventory:
             if inventory[device]["function"]=="oob-server" or inventory[device]["function"]=="oob-switch": continue
             elif inventory[device]["function"] in network_functions:
-                inventory[device]["config"] = "./helper_scripts/auto_mgmt_network/Extra_Switch_Config_auto_mgmt.sh"
+                inventory[device]["config"] = "./helper_scripts/extra_switch_config.sh"
             mgmt_switch_swp+=1
             net_number+=1
-            network_string="net"+str(net_number)
-            PortA=str(start_port+net_number)
-            PortB=str(start_port+port_gap+net_number)
             if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
-                print " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n"
+                print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
                 parser.print_help()
                 exit(1)
             mgmt_switch_swp_val="swp"+str(mgmt_switch_swp)
@@ -407,20 +407,20 @@ def parse_topology(topology_file):
             #Check to see if components of the link already exist
             if "eth0" in inventory[device]['interfaces']:
                 if inventory[device]['interfaces']['eth0']['remote_interface'] != mgmt_switch_swp_val:
-                    print " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val)
+                    print styles.FAIL + styles.BOLD + " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val) + styles.ENDC
                     exit(1)
                 if inventory[device]['interfaces']['eth0']['remote_device'] != mgmt_switch:
-                    print " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val)
+                    print styles.FAIL + styles.BOLD + " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val) + styles.ENDC
                     exit(1)
                 if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
                 half1_exists=True
 
             if mgmt_switch_swp_val in inventory[mgmt_switch]['interfaces']:
                 if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_interface'] != "eth0":
-                    print " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device)
+                    print styles.FAIL + styles.BOLD + " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device) + styles.ENDC
                     exit(1)
                 if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_device'] != device:
-                    print " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device)
+                    print styles.FAIL + styles.BOLD + " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device) + styles.ENDC
                     exit(1)
                 if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
                 half2_exists=True
@@ -428,7 +428,7 @@ def parse_topology(topology_file):
             if not half1_exists and not half2_exists:
                 #Display add message
                 if provider=="virtualbox":
-                    print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,network_string)
+                    print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:net%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,net_number)
                 elif provider=="libvirt":
                     print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,left_mac,PortA,device,"eth0",PortB,right_mac)
 
@@ -439,16 +439,38 @@ def parse_topology(topology_file):
                          "eth0",
                          left_mac,
                          right_mac,
-                         network_string,
-                         PortA,
-                         PortB)
+                         net_number,)
+    else:
+        #Add Dummy Eth0 Linkt
+        for device in inventory:
+            #Check to see if components of the link already exist
+            if "eth0" not in inventory[device]['interfaces']:
+                net_number+=1
+
+                add_link(inventory,
+                         device,
+                         "NOTHING",
+                         "eth0",
+                         "NOTHING",
+                         mac_fetch(device,"eth0"),
+                         "NOTHING",
+                         net_number,)
+
     if verbose:
         print "\n\n ### Inventory Datastructure: ###"
         pp.pprint(inventory)
 
     return inventory
 
-def add_link(inventory,left_device,right_device,left_interface,right_interface,left_mac_address,right_mac_address,network_string,PortA,PortB):
+def add_link(inventory,left_device,right_device,left_interface,right_interface,left_mac_address,right_mac_address,net_number):
+    network_string="net"+str(net_number)
+    PortA=str(start_port+net_number)
+    PortB=str(start_port+port_gap+net_number)
+    if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
+        print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
+        parser.print_help()
+        exit(1)
+
     global mac_map
     #Add a Link to the Inventory for both switches
 
@@ -457,7 +479,7 @@ def add_link(inventory,left_device,right_device,left_interface,right_interface,l
         inventory[left_device]['interfaces'][left_interface] = {}
         inventory[left_device]['interfaces'][left_interface]['mac']=left_mac_address
         if left_mac_address in mac_map:
-            print " ### ERROR -- MAC Address Collision - tried to use "+left_mac_address+" on "+left_device+":"+left_interface+"\n                 but it is already in use. Check your Topology File!"
+            print styles.FAIL + styles.BOLD + " ### ERROR -- MAC Address Collision - tried to use "+left_mac_address+" on "+left_device+":"+left_interface+"\n                 but it is already in use. Check your Topology File!" + styles.ENDC
             exit(1)
         mac_map[left_mac_address]=left_device+","+left_interface
         if provider=="virtualbox":
@@ -466,15 +488,17 @@ def add_link(inventory,left_device,right_device,left_interface,right_interface,l
             inventory[left_device]['interfaces'][left_interface]['local_port'] = PortA
             inventory[left_device]['interfaces'][left_interface]['remote_port'] = PortB
     else:
-        print " ### ERROR -- Interface " + left_interface + " Already used on device: " + left_device
+        print styles.FAIL + styles.BOLD + " ### ERROR -- Interface " + left_interface + " Already used on device: " + left_device + styles.ENDC
         exit(1)
 
     #Add right host switchport to inventory
-    if right_interface not in inventory[right_device]['interfaces']:
+    if right_device == "NOTHING":
+        pass
+    elif right_interface not in inventory[right_device]['interfaces']:
         inventory[right_device]['interfaces'][right_interface] = {}
         inventory[right_device]['interfaces'][right_interface]['mac']=right_mac_address
         if right_mac_address in mac_map:
-            print " ### ERROR -- MAC Address Collision - tried to use "+right_mac_address+" on "+right_device+":"+right_interface+"\n                 but it is already in use. Check your Topology File!"
+            print styles.FAIL + styles.BOLD + " ### ERROR -- MAC Address Collision - tried to use "+right_mac_address+" on "+right_device+":"+right_interface+"\n                 but it is already in use. Check your Topology File!" + styles.ENDC
             exit(1)
         mac_map[right_mac_address]=right_device+","+right_interface
         if provider=="virtualbox":
@@ -483,18 +507,24 @@ def add_link(inventory,left_device,right_device,left_interface,right_interface,l
             inventory[right_device]['interfaces'][right_interface]['local_port'] = PortB
             inventory[right_device]['interfaces'][right_interface]['remote_port'] = PortA
     else:
-        print " ### ERROR -- Interface " + right_interface + " Already used on device: " + right_device
+        print styles.FAIL + styles.BOLD + " ### ERROR -- Interface " + right_interface + " Already used on device: " + right_device + styles.ENDC
         exit(1)
     inventory[left_device]['interfaces'][left_interface]['remote_interface'] = right_interface
     inventory[left_device]['interfaces'][left_interface]['remote_device'] = right_device
 
-    inventory[right_device]['interfaces'][right_interface]['remote_interface'] = left_interface
-    inventory[right_device]['interfaces'][right_interface]['remote_device'] = left_device
+    if right_device != "NOTHING":
+        inventory[right_device]['interfaces'][right_interface]['remote_interface'] = left_interface
+        inventory[right_device]['interfaces'][right_interface]['remote_device'] = left_device
+
     if provider == 'libvirt':
-        inventory[left_device]['interfaces'][left_interface]['local_ip'] = inventory[left_device]['tunnel_ip']
-        inventory[left_device]['interfaces'][left_interface]['remote_ip'] = inventory[right_device]['tunnel_ip']
-        inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
-        inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
+        if right_device != "NOTHING":
+            inventory[left_device]['interfaces'][left_interface]['local_ip'] = inventory[left_device]['tunnel_ip']
+            inventory[left_device]['interfaces'][left_interface]['remote_ip'] = inventory[right_device]['tunnel_ip']
+            inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
+            inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
+        elif right_device == "NOTHING":
+            inventory[left_device]['interfaces'][left_interface]['local_ip'] = "127.0.0.1"
+            inventory[left_device]['interfaces'][left_interface]['remote_ip'] = "127.0.0.1"
 
 
 def clean_datastructure(devices):
@@ -505,7 +535,7 @@ def clean_datastructure(devices):
 
     if display_datastructures: return devices
     for device in devices:
-        print ">> DEVICE: " + device['hostname']
+        print styles.GREEN + styles.BOLD + ">> DEVICE: " + device['hostname'] + styles.ENDC
         print "     code: " + device['os']
         if 'memory' in device:
             print "     memory: " + device['memory']
@@ -524,7 +554,8 @@ def clean_datastructure(devices):
         if 'function' in devices[i]:
             if devices[i]['function'] == 'fake':
                 indexes_to_remove.append(i)
-    for index in indexes_to_remove: del devices[index]
+    for index in sorted(indexes_to_remove, reverse=True):
+        del devices[index]
     return devices
 
 def remove_generated_files():
@@ -589,7 +620,7 @@ def render_jinja_templates(devices):
         #Check that MGMT Template Dir exists
         mgmt_template_dir="./templates/auto_mgmt_network/"
         if not os.path.isdir("./templates/auto_mgmt_network"):
-            print "ERROR: " + mgmt_template_dir + " does not exist. Cannot populate templates!"
+            print styles.FAIL + styles.BOLD + "ERROR: " + mgmt_template_dir + " does not exist. Cannot populate templates!" + styles.ENDC
             exit(1)
 
         #Scan MGMT Template Dir for .j2 files
@@ -607,7 +638,7 @@ def render_jinja_templates(devices):
             try:
                 os.mkdir(mgmt_destination_dir)
             except:
-                print "ERROR: Could not create output directory for mgmt template renders!"
+                print styles.FAIL + styles.BOLD + "ERROR: Could not create output directory for mgmt template renders!" + styles.ENDC
                 exit(1)
 
         #Render out the templates
@@ -683,9 +714,10 @@ callback_whitelist = profile_tasks""")
 
 def main():
     global mac_map
-    print "\n######################################"
-    print "          Topology Converter"
-    print "######################################"
+    print styles.HEADER + "\n######################################"
+    print styles.HEADER + "          Topology Converter"
+    print styles.HEADER + "######################################"
+    print styles.BLUE + "           originally written by Eric Pulvino"
 
     inventory = parse_topology(topology_file)
 
@@ -701,6 +733,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-    print "\n############\nSUCCESS: Vagrantfile has been generated!\n############"
+    print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: Vagrantfile has been generated!\n############" + styles.ENDC
     print "\nDONE!\n"
 exit(0)

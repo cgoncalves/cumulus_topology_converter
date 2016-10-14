@@ -1,10 +1,11 @@
 #!/bin/bash
 
 echo "#################################"
-echo "  Running Extra_Switch_Config.sh"
+echo "   Running OOB_Switch_Config.sh"
 echo "#################################"
 sudo su
 
+# Config for OOB Switch
 cat <<EOT > /etc/network/interfaces
 auto lo
 iface lo inet loopback
@@ -15,11 +16,22 @@ iface vagrant inet dhcp
 auto eth0
 iface eth0 inet dhcp
 
+% for i in range(1, 49):
+auto swp\${i}
+iface swp\${i}
+% endfor
+
+auto bridge
+iface bridge inet dhcp
+    bridge-ports glob swp1-48 eth0
+    bridge-stp on
+
 EOT
 
-#add line to support bonding inside virtualbox VMs
-#sed -i '/.*iface swp.*/a\    #required for traffic to flow on Bonds in Vbox VMs\n    post-up ip link set $IFACE promisc on' /etc/network/interfaces
 
 echo "#################################"
-echo "   Finished"
+echo "   Finished "
 echo "#################################"
+
+
+
