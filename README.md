@@ -1,16 +1,6 @@
 # Topology Converter
 =====================
 
-## Coming in v4.5.1
-* Colored output --> DONE
-* Investigate removing 2.5.x simulation measures --> DONE
-* Updated for Vagrant v1.8.6 and boxes that can specify their own username/password --> DONE
-* Added knob to avoid the Udev Remapping Operations for other boxes --> DONE
-* Removed dependency on Apply_udev.py --> DONE
-  * Did this to better support COREos and Fedora, cleaner overall solution
-* Investigate Ruby Vagrantfile Segmentation (based on yaml)
-
-
 
 ## See the [Documentation Section](./documentation) for way more information!
 
@@ -43,15 +33,16 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
-## New Features in v4.5.0
-This is a feature release:
-- Added [Create Management Network](documentation/auto_mgmt_network) option, this can automatically add a management network connected to eth0 port of all devices. Also builds a mgmt switch and ubuntu 1604 mgmt server.
-- Added a TOR and SuperSpine function group.
-- Added Group support for Ansible based on functions.
-- Fixed interface driver configuration in host images to use E1000 driver to allow getting link speed to setup bonds.
-- Corrected and enhanced documentation for new features and the "config" attribute.
+## New Features in v4.5.1
+* Added Colored output for easy reading
+* Removed 2.5.x simulation measures
+* Updated for Vagrant v1.8.6 and boxes that can specify their own username/password
+* Added knob to avoid the Udev Remapping Operations for other boxes
+* Removed dependency on Apply_udev.py
+  * Did this to better support COREos and Fedora, cleaner overall solution
 
 ## Changelog:
+* v4\.5\.1 2016\_10\_14: Added Colored output for easy reading. Removed 2.5.x simulation measures. Updated for Vagrant v1.8.6 and boxes that can specify their own username/password. Added knob to avoid the Udev Remapping Operations for other boxes. Removed dependency on Apply_udev.py; did this to better support COREos and Fedora, cleaner overall solution.
 * v4\.5\.0 2016\_09\_10: Added [Create Management Network](documentation/auto_mgmt_network) option, this can automatically add a management network connected to eth0 port of all devices. Also builds a mgmt switch and ubuntu 1604 mgmt server. Added a TOR and SuperSpine function group. Added Group support for Ansible based on functions. Fixed interface driver configuration in host images to use E1000 driver to allow getting link speed to setup bonds. Corrected and enhanced documentation for new features and the "config" attribute.
 * v4\.3\.1 2016\_08\_07: Bugfix to fix regression in handling libvirt topologies. 
 * v4\.3\.0 2016\_07\_29: Added Initial PXEboot for Libvirt Support. Deprecated ubuntu=true node attribute, it is handled automatically now for images with ubuntu in the name. Modified Functional Defaults to use Ubuntu 14.04 as the host default instead of ubuntu1604 for wider compatability. Fixed Broken Synced Folders flag. Fixed /root/.profile error message output on unsupported platforms. Added Error handling for use of incompatible Ubuntu 1604 images with Libvirt. Updated Example topologies for v4.3.0 supported attributes. Removed Reference Topology. Updated Documentation for Libvirt provider options.
@@ -86,5 +77,4 @@ This is a feature release:
 * Enhanced PXEBOOT Libvirt Support -- Blank OS value should be allowed
 * Null Audio Driver
 * os.path.abspath("./helper_scripts")
-* Apply Udev enhancement for IF index of vagrant interface (cleaner)
-
+* Investigate Ruby Vagrantfile Segmentation (based on yaml)
