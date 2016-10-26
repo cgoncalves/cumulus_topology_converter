@@ -90,7 +90,7 @@ Vagrant.configure("2") do |config|
 {% elif provider == 'libvirt' %}
   config.vm.provider :libvirt do |domain|
     # increase nic adapter count to be greater than 8 for all VMs.
-    domain.nic_adapter_count = 55{% endif %}
+    domain.nic_adapter_count = 130{% endif %}
   end
 
 {% if generate_ansible_hostfile == True %}
