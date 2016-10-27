@@ -8,6 +8,9 @@
 [exit]{% for device in devices %}{% if device.function == "exit" %}
 {{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
 
+[superspine]{% for device in devices %}{% if device.function == "superspine" %}
+{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
+
 [spine]{% for device in devices %}{% if device.function == "spine" %}
 {{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus {% endif %}{% endfor %}
 
