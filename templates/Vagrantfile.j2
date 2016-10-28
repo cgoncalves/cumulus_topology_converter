@@ -120,7 +120,7 @@ Vagrant.configure("2") do |config|
     device.vm.box = "{{ device.os }}"{% if device.version %}
     device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
-      v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %} 
+      v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %}
     device.vm.provider :libvirt do |v|{% if device.pxehost=="True" %}
       v.storage :file, :size => '100G', :type => 'qcow2', :bus => 'sata', :device => 'sda'
       v.boot 'hd'
@@ -177,6 +177,7 @@ Vagrant.configure("2") do |config|
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "~/dhcpd.hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/hosts", destination: "~/hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ansible_hostfile", destination: "~/ansible_hostfile"
+    device.vm.provision "file", source: "./helper_scripts/auto_mgmt_network/ztp_oob.sh", destination: "~/ztp_oob.sh"
 {% endif -%}
 {% if create_mgmt_network and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 
@@ -215,7 +216,7 @@ echo 'ACTION=="add", SUBSYSTEM=="net", ATTR{ifindex}=="2", NAME="{% if device.va
 echo "#### UDEV Rules (/etc/udev/rules.d/70-persistent-net.rules) ####"
 cat /etc/udev/rules.d/70-persistent-net.rules
 vagrant_interface_rule
-     
+
 {% endif -%}
 {% if device.playbook is defined -%}
     # Ansible Playbook Configuration
@@ -243,7 +244,7 @@ vagrant_interface_rule
     # NO REMAP APPLICATION Required
 
 {% else -%}
-    # Run Any Platform Specific Code and Apply the interface Re-map 
+    # Run Any Platform Specific Code and Apply the interface Re-map
     #   (may or may not perform a reboot depending on platform)
     device.vm.provision :shell , :inline => $script
 

@@ -36,7 +36,7 @@ apt-get update -y
 
 echo " ### Installing Packages... ###"
 apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng ansible python-dev sshpass lldpd libssl-dev
-pip install pip --upgrade 
+pip install pip --upgrade
 pip install setuptools --upgrade
 pip install ansible --upgrade
 modprobe 8021q
@@ -49,6 +49,9 @@ mv /home/$username/dhcpd.hosts /etc/dhcp/dhcpd.hosts
 chmod 755 -R /etc/dhcp/*
 systemctl restart isc-dhcp-server
 
+echo " ### Setting up ZTP ###"
+mv /home/$username/ztp_oob.sh /var/www/html/ztp_oob.sh
+
 echo " ### Setting Up Hostfile ###"
 mv /home/$username/hosts /etc/hosts
 
@@ -56,9 +59,31 @@ echo " ### Moving Ansible Hostfile into place ###"
 mkdir -p /etc/ansible
 mv /home/$username/ansible_hostfile /etc/ansible/hosts
 
+echo " ###Creating SSH keys for cumulus user ###"
+mkdir /home/cumulus/.ssh
+/usr/bin/ssh-keygen -b 2048 -t rsa -f /home/cumulus/.ssh/id_rsa -q -N ""
+chown cumulus /home/cumulus/.ssh/id_rsa.pub
+chown cumulus /home/cumulus/.ssh/id_rsa
+echo "Copying Key into /var/www/html..."
+cp /home/cumulus/.ssh/id_rsa.pub /var/www/html/authorized_keys
+
 chmod 777 -R /var/www/html/*
+
+echo " ### Creating turnup.sh script ###"
+REPOSITORY="https://github.com/CumulusNetworks/example"
+echo "git clone $REPOSITORY" > /home/cumulus/turnup.sh
+echo " ### creating .gitconfig for cumulus user"
+cat <<EOT >> /home/cumulus/.gitconfig
+[push]
+  default = matching
+[color]
+    ui = true
+[credential]
+    helper = cache --timeout=3600
+[core]
+    editor = vim
+EOT
 
 echo "############################################"
 echo "      DONE!"
 echo "############################################"
-
