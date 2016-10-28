@@ -429,7 +429,7 @@ def parse_topology(topology_file):
                 if provider=="virtualbox":
                     print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:net%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,net_number)
                 elif provider=="libvirt":
-                    print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,left_mac,PortA,device,"eth0",PortB,right_mac)
+                    print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,PortA,left_mac,device,"eth0",PortB,right_mac)
 
                 add_link(inventory,
                          mgmt_switch,
