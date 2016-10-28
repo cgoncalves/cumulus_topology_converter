@@ -69,6 +69,9 @@ cp /home/cumulus/.ssh/id_rsa.pub /var/www/html/authorized_keys
 
 chmod 777 -R /var/www/html/*
 
+echo " ###Making cumulus passwordless sudo ###"
+echo "cumulus ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/10_cumulus
+
 echo " ### Creating turnup.sh script ###"
 REPOSITORY="https://github.com/CumulusNetworks/example"
 echo "git clone $REPOSITORY" > /home/cumulus/turnup.sh
