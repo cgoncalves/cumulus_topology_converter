@@ -43,6 +43,9 @@ modprobe 8021q
 #modprobe bonding
 echo "8021q" >> /etc/modules
 
+echo " ### Creating cumulus user ###"
+useradd -m cumulus
+
 echo " ### Setting Up DHCP ###"
 mv /home/$username/dhcpd.conf /etc/dhcp/dhcpd.conf
 mv /home/$username/dhcpd.hosts /etc/dhcp/dhcpd.hosts
@@ -68,6 +71,9 @@ echo "Copying Key into /var/www/html..."
 cp /home/cumulus/.ssh/id_rsa.pub /var/www/html/authorized_keys
 
 chmod 777 -R /var/www/html/*
+
+echo " ###Making cumulus passwordless sudo ###"
+echo "cumulus ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/10_cumulus
 
 echo " ### Creating turnup.sh script ###"
 REPOSITORY="https://github.com/CumulusNetworks/example"
