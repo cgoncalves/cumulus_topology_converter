@@ -60,6 +60,7 @@ parser.add_argument('--synced-folder', action='store_true',
 args = parser.parse_args()
 
 #Parse Arguments
+network_functions=['internet','exit','superspine','spine','leaf','tor']
 provider="virtualbox"
 generate_ansible_hostfile=False
 create_mgmt_network=False
@@ -146,7 +147,6 @@ def parse_topology(topology_file):
     global provider
     global verbose
     global warning
-    network_functions=['internet','exit','superspine','spine','leaf','tor']
     topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
     inventory = {}
     nodes=topology.get_node_list()
@@ -440,8 +440,9 @@ def parse_topology(topology_file):
                          right_mac,
                          net_number,)
     else:
-        #Add Dummy Eth0 Linkt
+        #Add Dummy Eth0 Link
         for device in inventory:
+            if inventory[device]["function"] not in network_functions: continue
             #Check to see if components of the link already exist
             if "eth0" not in inventory[device]['interfaces']:
                 net_number+=1
