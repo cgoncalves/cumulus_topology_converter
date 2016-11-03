@@ -61,7 +61,7 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
 
     elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
         echo "  INFO: Detected a 3.x Based Release"
-        echo "  Disabling default remap on Cumulus VX..."
+        echo "### Disabling default remap on Cumulus VX..."
         mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
         #echo "### Applying Remap without Reboot..."
         #~/apply_udev.py --apply
@@ -72,6 +72,16 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
         ztp -d 2>&1
         echo "### Resetting ZTP to work next boot..."
         ztp -R 2>&1
+        if [[ $DISTRIB_RELEASE =~ ^3.[1-9].* ]]; then
+            echo "  INFO: Detected 3.1+ Release"
+            echo "### Fixing ONIE DHCP to avoid Vagrant Interface ###"
+            echo "     Note: Installing from ONIE will undo these changes." 
+            mkdir /tmp/foo
+            mount LABEL=ONIE-BOOT /tmp/foo
+            sed -i 's/eth0/eth1/g' /tmp/foo/grub/grub.cfg
+            sed -i 's/eth0/eth1/g' /tmp/foo/onie/grub/grub-extra.cfg
+            umount /tmp/foo
+        fi
         echo "### Rebooting Switch to Apply Remap..."
         reboot
     fi
