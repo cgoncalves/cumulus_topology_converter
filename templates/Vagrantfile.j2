@@ -108,18 +108,14 @@ Vagrant.configure("2") do |config|
   #    ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "./helper_scripts/empty_playbook.yml"
+{% if function_group is defined -%}
     # ANSIBLE GROUPS CONFIGURATION
     ansible.groups = {
-      "oob-server" => [{% for device in devices %}{% if device.function == "oob-server" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "oob-switch" => [{% for device in devices %}{% if device.function == "oob-switch" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "exit" => [{% for device in devices %}{% if device.function == "exit" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "superspine" => [{% for device in devices %}{% if device.function == "superspine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "spine" => [{% for device in devices %}{% if device.function == "spine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "leaf" => [{% for device in devices %}{% if device.function == "leaf" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "tor" => [{% for device in devices %}{% if device.function == "tor" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "host" => [{% for device in devices %}{% if device.function == "host" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "network:children" => ["oob-switch","exit","superspine","spine","leaf","tor"]
+{%- for function in function_group %}
+      "{{ function }}" => [{% for device in function_group[function] %}"{{device}}",{% endfor %}],{% endfor %}
+      "network:children" => [{% for function in function_group%}{% if function in network_functions%}"{{function}}",{% endif %}{% endfor %}]
     }
+{%- endif %}
   end{% endif %}
 
 {% for device in devices %}
@@ -136,7 +132,7 @@ Vagrant.configure("2") do |config|
       v.boot 'hd'
       v.boot 'network'{% endif %}{% if device.function == 'host' %}
       v.nic_model_type = 'e1000' {% endif %}{% endif %}
-      v.memory = {{ device.memory }}
+{% if device.memory is defined %}      v.memory = {{ device.memory }}{% endif %}
     end{% if synced_folder == False %}
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}
@@ -228,24 +224,23 @@ cat /etc/udev/rules.d/70-persistent-net.rules
 vagrant_interface_rule
 
 {% endif -%}
-{% if device.playbook is defined -%}
+
+{% if device.playbook is defined %}
     # Ansible Playbook Configuration
     device.vm.provision "ansible" do |ansible|
           ansible.playbook = "{{ device.playbook }}"
+{%- if function_group is defined %}
           # ANSIBLE GROUPS CONFIGURATION
           ansible.groups = {
-            "oob-server" => [{% for device in devices %}{% if device.function == "oob-server" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "oob-switch" => [{% for device in devices %}{% if device.function == "oob-switch" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "exit" => [{% for device in devices %}{% if device.function == "exit" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "superspine" => [{% for device in devices %}{% if device.function == "superspine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "spine" => [{% for device in devices %}{% if device.function == "spine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "leaf" => [{% for device in devices %}{% if device.function == "leaf" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "tor" => [{% for device in devices %}{% if device.function == "tor" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "host" => [{% for device in devices %}{% if device.function == "host" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "network:children" => ["oob-switch","exit","superspine","spine","leaf","tor"]
+{%- for function in function_group%}
+            "{{ function }}" => [{% for device in function_group[function] %}"{{device}}",{% endfor %}],
+{%- endfor %}
+            "network:children" => [{% for function in function_group%}{% if function in network_functions%}"{{function}}",{% endif %}{% endfor %}]
           }
+{%- endif %}
     end
 {% endif -%}
+
 {% if device.pxehost=="True" and provider == 'libvirt' -%}
 
     # NO REMAP APPLICATION for LIBVIRT PXE DEVICE

@@ -61,6 +61,7 @@ args = parser.parse_args()
 
 #Parse Arguments
 network_functions=['internet','exit','superspine','spine','leaf','tor']
+function_group={}
 provider="virtualbox"
 generate_ansible_hostfile=False
 create_mgmt_network=False
@@ -529,6 +530,7 @@ def add_link(inventory,left_device,right_device,left_interface,right_interface,l
 
 def clean_datastructure(devices):
     #Sort the devices by function
+
     devices.sort(key=getKeyDevices)
     for device in devices:
         device['interfaces']=sorted_interfaces(device['interfaces'])
@@ -606,13 +608,22 @@ def generate_dhcp_mac_file(mac_map):
     mac_file.close()
 
 def populate_data_structures(inventory):
+    global function_group
     devices = []
     for device in inventory:
         inventory[device]['hostname']=device
         devices.append(inventory[device])
-    return clean_datastructure(devices)
+    devices_clean = clean_datastructure(devices)
+
+    #Create Functional Group Map
+    for device in devices_clean:
+        if device['function'] not in function_group: function_group[device['function']] = []
+        function_group[device['function']].append(device['hostname'])
+    
+    return devices_clean
 
 def render_jinja_templates(devices):
+    global function_group
     if verbose: print "RENDERING JINJA TEMPLATES..."
 
     #Render the MGMT Network stuff
@@ -656,7 +667,9 @@ def render_jinja_templates(devices):
                                               epoch_time=epoch_time,
                                               script_storage=script_storage,
                                               generate_ansible_hostfile=generate_ansible_hostfile,
-                                              create_mgmt_network=create_mgmt_network,)
+                                              create_mgmt_network=create_mgmt_network,
+                                              function_group=function_group,
+                                              network_functions=network_functions,)
                              )
 
     #Render the main Vagrantfile
@@ -673,7 +686,9 @@ def render_jinja_templates(devices):
                                           epoch_time=epoch_time,
                                           script_storage=script_storage,
                                           generate_ansible_hostfile=generate_ansible_hostfile,
-                                          create_mgmt_network=create_mgmt_network,)
+                                          create_mgmt_network=create_mgmt_network,
+                                          function_group=function_group,
+                                          network_functions=network_functions,)
                          )
 
 def print_datastructures(devices):
@@ -688,6 +703,10 @@ def print_datastructures(devices):
     print "script_storage=" + script_storage
     print "generate_ansible_hostfile=" + str(generate_ansible_hostfile)
     print "create_mgmt_network=" + str(create_mgmt_network)
+    print "function_group="
+    pp.pprint(function_group)
+    print "network_functions="
+    pp.pprint(network_functions)
     print "devices="
     pp.pprint(devices)
     exit(0)
