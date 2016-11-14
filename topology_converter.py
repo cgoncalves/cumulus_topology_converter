@@ -343,7 +343,8 @@ def parse_topology(topology_file):
         inventory[mgmt_server]["os"] = "ubuntu/xenial64"
         if provider=="libvirt":
             inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
-        inventory[mgmt_server]["memory"] = "512"
+        if "memory" not in inventory[mgmt_server]:
+            inventory[mgmt_server]["memory"] = "512"
         inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
 
         #Hardcode mgmt switch parameters       
