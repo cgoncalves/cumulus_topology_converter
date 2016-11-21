@@ -6,7 +6,7 @@
 
 {% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
 {% for mgmt_ip in mgmt_ips %}
-{{ mgmt_ip }} {{ devices[0].hostname }} puppet {% endfor %}
+{{ mgmt_ip }} {{ devices[0].hostname }} {% endfor %}
 
 {% for device in devices %}{% if device.mgmt_ip is defined %}{% if device.function != "oob-server" %}
 {{ device.mgmt_ip }} {{ device.hostname }}{% endif %}{% endif %}{% endfor %}{% else %}
