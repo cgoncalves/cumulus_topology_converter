@@ -531,7 +531,6 @@ def add_link(inventory,left_device,right_device,left_interface,right_interface,l
 
 def clean_datastructure(devices):
     #Sort the devices by function
-
     devices.sort(key=getKeyDevices)
     for device in devices:
         device['interfaces']=sorted_interfaces(device['interfaces'])
@@ -728,7 +727,8 @@ def generate_ansible_files():
 inventory = ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 hostfile= ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 host_key_checking=False
-callback_whitelist = profile_tasks""")
+callback_whitelist = profile_tasks
+jinja2_extensions=jinja2.ext.do""")
 
 
 
