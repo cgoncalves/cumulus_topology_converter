@@ -35,7 +35,7 @@ echo " ### Updating APT Repository... ###"
 apt-get update -y
 
 echo " ### Installing Packages... ###"
-apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng ansible python-dev sshpass lldpd libssl-dev
+apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng ansible python-dev sshpass lldpd libssl-dev libffi-dev
 pip install pip --upgrade
 pip install setuptools --upgrade
 pip install ansible --upgrade
@@ -67,6 +67,8 @@ mkdir /home/cumulus/.ssh
 /usr/bin/ssh-keygen -b 2048 -t rsa -f /home/cumulus/.ssh/id_rsa -q -N ""
 chown cumulus /home/cumulus/.ssh/id_rsa.pub
 chown cumulus /home/cumulus/.ssh/id_rsa
+chown -R cumulus:cumulus /home/cumulus/.ssh
+
 echo "Copying Key into /var/www/html..."
 cp /home/cumulus/.ssh/id_rsa.pub /var/www/html/authorized_keys
 
