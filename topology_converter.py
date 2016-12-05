@@ -73,6 +73,7 @@ display_datastructures=False
 VAGRANTFILE='Vagrantfile'
 VAGRANTFILE_template='templates/Vagrantfile.j2'
 TEMPLATES=[[VAGRANTFILE_template,VAGRANTFILE]]
+arg_string=" ".join(sys.argv)
 if args.topology_file: topology_file=args.topology_file
 if args.verbose: verbose=args.verbose
 if args.provider: provider=args.provider
@@ -664,6 +665,7 @@ def render_jinja_templates(devices):
                                               provider=provider,
                                               version=version,
                                               topology_file=topology_file,
+                                              arg_string=arg_string,
                                               epoch_time=epoch_time,
                                               script_storage=script_storage,
                                               generate_ansible_hostfile=generate_ansible_hostfile,
@@ -683,6 +685,7 @@ def render_jinja_templates(devices):
                                           provider=provider,
                                           version=version,
                                           topology_file=topology_file,
+                                          arg_string=arg_string,
                                           epoch_time=epoch_time,
                                           script_storage=script_storage,
                                           generate_ansible_hostfile=generate_ansible_hostfile,
@@ -699,6 +702,7 @@ def print_datastructures(devices):
     print "synced_folder=" + str(synced_folder)
     print "version=" + str(version)
     print "topology_file=" + topology_file
+    print "arg_string=" + arg_string
     print "epoch_time=" + str(epoch_time)
     print "script_storage=" + script_storage
     print "generate_ansible_hostfile=" + str(generate_ansible_hostfile)
