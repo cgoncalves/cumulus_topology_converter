@@ -1,9 +1,47 @@
+{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
 #!/bin/bash
 # Created by Topology-Converter v{{ version }}
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
+#######################
+#       KNOBS
+#######################
+
+REPOSITORY="https://github.com/CumulusNetworks/example"
+REPONAME="example"
+
+#Install Automation Tools
+puppet=0
+ansible=0
+
+#######################
+
 username=$(cat /tmp/normal_user)
+
+install_puppet(){
+    echo " ### Adding Puppet Repositories... ###"
+    wget https://apt.puppetlabs.com/puppetlabs-release-pc1-xenial.deb
+    dpkg -i puppetlabs-release-pc1-xenial.deb
+    echo " ### Updating APT Repository... ###"
+    apt-get update -y
+    echo " ### Installing Puppet ###"
+    apt-get install puppetserver -qy
+    echo " ### Setting up Puppet ###"
+    rm -rf /etc/puppetlabs/code/environments/production
+    sed -i 's/-Xms2g/-Xms512m/g' /etc/default/puppetserver
+    sed -i 's/-Xmx2g/-Xmx512m/g' /etc/default/puppetserver
+    echo "*" > /etc/puppetlabs/puppet/autosign.conf
+    sed -i 's/{{ mgmt_ips[0] }}/{{ mgmt_ips[0] }} puppet /g'>> /etc/hosts
+}
+
+install_ansible(){
+    echo " ### Installing Ansible... ###"
+    apt-get install -qy ansible sshpass libssh-dev python-dev
+    pip install pip --upgrade
+    pip install setuptools --upgrade
+    pip install ansible --upgrade
+}
 
 
 echo "################################################"
@@ -19,7 +57,6 @@ iface lo inet loopback
 auto vagrant
 iface vagrant inet dhcp
 
-{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
 {% for mgmt_ip in mgmt_ips %}
 auto mgmt_net
 iface mgmt_net inet static
@@ -35,13 +72,38 @@ echo " ### Updating APT Repository... ###"
 apt-get update -y
 
 echo " ### Installing Packages... ###"
-apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng ansible python-dev sshpass lldpd libssl-dev libffi-dev
-pip install pip --upgrade
-pip install setuptools --upgrade
-pip install ansible --upgrade
+apt-get install -y htop isc-dhcp-server tree apache2 vlan git python-pip dnsmasq ifenslave apt-cacher-ng lldpd ntp
 modprobe 8021q
 #modprobe bonding
 echo "8021q" >> /etc/modules
+
+if [ $puppet -eq 1 ]; then
+    echo " ### Installing Puppet ### "
+    install_puppet
+fi
+if [ $ansible -eq 1 ]; then
+    echo " ### Installing Ansible ### "
+    install_ansible
+fi
+
+echo " ### Configure NTP... ###"
+echo <<EOT >> /etc/ntp.conf
+driftfile /var/lib/ntp/ntp.drift
+statistics loopstats peerstats clockstats
+filegen loopstats file loopstats type day enable
+filegen peerstats file peerstats type day enable
+filegen clockstats file clockstats type day enable
+
+server clock.rdu.cumulusnetworks.com
+
+# By default, exchange time with everybody, but don't allow configuration.
+restrict -4 default kod notrap nomodify nopeer noquery
+restrict -6 default kod notrap nomodify nopeer noquery
+
+# Local users may interrogate the ntp server more closely.
+restrict 127.0.0.1
+restrict ::1
+EOT
 
 echo " ### Creating cumulus user ###"
 useradd -m cumulus
@@ -77,9 +139,35 @@ chmod 777 -R /var/www/html/*
 echo " ###Making cumulus passwordless sudo ###"
 echo "cumulus ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/10_cumulus
 
+echo ' ### Setting UP NAT and Routing on MGMT server... ### '
+echo -e '#!/bin/bash \n/sbin/iptables -t nat -A POSTROUTING -o vagrant -j MASQUERADE' > /etc/rc.local
+echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/98-ipforward.conf
+
+
 echo " ### Creating turnup.sh script ###"
-REPOSITORY="https://github.com/CumulusNetworks/example"
-echo "git clone $REPOSITORY" > /home/cumulus/turnup.sh
+    cat <<EOT >> /home/cumulus/turnup.sh
+git clone $REPOSITORY
+EOT
+
+if [ $puppet -eq 1 ]; then
+    cat <<EOT >> /home/cumulus/turnup.sh
+sudo rm -rf /etc/puppetlabs/code/environments/production
+sudo ln -s  /home/cumulus/$REPONAME/puppet/ /etc/puppetlabs/code/environments/production
+sudo /opt/puppetlabs/bin/puppet module install puppetlabs-stdlib
+#sudo bash -c 'echo "certname = {{ mgmt_ips[0] }}" >> /etc/puppetlabs/puppet/puppet.conf'
+echo " ### STARTING PUPPETSERVER... ###"
+echo "     (this may take a while 30 secs or so...)"
+sudo systemctl restart puppetserver.service  
+EOT
+fi
+if [ $ansible -eq 1 ]; then
+    cat <<EOT >> /home/cumulus/turnup.sh
+#Add any ansible specific steps here
+EOT
+fi
+
+chmod +x /home/cumulus/turnup.sh
+
 echo " ### creating .gitconfig for cumulus user"
 cat <<EOT >> /home/cumulus/.gitconfig
 [push]
