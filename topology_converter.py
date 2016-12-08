@@ -10,7 +10,7 @@
 #
 #
 
-version = "4.5.1"
+version = "4.5.2"
 
 
 import os
@@ -61,6 +61,8 @@ parser.add_argument('--synced-folder', action='store_true',
 args = parser.parse_args()
 
 #Parse Arguments
+network_functions=['internet','exit','superspine','spine','leaf','tor']
+function_group={}
 provider="virtualbox"
 generate_ansible_hostfile=False
 create_mgmt_network=False
@@ -72,6 +74,7 @@ display_datastructures=False
 VAGRANTFILE='Vagrantfile'
 VAGRANTFILE_template='templates/Vagrantfile.j2'
 TEMPLATES=[[VAGRANTFILE_template,VAGRANTFILE]]
+arg_string=" ".join(sys.argv)
 if args.topology_file: topology_file=args.topology_file
 if args.verbose: verbose=args.verbose
 if args.provider: provider=args.provider
@@ -147,7 +150,6 @@ def parse_topology(topology_file):
     global provider
     global verbose
     global warning
-    network_functions=['internet','exit','superspine','spine','leaf','tor']
     topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
     inventory = {}
     nodes=topology.get_node_list()
@@ -343,7 +345,8 @@ def parse_topology(topology_file):
         inventory[mgmt_server]["os"] = "ubuntu/xenial64"
         if provider=="libvirt":
             inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
-        inventory[mgmt_server]["memory"] = "512"
+        if "memory" not in inventory[mgmt_server]:
+            inventory[mgmt_server]["memory"] = "512"
         inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
 
         #Hardcode mgmt switch parameters       
@@ -430,7 +433,7 @@ def parse_topology(topology_file):
                 if provider=="virtualbox":
                     print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:net%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,net_number)
                 elif provider=="libvirt":
-                    print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,left_mac,PortA,device,"eth0",PortB,right_mac)
+                    print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,PortA,left_mac,device,"eth0",PortB,right_mac)
 
                 add_link(inventory,
                          mgmt_switch,
@@ -441,8 +444,9 @@ def parse_topology(topology_file):
                          right_mac,
                          net_number,)
     else:
-        #Add Dummy Eth0 Linkt
+        #Add Dummy Eth0 Link
         for device in inventory:
+            if inventory[device]["function"] not in network_functions: continue
             #Check to see if components of the link already exist
             if "eth0" not in inventory[device]['interfaces']:
                 net_number+=1
@@ -606,13 +610,22 @@ def generate_dhcp_mac_file(mac_map):
     mac_file.close()
 
 def populate_data_structures(inventory):
+    global function_group
     devices = []
     for device in inventory:
         inventory[device]['hostname']=device
         devices.append(inventory[device])
-    return clean_datastructure(devices)
+    devices_clean = clean_datastructure(devices)
+
+    #Create Functional Group Map
+    for device in devices_clean:
+        if device['function'] not in function_group: function_group[device['function']] = []
+        function_group[device['function']].append(device['hostname'])
+    
+    return devices_clean
 
 def render_jinja_templates(devices):
+    global function_group
     if verbose: print "RENDERING JINJA TEMPLATES..."
 
     #Render the MGMT Network stuff
@@ -653,10 +666,13 @@ def render_jinja_templates(devices):
                                               provider=provider,
                                               version=version,
                                               topology_file=topology_file,
+                                              arg_string=arg_string,
                                               epoch_time=epoch_time,
                                               script_storage=script_storage,
                                               generate_ansible_hostfile=generate_ansible_hostfile,
-                                              create_mgmt_network=create_mgmt_network,)
+                                              create_mgmt_network=create_mgmt_network,
+                                              function_group=function_group,
+                                              network_functions=network_functions,)
                              )
 
     #Render the main Vagrantfile
@@ -670,10 +686,13 @@ def render_jinja_templates(devices):
                                           provider=provider,
                                           version=version,
                                           topology_file=topology_file,
+                                          arg_string=arg_string,
                                           epoch_time=epoch_time,
                                           script_storage=script_storage,
                                           generate_ansible_hostfile=generate_ansible_hostfile,
-                                          create_mgmt_network=create_mgmt_network,)
+                                          create_mgmt_network=create_mgmt_network,
+                                          function_group=function_group,
+                                          network_functions=network_functions,)
                          )
 
 def print_datastructures(devices):
@@ -684,10 +703,15 @@ def print_datastructures(devices):
     print "synced_folder=" + str(synced_folder)
     print "version=" + str(version)
     print "topology_file=" + topology_file
+    print "arg_string=" + arg_string
     print "epoch_time=" + str(epoch_time)
     print "script_storage=" + script_storage
     print "generate_ansible_hostfile=" + str(generate_ansible_hostfile)
     print "create_mgmt_network=" + str(create_mgmt_network)
+    print "function_group="
+    pp.pprint(function_group)
+    print "network_functions="
+    pp.pprint(network_functions)
     print "devices="
     pp.pprint(devices)
     exit(0)
@@ -708,7 +732,8 @@ def generate_ansible_files():
 inventory = ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 hostfile= ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 host_key_checking=False
-callback_whitelist = profile_tasks""")
+callback_whitelist = profile_tasks
+jinja2_extensions=jinja2.ext.do""")
 
 
 

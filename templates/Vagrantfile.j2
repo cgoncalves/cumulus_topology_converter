@@ -1,6 +1,7 @@
 # Created by Topology-Converter v{{ version }}
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
+#    built with the following args: {{ arg_string }}
 #
 #    NOTE: in order to use this Vagrantfile you will need:
 #       -Vagrant(v1.8.1+) installed: http://www.vagrantup.com/downloads
@@ -16,6 +17,8 @@
 
 #Set the default provider to libvirt in the case they forget --provider=libvirt or if someone destroys a machine it reverts to virtualbox
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
+
+Vagrant.require_version ">= 1.8.6", "< 1.8.7"
 
 # Check required plugins
 REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt vagrant-mutate)
@@ -61,7 +64,7 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
 
     elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
         echo "  INFO: Detected a 3.x Based Release"
-        echo "  Disabling default remap on Cumulus VX..."
+        echo "### Disabling default remap on Cumulus VX..."
         mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
         #echo "### Applying Remap without Reboot..."
         #~/apply_udev.py --apply
@@ -72,14 +75,21 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
         ztp -d 2>&1
         echo "### Resetting ZTP to work next boot..."
         ztp -R 2>&1
-        echo "### Rebooting Switch to Apply Remap..."
-        reboot
+        if [[ $DISTRIB_RELEASE =~ ^3.[1-9].* ]]; then
+            echo "  INFO: Detected 3.1+ Release"
+            echo "### Fixing ONIE DHCP to avoid Vagrant Interface ###"
+            echo "     Note: Installing from ONIE will undo these changes." 
+            mkdir /tmp/foo
+            mount LABEL=ONIE-BOOT /tmp/foo
+            sed -i 's/eth0/eth1/g' /tmp/foo/grub/grub.cfg
+            sed -i 's/eth0/eth1/g' /tmp/foo/onie/grub/grub-extra.cfg
+            umount /tmp/foo
+        fi
     fi
-    echo "### DONE ###"
-else
-    echo "### Rebooting to Apply Remap..."
-    reboot
 fi
+echo "### DONE ###"
+echo "### Rebooting Device to Apply Remap..."
+nohup bash -c 'sleep 2; shutdown now -r "Rebooting to Remap Interfaces"' &
 SCRIPT
 
 Vagrant.configure("2") do |config|
@@ -90,7 +100,7 @@ Vagrant.configure("2") do |config|
 {% elif provider == 'libvirt' %}
   config.vm.provider :libvirt do |domain|
     # increase nic adapter count to be greater than 8 for all VMs.
-    domain.nic_adapter_count = 55{% endif %}
+    domain.nic_adapter_count = 130{% endif %}
   end
 
 {% if generate_ansible_hostfile == True %}
@@ -98,18 +108,14 @@ Vagrant.configure("2") do |config|
   #    ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "./helper_scripts/empty_playbook.yml"
+{% if function_group is defined -%}
     # ANSIBLE GROUPS CONFIGURATION
     ansible.groups = {
-      "oob-server" => [{% for device in devices %}{% if device.function == "oob-server" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "oob-switch" => [{% for device in devices %}{% if device.function == "oob-switch" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "exit" => [{% for device in devices %}{% if device.function == "exit" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "superspine" => [{% for device in devices %}{% if device.function == "superspine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "spine" => [{% for device in devices %}{% if device.function == "spine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "leaf" => [{% for device in devices %}{% if device.function == "leaf" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "tor" => [{% for device in devices %}{% if device.function == "tor" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "host" => [{% for device in devices %}{% if device.function == "host" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-      "network:children" => ["oob-switch","exit","superspine","spine","leaf","tor"]
+{%- for function in function_group %}
+      "{{ function }}" => [{% for device in function_group[function] %}"{{device}}",{% endfor %}],{% endfor %}
+      "network:children" => [{% for function in function_group%}{% if function in network_functions%}"{{function}}",{% endif %}{% endfor %}]
     }
+{%- endif %}
   end{% endif %}
 
 {% for device in devices %}
@@ -120,13 +126,13 @@ Vagrant.configure("2") do |config|
     device.vm.box = "{{ device.os }}"{% if device.version %}
     device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
-      v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %} 
+      v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %}
     device.vm.provider :libvirt do |v|{% if device.pxehost=="True" %}
       v.storage :file, :size => '100G', :type => 'qcow2', :bus => 'sata', :device => 'sda'
       v.boot 'hd'
       v.boot 'network'{% endif %}{% if device.function == 'host' %}
       v.nic_model_type = 'e1000' {% endif %}{% endif %}
-      v.memory = {{ device.memory }}
+{% if device.memory is defined %}      v.memory = {{ device.memory }}{% endif %}
     end{% if synced_folder == False %}
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}
@@ -177,6 +183,7 @@ Vagrant.configure("2") do |config|
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "~/dhcpd.hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/hosts", destination: "~/hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ansible_hostfile", destination: "~/ansible_hostfile"
+    device.vm.provision "file", source: "./helper_scripts/auto_mgmt_network/ztp_oob.sh", destination: "~/ztp_oob.sh"
 {% endif -%}
 {% if create_mgmt_network and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 
@@ -215,26 +222,25 @@ echo 'ACTION=="add", SUBSYSTEM=="net", ATTR{ifindex}=="2", NAME="{% if device.va
 echo "#### UDEV Rules (/etc/udev/rules.d/70-persistent-net.rules) ####"
 cat /etc/udev/rules.d/70-persistent-net.rules
 vagrant_interface_rule
-     
+
 {% endif -%}
-{% if device.playbook is defined -%}
+
+{% if device.playbook is defined %}
     # Ansible Playbook Configuration
     device.vm.provision "ansible" do |ansible|
           ansible.playbook = "{{ device.playbook }}"
+{%- if function_group is defined %}
           # ANSIBLE GROUPS CONFIGURATION
           ansible.groups = {
-            "oob-server" => [{% for device in devices %}{% if device.function == "oob-server" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "oob-switch" => [{% for device in devices %}{% if device.function == "oob-switch" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "exit" => [{% for device in devices %}{% if device.function == "exit" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "superspine" => [{% for device in devices %}{% if device.function == "superspine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "spine" => [{% for device in devices %}{% if device.function == "spine" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "leaf" => [{% for device in devices %}{% if device.function == "leaf" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "tor" => [{% for device in devices %}{% if device.function == "tor" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "host" => [{% for device in devices %}{% if device.function == "host" %}"{{device.hostname}}",{% endif %}{% endfor %}],
-            "network:children" => ["oob-switch","exit","superspine","spine","leaf","tor"]
+{%- for function in function_group%}
+            "{{ function }}" => [{% for device in function_group[function] %}"{{device}}",{% endfor %}],
+{%- endfor %}
+            "network:children" => [{% for function in function_group%}{% if function in network_functions%}"{{function}}",{% endif %}{% endfor %}]
           }
+{%- endif %}
     end
 {% endif -%}
+
 {% if device.pxehost=="True" and provider == 'libvirt' -%}
 
     # NO REMAP APPLICATION for LIBVIRT PXE DEVICE
@@ -243,7 +249,7 @@ vagrant_interface_rule
     # NO REMAP APPLICATION Required
 
 {% else -%}
-    # Run Any Platform Specific Code and Apply the interface Re-map 
+    # Run Any Platform Specific Code and Apply the interface Re-map
     #   (may or may not perform a reboot depending on platform)
     device.vm.provision :shell , :inline => $script
 

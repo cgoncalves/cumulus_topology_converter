@@ -33,15 +33,21 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
-## New Features in v4.5.1
-* Added Colored output for easy reading
-* Removed 2.5.x simulation measures
-* Updated for Vagrant v1.8.6 and boxes that can specify their own username/password
-* Added knob to avoid the Udev Remapping Operations for other boxes
-* Removed dependency on Apply_udev.py
-  * Did this to better support COREos and Fedora, cleaner overall solution
+## New Features in v4.5.2
+* Fixed many aspects of the Auto Mgmt Workflow (-c)
+  * Added Selective install of Puppet/Ansible to OOB-MGMT-SERVER Script
+  * Added More Compact DHCP Hosts format
+  * Fixed Errors during software install at turnup
+  * Added Passwordless Sudo and SSH key generation
+* Added more robust Reboot support for all devices
+* Added Arg_string printout to Vagrantfile so you can see how topology converter was called
+* Added the ability to specify custom ansible groups based on device function
+* Added ONIE DHCP fix for vagrant
+* Upped Max NIC count in Libvirt to 130
+* Added Hardcode for Vagrant Version.
 
 ## Changelog:
+* v4\.5\.2 2016\_12\_08: Fixed many aspects of the Auto Mgmt Workflow (-c), Added Selective install of Puppet/Ansible to OOB-MGMT-SERVER Script, Added More Compact DHCP Hosts format, Fixed Errors during software install at turnup, Added Passwordless Sudo and SSH key generation. Added more robust Reboot support for all devices. Added Arg_string printout to Vagrantfile so you can see how topology converter was called. Added the ability to specify custom ansible groups based on device function. Added ONIE DHCP fix for vagrant. Upped Max NIC count in Libvirt to 130
 * v4\.5\.1 2016\_10\_14: Added Colored output for easy reading. Removed 2.5.x simulation measures. Updated for Vagrant v1.8.6 and boxes that can specify their own username/password. Added knob to avoid the Udev Remapping Operations for other boxes. Removed dependency on Apply_udev.py; did this to better support COREos and Fedora, cleaner overall solution.
 * v4\.5\.0 2016\_09\_10: Added [Create Management Network](documentation/auto_mgmt_network) option, this can automatically add a management network connected to eth0 port of all devices. Also builds a mgmt switch and ubuntu 1604 mgmt server. Added a TOR and SuperSpine function group. Added Group support for Ansible based on functions. Fixed interface driver configuration in host images to use E1000 driver to allow getting link speed to setup bonds. Corrected and enhanced documentation for new features and the "config" attribute.
 * v4\.3\.1 2016\_08\_07: Bugfix to fix regression in handling libvirt topologies. 

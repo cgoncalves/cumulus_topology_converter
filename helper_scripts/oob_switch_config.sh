@@ -23,7 +23,7 @@ iface swp\${i}
 
 auto bridge
 iface bridge inet dhcp
-    bridge-ports glob swp1-48 eth0
+    bridge-ports glob swp1-48
     bridge-stp on
 
 EOT
@@ -32,6 +32,3 @@ EOT
 echo "#################################"
 echo "   Finished "
 echo "#################################"
-
-
-
