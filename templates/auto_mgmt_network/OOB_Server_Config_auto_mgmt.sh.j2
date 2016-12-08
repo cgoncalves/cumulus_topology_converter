@@ -13,7 +13,7 @@ REPONAME="example"
 
 #Install Automation Tools
 puppet=0
-ansible=0
+ansible=1
 
 #######################
 
@@ -37,7 +37,7 @@ install_puppet(){
 
 install_ansible(){
     echo " ### Installing Ansible... ###"
-    apt-get install -qy ansible sshpass libssh-dev python-dev
+    apt-get install -qy ansible sshpass libssh-dev python-dev libssl-dev libffi-dev
     pip install pip --upgrade
     pip install setuptools --upgrade
     pip install ansible --upgrade
