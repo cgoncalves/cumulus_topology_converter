@@ -83,14 +83,11 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             sed -i 's/eth0/eth1/g' /tmp/foo/onie/grub/grub-extra.cfg
             umount /tmp/foo
         fi
-        echo "### Rebooting Switch to Apply Remap..."
-        reboot
     fi
-    echo "### DONE ###"
-else
-    echo "### Rebooting to Apply Remap..."
-    reboot
 fi
+echo "### DONE ###"
+echo "### Rebooting Device to Apply Remap..."
+nohup bash -c 'sleep 2; shutdown now -r "Rebooting to Remap Interfaces"' &
 SCRIPT
 
 Vagrant.configure("2") do |config|
