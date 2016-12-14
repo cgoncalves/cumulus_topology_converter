@@ -341,7 +341,7 @@ def parse_topology(topology_file):
             if "mgmt_ip" not in inventory[mgmt_server]:
                 inventory[mgmt_server]["mgmt_ip"] = "192.168.200.254"
     
-        inventory[mgmt_server]["os"] = "ubuntu/xenial64"
+        inventory[mgmt_server]["os"] = "boxcutter/ubuntu1604"
         if provider=="libvirt":
             inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
         if "memory" not in inventory[mgmt_server]:
