@@ -75,8 +75,8 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
         ztp -d 2>&1
         echo "### Resetting ZTP to work next boot..."
         ztp -R 2>&1
+        echo "  INFO: Detected Cumulus Linux v$DISTRIB_RELEASE Release"
         if [[ $DISTRIB_RELEASE =~ ^3.[1-9].* ]]; then
-            echo "  INFO: Detected 3.1+ Release"
             echo "### Fixing ONIE DHCP to avoid Vagrant Interface ###"
             echo "     Note: Installing from ONIE will undo these changes." 
             mkdir /tmp/foo
@@ -85,6 +85,12 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             sed -i 's/eth0/eth1/g' /tmp/foo/onie/grub/grub-extra.cfg
             umount /tmp/foo
         fi
+        if [[ $DISTRIB_RELEASE =~ ^3.[2-9].* ]]; then
+            echo "### Giving Vagrant User Ability to Run NCLU Commands ###"
+            sed -i 's/users_with_edit = root, cumulus/users_with_edit = root, cumulus, vagrant/g' /etc/netd.conf
+            sed -i 's/users_with_show = root, cumulus/users_with_show = root, cumulus, vagrant/g' /etc/netd.conf
+        fi
+
     fi
 fi
 echo "### DONE ###"
