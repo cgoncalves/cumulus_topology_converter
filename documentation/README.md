@@ -56,7 +56,7 @@ Interface remapping is the process by which interfaces are renamed to match the 
 
 ##Features
 * Converts a topology file "topology.dot" into a Vagrantfile
-* 1 file is modified by the user to create a suitable Vagrantfile (topology.dot)
+* 1 file is modified by the user (topology.dot) to create a suitable Vagrantfile 
 * Handles interface remapping on Vx instances (and hosts) to match the interfaces used in the provided topology file
 * Removes extra Ruby-based logic from the Vagrantfile making a simple human-readable output
 * Can generate Vagrantfiles that contain servers and switches and anything else that can be found in a Vagrant Box image
@@ -179,7 +179,7 @@ For Libvirt:
 
 *Note: When using Ubuntu1604 with the libvirt provider, an image that was natively built for libvirt must be used like yk0/ubuntu-xenial otherwise the machine will fail to boot. See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607 , https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609
 
-*Note: to learn how to mutate a box that was built for the virtualbox provider to use the libvirt provider check out this [community post](https://community.cumulusnetworks.com/cumulus/topics/converting-cumulus-vx-virtualbox-vagrant-box-gt-libvirt-vagrant-box).
+*Note: Mutation is the process of converting an image which was written for use with one hypervisor to run under another hypervisor, to learn how to mutate a box that was built for the virtualbox provider to use the libvirt provider check out this [community post](https://community.cumulusnetworks.com/cumulus/topics/converting-cumulus-vx-virtualbox-vagrant-box-gt-libvirt-vagrant-box).
 
 ###Supported Attributes
 Note: This list cannot be exhaustive because users can define new [passthrough attributes](#passthrough-attributes) and use them with custom templates. These are simply the attributes that the default template (Vagrantfile.j2) has support for.
@@ -294,7 +294,7 @@ graph dc1 {
 }
 ```
 
-At the conclusion of the run, the MAC address to interface mapping will be written in CSV format to the dhcp_mac_map file that lives in the same directory as topology_converter.py. The format for that file is as follows:
+At the conclusion of the run, the MAC address to interface mapping will be written in CSV format to the dhcp_mac_map file that lives in the same directory as topology_converter.py. This file is created only for reference, and is not used anywhere. The format for that file is as follows:
 
 ```
 #Device,interface,MAC
@@ -444,8 +444,10 @@ Use the -v option.
 -v, --verbose         enables verbose logging mode
 ```
 
-###synced_folder=False
-Documentation coming soon!
+###Synced Folders
+By default Vagrant's synced folder is disabled in Vagrantfiles built with topology converter. This is done because it has proven unreliable. In the event that you would like to share files with a VM in simulation you can use "vagrant scp" to move a file into the VM as needed.
+
+If you would like to renable the synced folder you can add the "--synced-folder" option when calling topology converter on the command line.
 
  
 ##Miscellaneous Info
@@ -453,7 +455,6 @@ Documentation coming soon!
 * When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is related to Vagrant #7286 https://github.com/mitchellh/vagrant/issues/7286.
 * Point to Multipoint connections are not supported at this time.
 * The Virtualbox provider supports a maximum of 36 interfaces of which one is consumed by the vagrant interface giving an end-user 35 interfaces to interconnect in the topology. (I am not aware of any such interface limitation on libvirt although boot time for nodes is severly impacted with interfaces > 150)
-* **Note that topology converter requires that python be installed on whatever system is to be simulated so that interface remapping can be performed via the apply_udev.py script.** This is especially important for devices running Fedora (which does not ship with python installed by default)
 
 
 
