@@ -37,7 +37,7 @@ class styles:
     ENDC = '\033[0m'
 
 parser = argparse.ArgumentParser(description='Topology Converter -- Convert topology.dot files into Vagrantfiles')
-parser.add_argument('topology_file',
+parser.add_argument('topology_file', 
                    help='provide a topology file as input')
 parser.add_argument('-v','--verbose', action='store_true',
                    help='enables verbose logging mode')
@@ -57,6 +57,8 @@ parser.add_argument('-dd','--display-datastructures', action='store_true',
                    help='When specified, the datastructures which are passed to the template are displayed to screen. Note: Using this option does not write a Vagrantfile and supercedes other options.')
 parser.add_argument('--synced-folder', action='store_true',
                    help='Using this option enables the default Vagrant synced folder which we disable by default. See: https://www.vagrantup.com/docs/synced-folders/basic_usage.html')
+parser.add_argument('--version', action='version', version="Topology Converter version is v%s" % version,
+                   help='Using this option displays the version of Topology Converter')
 args = parser.parse_args()
 
 #Parse Arguments
@@ -90,6 +92,9 @@ if args.start_port: start_port=args.start_port
 if args.port_gap: port_gap=args.port_gap
 if args.display_datastructures: display_datastructures=True
 if args.synced_folder: synced_folder=True
+if args.version: 
+    print "Topology Converter version v%s" % version
+    exit(0)
 
 if verbose:
     print "Arguments:"
