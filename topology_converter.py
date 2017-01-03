@@ -92,9 +92,6 @@ if args.start_port: start_port=args.start_port
 if args.port_gap: port_gap=args.port_gap
 if args.display_datastructures: display_datastructures=True
 if args.synced_folder: synced_folder=True
-if args.version: 
-    print "Topology Converter version v%s" % version
-    exit(0)
 
 if verbose:
     print "Arguments:"
