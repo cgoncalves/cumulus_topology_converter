@@ -157,6 +157,14 @@ def parse_topology(topology_file):
     edges=topology.get_edge_list()
     for node in nodes:
         node_name=node.get_name().replace('"','')
+
+        #Try to encode into ascii
+        try:
+            node_name.encode('ascii','ignore')
+        except UnicodeDecodeError as e:
+            print "\n    ERROR: Node name \"%s\" --> \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (node_name,node_name.decode('utf-8').encode('ascii','replace'))
+            exit(1)
+
         #Add node to inventory
         if node_name not in inventory:
             inventory[node_name] = {}
@@ -244,6 +252,15 @@ def parse_topology(topology_file):
         left_interface=edge.get_source().split(":")[1].replace('"','')
         right_device=edge.get_destination().split(":")[0].replace('"','')
         right_interface=edge.get_destination().split(":")[1].replace('"','')
+
+        for value in [left_device,left_interface,right_device,right_interface]:
+            #Try to encode into ascii
+            try:
+                value.encode('ascii','ignore')
+            except UnicodeDecodeError as e:
+                print "\n    ERROR: in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        Link component: \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (left_device,left_interface,right_device,right_interface,value.decode('utf-8').encode('ascii','replace'))
+                exit(1)
+
 
         left_mac_address=""
         if edge.get('left_mac') != None : 
