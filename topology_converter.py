@@ -49,6 +49,8 @@ parser.add_argument('-c','--create-mgmt-network', action='store_true',
                    help='When specified, a mgmt switch and server will be created. A /24 is assumed for the mgmt network. mgmt_ip=X.X.X.X will be read from each device to create a Static DHCP mapping for the oob-mgmt-server.')
 parser.add_argument('-cco','--create-mgmt-configs-only', action='store_true',
                    help='Calling this option does NOT regenerate the Vagrantfile but it DOES regenerate the configuration files that come packaged with the mgmt-server in the "-c" option. This option is typically used after the "-c" has been called to generate a Vagrantfile with an oob-mgmt-server and oob-mgmt-switch to modify the configuraiton files placed on the oob-mgmt-server device. Useful when you do not want to regenerate the vagrantfile but you do want to make changes to the OOB-mgmt-server configuration templates.')
+parser.add_argument('-cmd','--create-mgmt-device', action='store_true',
+                   help='Calling this option creates the mgmt device and runs the auto_mgmt_network template engine to load configurations on to the mgmt device but it does not create the OOB-MGMT-SWITCH or associated connections. Useful when you are manually specifying the construction of the management network but still want to have the OOB-mgmt-server created automatically.')
 parser.add_argument('-t','--template', action='append', nargs=2,
                    help='Specify an additional jinja2 template and a destination for that file to be rendered to.')
 parser.add_argument('-s','--start-port', type=int,
@@ -68,8 +70,9 @@ network_functions=['internet','exit','superspine','spine','leaf','tor']
 function_group={}
 provider="virtualbox"
 generate_ansible_hostfile=False
+create_mgmt_device=False
 create_mgmt_network=False
-create_mgmt_network_configs_only=False
+create_mgmt_configs_only=False
 verbose=False
 start_port=8000
 port_gap=1000
@@ -83,11 +86,14 @@ if args.topology_file: topology_file=args.topology_file
 if args.verbose: verbose=args.verbose
 if args.provider: provider=args.provider
 if args.ansible_hostfile: generate_ansible_hostfile=True
+if args.create_mgmt_device:
+    create_mgmt_device=True
 if args.create_mgmt_network:
+    create_mgmt_device=True
     create_mgmt_network=True
 if args.create_mgmt_configs_only:
-    create_mgmt_network=True
-    create_mgmt_network_configs_only=True
+    create_mgmt_configs_only=True
+
 if args.template:
     for templatefile,destination in args.template:
         TEMPLATES.append([templatefile,destination])
@@ -340,7 +346,7 @@ def parse_topology(topology_file):
             exit(1)
 
     #Add Mgmt Network Links
-    if create_mgmt_network:
+    if create_mgmt_device:
         mgmt_server=None
         mgmt_switch=None
         for device in inventory:
@@ -374,8 +380,9 @@ def parse_topology(topology_file):
             inventory[mgmt_server]["memory"] = "512"
         inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
 
-        #Hardcode mgmt switch parameters       
-        if mgmt_switch == None:
+        #Hardcode mgmt switch parameters
+            
+        if mgmt_switch == None and create_mgmt_network:
             if "oob-mgmt-switch" in inventory:
                 print styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-switch must be set to function = "oob-switch"' + styles.ENDC
                 exit(1)
@@ -387,87 +394,88 @@ def parse_topology(topology_file):
 
             mgmt_switch="oob-mgmt-switch"
 
-        inventory[mgmt_switch]["os"] = "CumulusCommunity/cumulus-vx"
-        inventory[mgmt_switch]["memory"] = "512"
-        inventory[mgmt_switch]["config"] = "./helper_scripts/oob_switch_config.sh"
+        if create_mgmt_network:
+            inventory[mgmt_switch]["os"] = "CumulusCommunity/cumulus-vx"
+            inventory[mgmt_switch]["memory"] = "512"
+            inventory[mgmt_switch]["config"] = "./helper_scripts/oob_switch_config.sh"
 
-        #Add Link between oob-mgmt-switch oob-mgmt-server
-        net_number+=1
-
-        if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
-            print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
-            parser.print_help()
-            exit(1)
-        left_mac=mac_fetch(mgmt_switch,"swp1")
-        right_mac=mac_fetch(mgmt_server,"mgmt_net")
-        print "  adding mgmt links:"
-        if provider=="virtualbox":
-            print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,"swp1",left_mac,mgmt_server,"mgmt_net",right_mac,network_string)
-        elif provider=="libvirt":
-            print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,"swp1",left_mac,PortA,mgmt_server,"mgmt_net",PortB,right_mac)
-        add_link(inventory,
-                 mgmt_switch,
-                 mgmt_server,
-                 "swp1",
-                 "mgmt_net",
-                 left_mac,
-                 right_mac,
-                 net_number)
-        mgmt_switch_swp=1
-
-        #Add Eth0 MGMT Link for every device that is is not oob-switch or oob-server
-        for device in inventory:
-            if inventory[device]["function"]=="oob-server" or inventory[device]["function"]=="oob-switch": continue
-            elif inventory[device]["function"] in network_functions:
-                inventory[device]["config"] = "./helper_scripts/extra_switch_config.sh"
-            mgmt_switch_swp+=1
+            #Add Link between oob-mgmt-switch oob-mgmt-server
             net_number+=1
+
             if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
                 print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
                 parser.print_help()
                 exit(1)
-            mgmt_switch_swp_val="swp"+str(mgmt_switch_swp)
-            left_mac=mac_fetch(mgmt_switch,mgmt_switch_swp_val)
-            right_mac=mac_fetch(device,"eth0")
+            left_mac=mac_fetch(mgmt_switch,"swp1")
+            right_mac=mac_fetch(mgmt_server,"mgmt_net")
+            print "  adding mgmt links:"
+            if provider=="virtualbox":
+               print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,"swp1",left_mac,mgmt_server,"mgmt_net",right_mac,network_string)
+            elif provider=="libvirt":
+                print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,"swp1",left_mac,PortA,mgmt_server,"mgmt_net",PortB,right_mac)
+            add_link(inventory,
+                     mgmt_switch,
+                     mgmt_server,
+                     "swp1",
+                     "mgmt_net",
+                     left_mac,
+                     right_mac,
+                     net_number)
+            mgmt_switch_swp=1
+
+            #Add Eth0 MGMT Link for every device that is is not oob-switch or oob-server
+            for device in inventory:
+                if inventory[device]["function"]=="oob-server" or inventory[device]["function"]=="oob-switch": continue
+                elif inventory[device]["function"] in network_functions:
+                    inventory[device]["config"] = "./helper_scripts/extra_switch_config.sh"
+                mgmt_switch_swp+=1
+                net_number+=1
+                if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
+                    print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
+                    parser.print_help()
+                    exit(1)
+                mgmt_switch_swp_val="swp"+str(mgmt_switch_swp)
+                left_mac=mac_fetch(mgmt_switch,mgmt_switch_swp_val)
+                right_mac=mac_fetch(device,"eth0")
             
-            half1_exists=False
-            half2_exists=False
-            #Check to see if components of the link already exist
-            if "eth0" in inventory[device]['interfaces']:
-                if inventory[device]['interfaces']['eth0']['remote_interface'] != mgmt_switch_swp_val:
-                    print styles.FAIL + styles.BOLD + " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val) + styles.ENDC
-                    exit(1)
-                if inventory[device]['interfaces']['eth0']['remote_device'] != mgmt_switch:
-                    print styles.FAIL + styles.BOLD + " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val) + styles.ENDC
-                    exit(1)
-                if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
-                half1_exists=True
+                half1_exists=False
+                half2_exists=False
+                #Check to see if components of the link already exist
+                if "eth0" in inventory[device]['interfaces']:
+                    if inventory[device]['interfaces']['eth0']['remote_interface'] != mgmt_switch_swp_val:
+                        print styles.FAIL + styles.BOLD + " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val) + styles.ENDC
+                        exit(1)
+                    if inventory[device]['interfaces']['eth0']['remote_device'] != mgmt_switch:
+                        print styles.FAIL + styles.BOLD + " ### ERROR: %s:eth0 interface already exists but not connected to %s:%s" %(device,mgmt_switch,mgmt_switch_swp_val) + styles.ENDC
+                        exit(1)
+                    if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
+                    half1_exists=True
 
-            if mgmt_switch_swp_val in inventory[mgmt_switch]['interfaces']:
-                if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_interface'] != "eth0":
-                    print styles.FAIL + styles.BOLD + " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device) + styles.ENDC
-                    exit(1)
-                if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_device'] != device:
-                    print styles.FAIL + styles.BOLD + " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device) + styles.ENDC
-                    exit(1)
-                if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
-                half2_exists=True
+                if mgmt_switch_swp_val in inventory[mgmt_switch]['interfaces']:
+                    if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_interface'] != "eth0":
+                        print styles.FAIL + styles.BOLD + " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device) + styles.ENDC
+                        exit(1)
+                    if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_device'] != device:
+                        print styles.FAIL + styles.BOLD + " ### ERROR: %s:%s-- link already exists but not connected to %s:eth0" %(mgmt_switch,mgmt_switch_swp_val,device) + styles.ENDC
+                        exit(1)
+                    if verbose: print "        mgmt link on %s already exists and is good." % (mgmt_switch)
+                    half2_exists=True
 
-            if not half1_exists and not half2_exists:
-                #Display add message
-                if provider=="virtualbox":
-                    print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:net%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,net_number)
-                elif provider=="libvirt":
-                    print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,PortA,left_mac,device,"eth0",PortB,right_mac)
+                if not half1_exists and not half2_exists:
+                    #Display add message
+                    if provider=="virtualbox":
+                        print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:net%s" % (mgmt_switch,mgmt_switch_swp_val,left_mac,device,"eth0",right_mac,net_number)
+                    elif provider=="libvirt":
+                        print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,mgmt_switch_swp_val,PortA,left_mac,device,"eth0",PortB,right_mac)
 
-                add_link(inventory,
-                         mgmt_switch,
-                         device,
-                         mgmt_switch_swp_val,
-                         "eth0",
-                         left_mac,
-                         right_mac,
-                         net_number,)
+                    add_link(inventory,
+                             mgmt_switch,
+                             device,
+                             mgmt_switch_swp_val,
+                             "eth0",
+                             left_mac,
+                             right_mac,
+                             net_number,)
     else:
         #Add Dummy Eth0 Link
         for device in inventory:
@@ -695,13 +703,13 @@ def render_jinja_templates(devices):
                                               epoch_time=epoch_time,
                                               script_storage=script_storage,
                                               generate_ansible_hostfile=generate_ansible_hostfile,
-                                              create_mgmt_network=create_mgmt_network,
+                                              create_mgmt_device=create_mgmt_device,
                                               function_group=function_group,
                                               network_functions=network_functions,)
                              )
     #Render the main Vagrantfile
     if display_datastructures: print_datastructures(devices)
-    if create_mgmt_network and create_mgmt_network_configs_only:
+    if create_mgmt_device and create_mgmt_configs_only:
         return 0
     for templatefile,destination in TEMPLATES:
         if verbose: print "    Rendering: " + templatefile + " --> " + destination
@@ -716,7 +724,7 @@ def render_jinja_templates(devices):
                                           epoch_time=epoch_time,
                                           script_storage=script_storage,
                                           generate_ansible_hostfile=generate_ansible_hostfile,
-                                          create_mgmt_network=create_mgmt_network,
+                                          create_mgmt_device=create_mgmt_device,
                                           function_group=function_group,
                                           network_functions=network_functions,)
                          )
@@ -733,7 +741,7 @@ def print_datastructures(devices):
     print "epoch_time=" + str(epoch_time)
     print "script_storage=" + script_storage
     print "generate_ansible_hostfile=" + str(generate_ansible_hostfile)
-    print "create_mgmt_network=" + str(create_mgmt_network)
+    print "create_mgmt_device=" + str(create_mgmt_device)
     print "function_group="
     pp.pprint(function_group)
     print "network_functions="
@@ -784,7 +792,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-    if create_mgmt_network_configs_only:
+    if create_mgmt_configs_only:
         print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: MGMT Network Templates have been regenerated!\n############" + styles.ENDC
     else:
         print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: Vagrantfile has been generated!\n############" + styles.ENDC
