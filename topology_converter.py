@@ -47,6 +47,8 @@ parser.add_argument('-a','--ansible-hostfile', action='store_true',
                    help='When specified, ansible hostfile will be generated from a dummy playbook run.')
 parser.add_argument('-c','--create-mgmt-network', action='store_true',
                    help='When specified, a mgmt switch and server will be created. A /24 is assumed for the mgmt network. mgmt_ip=X.X.X.X will be read from each device to create a Static DHCP mapping for the oob-mgmt-server.')
+parser.add_argument('-cco','--create-mgmt-configs-only', action='store_true',
+                   help='Calling this option does NOT regenerate the Vagrantfile but it DOES regenerate the configuration files that come packaged with the mgmt-server in the "-c" option. This option is typically used after the "-c" has been called to generate a Vagrantfile with an oob-mgmt-server and oob-mgmt-switch to modify the configuraiton files placed on the oob-mgmt-server device. Useful when you do not want to regenerate the vagrantfile but you do want to make changes to the OOB-mgmt-server configuration templates.')
 parser.add_argument('-t','--template', action='append', nargs=2,
                    help='Specify an additional jinja2 template and a destination for that file to be rendered to.')
 parser.add_argument('-s','--start-port', type=int,
@@ -67,6 +69,7 @@ function_group={}
 provider="virtualbox"
 generate_ansible_hostfile=False
 create_mgmt_network=False
+create_mgmt_network_configs_only=False
 verbose=False
 start_port=8000
 port_gap=1000
@@ -80,7 +83,11 @@ if args.topology_file: topology_file=args.topology_file
 if args.verbose: verbose=args.verbose
 if args.provider: provider=args.provider
 if args.ansible_hostfile: generate_ansible_hostfile=True
-if args.create_mgmt_network: create_mgmt_network=True
+if args.create_mgmt_network:
+    create_mgmt_network=True
+if args.create_mgmt_configs_only:
+    create_mgmt_network=True
+    create_mgmt_network_configs_only=True
 if args.template:
     for templatefile,destination in args.template:
         TEMPLATES.append([templatefile,destination])
@@ -692,9 +699,10 @@ def render_jinja_templates(devices):
                                               function_group=function_group,
                                               network_functions=network_functions,)
                              )
-
     #Render the main Vagrantfile
     if display_datastructures: print_datastructures(devices)
+    if create_mgmt_network and create_mgmt_network_configs_only:
+        return 0
     for templatefile,destination in TEMPLATES:
         if verbose: print "    Rendering: " + templatefile + " --> " + destination
         template = jinja2.Template(open(templatefile).read())
@@ -776,6 +784,9 @@ def main():
 
 if __name__ == "__main__":
     main()
-    print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: Vagrantfile has been generated!\n############" + styles.ENDC
+    if create_mgmt_network_configs_only:
+        print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: MGMT Network Templates have been regenerated!\n############" + styles.ENDC
+    else:
+        print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: Vagrantfile has been generated!\n############" + styles.ENDC
     print "\nDONE!\n"
 exit(0)
