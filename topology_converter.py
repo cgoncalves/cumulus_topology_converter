@@ -662,7 +662,7 @@ def render_jinja_templates(devices):
     if verbose: print "RENDERING JINJA TEMPLATES..."
 
     #Render the MGMT Network stuff
-    if create_mgmt_network:
+    if create_mgmt_device:
         #Check that MGMT Template Dir exists
         mgmt_template_dir="./templates/auto_mgmt_network/"
         if not os.path.isdir("./templates/auto_mgmt_network"):
