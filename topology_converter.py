@@ -147,16 +147,20 @@ def mac_fetch(hostname,interface):
     global start_mac
     global mac_map
     global warning
-    new_mac = hex(int(start_mac, 16) + 1)[2:].upper()
+    global verbose
+    new_mac = ("%x" % (int(start_mac, 16)+1)).upper()
     while new_mac in mac_map:
         print " WARNING: MF MAC Address Collision -- tried to use " + new_mac + " (on "+interface+") but it was already in use."
         start_mac = new_mac
-        new_mac = hex(int(start_mac, 16) + 1)[2:].upper()
+        new_mac = ("%x" % (int(start_mac, 16)+1)).upper()
         warning=True
     start_mac = new_mac
+    if verbose: print "    Fetched new MAC ADDRESS: \"%s\"" % new_mac
     return add_mac_colon(new_mac)
 
 def add_mac_colon(mac_address):
+    global verbose
+    if verbose: print "MAC ADDRESS IS: \"%s\"" % mac_address
     return str(':'.join(s.encode('hex') for s in mac_address.decode('hex')))
 
 
