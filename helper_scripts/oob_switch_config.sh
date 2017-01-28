@@ -1,4 +1,4 @@
-#!/bin/bash
+k#!/bin/bash
 
 echo "#################################"
 echo "   Running OOB_Switch_Config.sh"
@@ -13,22 +13,22 @@ iface lo inet loopback
 auto vagrant
 iface vagrant inet dhcp
 
-auto eth0
-iface eth0 inet dhcp
+#auto eth0
+#iface eth0 inet dhcp
 
-% for i in range(1, 49):
-auto swp\${i}
-iface swp\${i}
-% endfor
-
-auto bridge
-iface bridge inet dhcp
-    bridge-ports glob swp1-48
-    bridge-stp on
-
+source /etc/network/interfaces.d/*
 EOT
+
+/usr/share/doc/ifupdown2/examples/generate_interfaces.py -b | grep -v "#" >> /etc/network/interfaces.d/bridge
+
+sed -i 's/vagrant//g' /etc/network/interfaces.d/bridge
+sed -i 's/eth0//g' /etc/network/interfaces.d/bridge
+sed -i 's/iface bridge-untagged/iface bridge-untagged inet dhcp/' /etc/network/interfaces.d/bridge
+
+
 
 
 echo "#################################"
 echo "   Finished "
 echo "#################################"
+
