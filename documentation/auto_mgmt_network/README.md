@@ -64,6 +64,13 @@ In order for the automated management network builder to create all of this extr
 * hosts.j2
 * OOB_Server_Config_auto_mgmt.sh.j2
 
+These templates, once rendered will be placed on the OOB-mgmt-server in the appropriate locations:
+* ansible_hostfile --> /etc/ansible/hosts
+* dhcpd.conf --> /etc/dhcpd/dhcpd.conf
+* dhcpd.hosts --> /etc/dhcpd/dhcpd.hosts
+* hosts --> /etc/hosts
+* OOB_Server_Config_auto_mgmt.sh --> executed on bootup 
+
 New templates can be added to this directory and they will be automatically rendered to the ./helper_scripts/auto_mgmt_network/ directory however the standard ./templates/Vagrantfile.j2 template would need to be extended to process any new files.
 
 ###Sample Output
