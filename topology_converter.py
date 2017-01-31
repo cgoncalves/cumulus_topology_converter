@@ -163,15 +163,55 @@ def add_mac_colon(mac_address):
     if verbose: print "MAC ADDRESS IS: \"%s\"" % mac_address
     return str(':'.join(s.encode('hex') for s in mac_address.decode('hex')))
 
+def lint_topo_file(topology_file):
+    with open(topology_file,"r") as topo_file:
+        line_list=topo_file.readlines()
+        count=0
+        for line in line_list:
+            count +=1
+            #Try to encode into ascii
+            try:
+                line.encode('ascii','ignore')
+            except UnicodeDecodeError as e:
+                print "\n    ERROR: Line %s:\n %s\n         --> \"%s\" \n     Has hidden unicode characters in it which prevent it from being converted to ASCII cleanly. Try manually typing it instead of copying and pasting." % (count,line,line.decode('utf-8').encode('ascii','replace'))
+                exit(1)
+
+            if line.count("\"")%2 == 1:
+                print "\n    ERROR: Line %s: Has an odd number of quotation characters (\").\n     %s\n"%(count,line)
+                exit(1)
+            if line.count("'")%2 == 1:
+                print "\n    ERROR: Line %s: Has an odd number of quotation characters (').\n     %s\n"%(count,line)
+                exit(1)
+            if line.count(":") == 2:
+                if " -- " not in line:
+                    print "\n    ERROR: Line %s: Does not contain the following sequence \" -- \" to seperate the different ends of the link.\n     %s\n"%(count,line)
+                    exit(1)
 
 def parse_topology(topology_file):
     global provider
     global verbose
     global warning
-    topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
+    lint_topo_file(topology_file)
+    try:
+        topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
+    except Exception as e:
+        print "\n    ERROR: Cannot parse the provided topology.dot file (%s)\n     There is probably a syntax error of some kind, common causes include failing to close quotation marks and hidden characters from copy/pasting device names into the topology file." % (topology_file)
+        exit(1)
+
     inventory = {}
-    nodes=topology.get_node_list()
-    edges=topology.get_edge_list()
+    try:
+        nodes=topology.get_node_list()
+    except Exception as e:
+        print e
+        print "\n ERROR: There is a syntax error in your topology file (%s). Read the error output above for any clues as to the source." %(topology_file)
+        exit(1)
+    try:
+        edges=topology.get_edge_list()
+    except Exception as e:
+        print e
+        print "\n ERROR: There is a syntax error in your topology file (%s). Read the error output above for any clues as to the source." %(topology_file)
+        exit(1)
+
     for node in nodes:
         node_name=node.get_name().replace('"','')
 
