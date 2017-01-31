@@ -2,7 +2,7 @@
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
-{% for function in ["oob-switch", "exit", "leaf", "spine", "tor", "host"] %}
+{% for function in ["oob-switch", "exit", "superspine", "leaf", "spine", "tor", "host"] %}
 {%   for device in devices|selectattr("function", "equalto", function) %}
 {%     if loop.first %}
 [{{function}}]
