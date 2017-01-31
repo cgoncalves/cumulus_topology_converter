@@ -1,4 +1,4 @@
-k#!/bin/bash
+#!/bin/bash
 
 echo "#################################"
 echo "   Running OOB_Switch_Config.sh"
