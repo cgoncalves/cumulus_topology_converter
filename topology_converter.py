@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.5.3_dev"
+version = "4.6.0_dev"
 
 
 import os
@@ -453,11 +453,6 @@ def parse_topology(topology_file):
 
             #Add Link between oob-mgmt-switch oob-mgmt-server
             net_number+=1
-
-            if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
-                print styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC
-                parser.print_help()
-                exit(1)
             left_mac=mac_fetch(mgmt_switch,"swp1")
             right_mac=mac_fetch(mgmt_server,"mgmt_net")
             print "  adding mgmt links:"

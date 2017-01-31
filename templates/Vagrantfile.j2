@@ -5,7 +5,6 @@
 #
 #    NOTE: in order to use this Vagrantfile you will need:
 #       -Vagrant(v1.8.1+) installed: http://www.vagrantup.com/downloads
-#       -Cumulus Plugin for Vagrant installed: $ vagrant plugin install vagrant-cumulus
 #       -the "helper_scripts" directory that comes packaged with topology-converter.py
 {% if provider == 'virtualbox' %}#       -Virtualbox installed: https://www.virtualbox.org/wiki/Downloads
 
@@ -18,7 +17,7 @@
 #Set the default provider to libvirt in the case they forget --provider=libvirt or if someone destroys a machine it reverts to virtualbox
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-Vagrant.require_version ">= 1.8.6", "< 1.9.0"
+Vagrant.require_version ">= 1.8.6", "< 1.9.2"
 
 # Check required plugins
 REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt vagrant-mutate)
@@ -29,16 +28,6 @@ exit unless REQUIRED_PLUGINS_LIBVIRT.all? do |plugin|
     false
   )
 end{% endif %}
-
-# Check required plugins
-REQUIRED_PLUGINS = %w(vagrant-cumulus)
-exit unless REQUIRED_PLUGINS.all? do |plugin|
-  Vagrant.has_plugin?(plugin) || (
-    puts "The #{plugin} plugin is required. Please install it with:"
-    puts "$ vagrant plugin install #{plugin}"
-    false
-  )
-end
 
 
 $script = <<-SCRIPT
