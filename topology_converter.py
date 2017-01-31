@@ -173,18 +173,18 @@ def lint_topo_file(topology_file):
             try:
                 line.encode('ascii','ignore')
             except UnicodeDecodeError as e:
-                print "\n    ERROR: Line %s:\n %s\n         --> \"%s\" \n     Has hidden unicode characters in it which prevent it from being converted to ASCII cleanly. Try manually typing it instead of copying and pasting." % (count,line,line.decode('utf-8').encode('ascii','replace'))
+                print styles.FAIL + styles.BOLD + " ### ERROR: Line %s:\n %s\n         --> \"%s\" \n     Has hidden unicode characters in it which prevent it from being converted to ASCII cleanly. Try manually typing it instead of copying and pasting." % (count,line,line.decode('utf-8').encode('ascii','replace')) + styles.ENDC
                 exit(1)
 
             if line.count("\"")%2 == 1:
-                print "\n    ERROR: Line %s: Has an odd number of quotation characters (\").\n     %s\n"%(count,line)
+                print styles.FAIL + styles.BOLD + " ### ERROR: Line %s: Has an odd number of quotation characters (\").\n     %s\n"%(count,line) + styles.ENDC
                 exit(1)
             if line.count("'")%2 == 1:
-                print "\n    ERROR: Line %s: Has an odd number of quotation characters (').\n     %s\n"%(count,line)
+                print styles.FAIL + styles.BOLD + " ### ERROR: Line %s: Has an odd number of quotation characters (').\n     %s\n"%(count,line) + styles.ENDC
                 exit(1)
             if line.count(":") == 2:
                 if " -- " not in line:
-                    print "\n    ERROR: Line %s: Does not contain the following sequence \" -- \" to seperate the different ends of the link.\n     %s\n"%(count,line)
+                    print styles.FAIL + styles.BOLD + " ### ERROR: Line %s: Does not contain the following sequence \" -- \" to seperate the different ends of the link.\n     %s\n"%(count,line) + styles.ENDC
                     exit(1)
 
 def parse_topology(topology_file):
@@ -195,7 +195,7 @@ def parse_topology(topology_file):
     try:
         topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
     except Exception as e:
-        print "\n    ERROR: Cannot parse the provided topology.dot file (%s)\n     There is probably a syntax error of some kind, common causes include failing to close quotation marks and hidden characters from copy/pasting device names into the topology file." % (topology_file)
+        print styles.FAIL + styles.BOLD + " ### ERROR: Cannot parse the provided topology.dot file (%s)\n     There is probably a syntax error of some kind, common causes include failing to close quotation marks and hidden characters from copy/pasting device names into the topology file." % (topology_file) + styles.ENDC
         exit(1)
 
     inventory = {}
@@ -203,26 +203,33 @@ def parse_topology(topology_file):
         nodes=topology.get_node_list()
     except Exception as e:
         print e
-        print "\n ERROR: There is a syntax error in your topology file (%s). Read the error output above for any clues as to the source." %(topology_file)
+        print styles.FAIL + styles.BOLD + " ### ERROR: There is a syntax error in your topology file (%s). Read the error output above for any clues as to the source." %(topology_file) + styles.ENDC
         exit(1)
     try:
         edges=topology.get_edge_list()
     except Exception as e:
         print e
-        print "\n ERROR: There is a syntax error in your topology file (%s). Read the error output above for any clues as to the source." %(topology_file)
+        print styles.FAIL + styles.BOLD + " ### ERROR: There is a syntax error in your topology file (%s). Read the error output above for any clues as to the source." %(topology_file) + styles.ENDC
         exit(1)
 
+    #Add Nodes to inventory
     for node in nodes:
         node_name=node.get_name().replace('"','')
+        if node_name.startswith(".") or node_name.startswith("-"):
+            print styles.FAIL + styles.BOLD + " ### ERROR: Node name cannot start with a hyphen or period. '%s' is not valid!\n"%(node_name) + styles.ENDC
+            exit(1)
+        reg=re.compile('^[A-Za-z0-9\.-]+$')
+        if not reg.match(node_name):
+            print styles.FAIL + styles.BOLD + " ### ERROR: Node name for the VM should only contain letters, numbers, hyphens or dots. It cannot start with a hyphen or dot.  '%s' is not valid!\n"%(node_name) + styles.ENDC
+            exit(1)
 
         #Try to encode into ascii
         try:
             node_name.encode('ascii','ignore')
         except UnicodeDecodeError as e:
-            print "\n    ERROR: Node name \"%s\" --> \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (node_name,node_name.decode('utf-8').encode('ascii','replace'))
+            print styles.FAIL + styles.BOLD + " ### ERROR: Node name \"%s\" --> \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (node_name,node_name.decode('utf-8').encode('ascii','replace')) + styles.ENDC
             exit(1)
 
-        #Add node to inventory
         if node_name not in inventory:
             inventory[node_name] = {}
             inventory[node_name]['interfaces'] = {}
@@ -294,6 +301,7 @@ def parse_topology(topology_file):
             if 'tunnel_ip' not in inventory[node_name]: inventory[node_name]['tunnel_ip']='127.0.0.1'
 
 
+    #Add All the Edges to Inventory
     net_number = 1
     for edge in edges:
         #if provider=="virtualbox":
@@ -315,7 +323,7 @@ def parse_topology(topology_file):
             try:
                 value.encode('ascii','ignore')
             except UnicodeDecodeError as e:
-                print "\n    ERROR: in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        Link component: \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (left_device,left_interface,right_device,right_interface,value.decode('utf-8').encode('ascii','replace'))
+                print styles.FAIL + styles.BOLD + " ### ERROR: in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        Link component: \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (left_device,left_interface,right_device,right_interface,value.decode('utf-8').encode('ascii','replace')) + styles.ENDC
                 exit(1)
 
 
@@ -389,7 +397,9 @@ def parse_topology(topology_file):
             print styles.FAIL + styles.BOLD + " ### ERROR -- Device " + device + " sets pxebootinterface more than once." + styles.ENDC
             exit(1)
 
+    #######################
     #Add Mgmt Network Links
+    #######################
     if create_mgmt_device:
         mgmt_server=None
         mgmt_switch=None
