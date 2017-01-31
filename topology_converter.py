@@ -66,7 +66,7 @@ parser.add_argument('--version', action='version', version="Topology Converter v
 args = parser.parse_args()
 
 #Parse Arguments
-network_functions=['internet','exit','superspine','spine','leaf','tor']
+network_functions=['oob-switch','internet','exit','superspine','spine','leaf','tor']
 function_group={}
 provider="virtualbox"
 generate_ansible_hostfile=False
@@ -130,7 +130,7 @@ epoch_time = str(int(time.time()))
 mac_map={}
 
 #Static Variables -- #Do not change!
-warning=False
+warning=[]
 libvirt_reuse_error="""
        When constructing a VAGRANTFILE for the libvirt provider
        interface reuse is not possible because the UDP tunnels
@@ -150,10 +150,9 @@ def mac_fetch(hostname,interface):
     global verbose
     new_mac = ("%x" % (int(start_mac, 16)+1)).upper()
     while new_mac in mac_map:
-        print " WARNING: MF MAC Address Collision -- tried to use " + new_mac + " (on "+interface+") but it was already in use."
+        warning.append(styles.WARNING + styles.BOLD + "    WARNING: MF MAC Address Collision -- tried to use " + new_mac + " (on "+interface+") but it was already in use." + styles.ENDC)
         start_mac = new_mac
         new_mac = ("%x" % (int(start_mac, 16)+1)).upper()
-        warning=True
     start_mac = new_mac
     if verbose: print "    Fetched new MAC ADDRESS: \"%s\"" % new_mac
     return add_mac_colon(new_mac)
@@ -361,8 +360,7 @@ def parse_topology(topology_file):
         for attribute in edge.get_attributes():
             if attribute=="left_mac" or attribute=="right_mac": continue
             if attribute in edge_attributes:
-                print " ### WARNING: Attribute \""+attribute+"\" specified twice. Using second value."
-                warning=True
+                warning.append(styles.WARNING + styles.BOLD + "    WARNING: Attribute \""+attribute+"\" specified twice. Using second value." + styles.ENDC)
             value=edge.get(attribute)
             if value.startswith('"') or value.startswith("'"): value=value[1:]
             if value.endswith('"') or value.endswith("'"): value=value[:-1]
@@ -544,6 +542,35 @@ def parse_topology(topology_file):
                          "eth0",
                          "NOTHING",
                          mac_fetch(device,"eth0"),
+                         "NOTHING",
+                         net_number,)
+
+    #Add Extra Port Ranges (if needed)
+    for device in inventory:
+        if "ports" in inventory[device] and inventory[device]["function"] in network_functions:
+            if provider!="libvirt":
+                warning.append(styles.WARNING + styles.BOLD + "    WARNING: 'ports' setting on node %s will be ignored when not using the libvirt hypervisor."%(device) + styles.ENDC)
+            port_range = int(inventory[device]["ports"])
+            existing_port_list=[]
+            ports_to_create=[]
+            only_nums = re.compile(r'[^\d]+')
+            for port in inventory[device]['interfaces']:
+                existing_port_list.append(int(only_nums.sub('', port)))
+            print existing_port_list
+            for i in range(0,port_range+1):
+                if i not in existing_port_list: ports_to_create.append(i)
+            if verbose:
+                print "  INFO: On %s will create the following ports:" %(device)
+                print ports_to_create
+            #exit(1)
+            for i in ports_to_create:
+                net_number+=1
+                add_link(inventory,
+                         device,
+                         "NOTHING",
+                         "swp%s"%(i),
+                         "NOTHING",
+                         mac_fetch(device,"swp%s"%(i)),
                          "NOTHING",
                          net_number,)
 
@@ -850,5 +877,7 @@ if __name__ == "__main__":
         print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: MGMT Network Templates have been regenerated!\n############" + styles.ENDC
     else:
         print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: Vagrantfile has been generated!\n############" + styles.ENDC
+    for warn_msg in warning:
+        print warn_msg
     print "\nDONE!\n"
 exit(0)
