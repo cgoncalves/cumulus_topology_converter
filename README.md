@@ -33,20 +33,25 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
-## New Features in v4.5.2
+## New Features in v4.6.0
+* Updated oob-mgmt-server image to yk0
+* Added support for NCLU on the Vagrant User
+* Added a version argument
+* Added -cco (Create Mgmt Configs Only) option to allow for regeneration of templates without regeneration of the vagrantfile.
+* Added -cmd (Create Mgmt Device Only) option to create the oob-mgmt-server without creatin the oob-mgmt-switch as well.
+* Added node_name sanity checking
+* Added ports node attribute for libvirt simulations for more realistic simulation environments
+* Set the functional default for hosts and oob-servers to yk0/ubuntu-xenial
+
+### Bugfixes:
 * Fixed many aspects of the Auto Mgmt Workflow (-c)
-  * Added Selective install of Puppet/Ansible to OOB-MGMT-SERVER Script
-  * Added More Compact DHCP Hosts format
-  * Fixed Errors during software install at turnup
-  * Added Passwordless Sudo and SSH key generation
-* Added more robust Reboot support for all devices
-* Added Arg_string printout to Vagrantfile so you can see how topology converter was called
-* Added the ability to specify custom ansible groups based on device function
-* Added ONIE DHCP fix for vagrant
-* Upped Max NIC count in Libvirt to 130
-* Added Hardcode for Vagrant Version.
+  * Added Mgmt Subnet check to DHCP IP Host Template
+* Added linting and Sanity checking for unicode characters, quotes and other typos in topology file
+* Fixed MAC address conversion issue on Windows machines
+
 
 ## Changelog:
+* v4\.6\.0 2017\_02\_03: Added NCLU Support for Vagrant user, Added a version argument, all references to host, oob-server and oob-mgmt-server have been moved to the yk0/ubuntu-xenial image, two new options for the -c workflow were added (-cco and -cmd) added significant linting and sanity checking for the topology.dot file and device names, fixed a MAC address conversion issue on windows python installs.
 * v4\.5\.2 2016\_12\_08: Fixed many aspects of the Auto Mgmt Workflow (-c), Added Selective install of Puppet/Ansible to OOB-MGMT-SERVER Script, Added More Compact DHCP Hosts format, Fixed Errors during software install at turnup, Added Passwordless Sudo and SSH key generation. Added more robust Reboot support for all devices. Added Arg_string printout to Vagrantfile so you can see how topology converter was called. Added the ability to specify custom ansible groups based on device function. Added ONIE DHCP fix for vagrant. Upped Max NIC count in Libvirt to 130
 * v4\.5\.1 2016\_10\_14: Added Colored output for easy reading. Removed 2.5.x simulation measures. Updated for Vagrant v1.8.6 and boxes that can specify their own username/password. Added knob to avoid the Udev Remapping Operations for other boxes. Removed dependency on Apply_udev.py; did this to better support COREos and Fedora, cleaner overall solution.
 * v4\.5\.0 2016\_09\_10: Added [Create Management Network](documentation/auto_mgmt_network) option, this can automatically add a management network connected to eth0 port of all devices. Also builds a mgmt switch and ubuntu 1604 mgmt server. Added a TOR and SuperSpine function group. Added Group support for Ansible based on functions. Fixed interface driver configuration in host images to use E1000 driver to allow getting link speed to setup bonds. Corrected and enhanced documentation for new features and the "config" attribute.

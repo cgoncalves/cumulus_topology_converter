@@ -10,8 +10,9 @@ which apt &> /dev/null
 if [ "$?" == "0" ]; then
     #These lines will be used when booting on a debian-based box
     echo -e "note: ubuntu device detected"
-    #remove cloud-init software
-    #apt-get purge cloud-init -y
+    #Install LLDP
+    apt-get update -qy && apt-get install lldpd -qy
+    echo "configure lldp portidsubtype ifname" > etc/lldpd.d/port_info.conf
 
     #Replace existing network interfaces file
     echo -e "auto lo" > /etc/network/interfaces

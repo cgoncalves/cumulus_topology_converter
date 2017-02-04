@@ -14,6 +14,7 @@ REPONAME="example"
 #Install Automation Tools
 puppet=0
 ansible=1
+ansible_version=2.1.3.0
 
 #######################
 
@@ -40,7 +41,7 @@ install_ansible(){
     apt-get install -qy ansible sshpass libssh-dev python-dev libssl-dev libffi-dev
     pip install pip --upgrade
     pip install setuptools --upgrade
-    pip install ansible --upgrade
+    pip install ansible==$ansible_version --upgrade
 }
 
 

@@ -5,7 +5,6 @@
 #
 #    NOTE: in order to use this Vagrantfile you will need:
 #       -Vagrant(v1.8.1+) installed: http://www.vagrantup.com/downloads
-#       -Cumulus Plugin for Vagrant installed: $ vagrant plugin install vagrant-cumulus
 #       -the "helper_scripts" directory that comes packaged with topology-converter.py
 {% if provider == 'virtualbox' %}#       -Virtualbox installed: https://www.virtualbox.org/wiki/Downloads
 
@@ -18,7 +17,7 @@
 #Set the default provider to libvirt in the case they forget --provider=libvirt or if someone destroys a machine it reverts to virtualbox
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-Vagrant.require_version ">= 1.8.6", "< 1.9.0"
+Vagrant.require_version ">= 1.8.6", "< 1.9.2"
 
 # Check required plugins
 REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt vagrant-mutate)
@@ -29,16 +28,6 @@ exit unless REQUIRED_PLUGINS_LIBVIRT.all? do |plugin|
     false
   )
 end{% endif %}
-
-# Check required plugins
-REQUIRED_PLUGINS = %w(vagrant-cumulus)
-exit unless REQUIRED_PLUGINS.all? do |plugin|
-  Vagrant.has_plugin?(plugin) || (
-    puts "The #{plugin} plugin is required. Please install it with:"
-    puts "$ vagrant plugin install #{plugin}"
-    false
-  )
-end
 
 
 $script = <<-SCRIPT
@@ -75,8 +64,8 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
         ztp -d 2>&1
         echo "### Resetting ZTP to work next boot..."
         ztp -R 2>&1
+        echo "  INFO: Detected Cumulus Linux v$DISTRIB_RELEASE Release"
         if [[ $DISTRIB_RELEASE =~ ^3.[1-9].* ]]; then
-            echo "  INFO: Detected 3.1+ Release"
             echo "### Fixing ONIE DHCP to avoid Vagrant Interface ###"
             echo "     Note: Installing from ONIE will undo these changes." 
             mkdir /tmp/foo
@@ -85,6 +74,12 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             sed -i 's/eth0/eth1/g' /tmp/foo/onie/grub/grub-extra.cfg
             umount /tmp/foo
         fi
+        if [[ $DISTRIB_RELEASE =~ ^3.[2-9].* ]]; then
+            echo "### Giving Vagrant User Ability to Run NCLU Commands ###"
+            sed -i 's/users_with_edit = root, cumulus/users_with_edit = root, cumulus, vagrant/g' /etc/netd.conf
+            sed -i 's/users_with_show = root, cumulus/users_with_show = root, cumulus, vagrant/g' /etc/netd.conf
+        fi
+
     fi
 fi
 echo "### DONE ###"
@@ -170,14 +165,14 @@ Vagrant.configure("2") do |config|
     end{% endif %}
 
     # Fixes "stdin: is not a tty" and "mesg: ttyname failed : Inappropriate ioctl for device"  messages --> https://github.com/mitchellh/vagrant/issues/1673
-    device.vm.provision :shell , inline: "(grep -q 'mesg n' /root/.profile 2>/dev/null && sed -i '/mesg n/d' /root/.profile  2>/dev/null && echo 'Ignore the previous error, fixing this now...') || true;"
+    device.vm.provision :shell , inline: "(sudo grep -q 'mesg n' /root/.profile 2>/dev/null && sudo sed -i '/mesg n/d' /root/.profile  2>/dev/null) || true;", privileged: false
 
     {% if "ubuntu" in device.os.lower() -%}
     # Shorten Boot Process - Applies to Ubuntu Only - remove \"Wait for Network\"
     device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf 2>/dev/null || true"
 
     {% endif -%}
-{% if device.function == "oob-server" and create_mgmt_network -%}
+{% if device.function == "oob-server" and create_mgmt_device -%}
     #Copy over DHCP files and MGMT Network Files
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.conf", destination: "~/dhcpd.conf"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "~/dhcpd.hosts"
@@ -185,7 +180,7 @@ Vagrant.configure("2") do |config|
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ansible_hostfile", destination: "~/ansible_hostfile"
     device.vm.provision "file", source: "./helper_scripts/auto_mgmt_network/ztp_oob.sh", destination: "~/ztp_oob.sh"
 {% endif -%}
-{% if create_mgmt_network and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
+{% if create_mgmt_device and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 
     #Copy over Topology.dot File
     device.vm.provision "file", source: "{{ topology_file }}", destination: "~/topology.dot"
