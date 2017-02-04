@@ -155,7 +155,7 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 **For Functions:** "oob-server" and "host"
 
 **Functional Defaults are:**
-* os="boxcutter/ubuntu1404"
+* os="yk0/ubuntu-xenial"
 * memory="512"
 
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
@@ -165,6 +165,7 @@ There are a number of different sources of Vagrant box images however there are 
 
 For Virtualbox:
 * cumuluscommunity/cumulus-vx
+* yk0/ubuntu-xenial
 * ubuntu/xenial64
 * boxcutter/ubuntu1404
 * boxcutter/ubuntu1604

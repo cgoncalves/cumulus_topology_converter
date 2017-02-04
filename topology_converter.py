@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.6.0_dev"
+version = "4.6.0"
 
 
 import os
@@ -244,7 +244,7 @@ def parse_topology(topology_file):
                 inventory[node_name]['os']="None"
                 inventory[node_name]['memory']="1"
             if value=='oob-server':
-                inventory[node_name]['os']="boxcutter/ubuntu1404"
+                inventory[node_name]['os']="yk0/ubuntu-xenial"
                 inventory[node_name]['memory']="512"
             if value=='oob-switch':
                 inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
@@ -255,7 +255,7 @@ def parse_topology(topology_file):
                 inventory[node_name]['memory']="512"
                 inventory[node_name]['config'] = "./helper_scripts/extra_switch_config.sh"
             elif value=='host':
-                inventory[node_name]['os']="boxcutter/ubuntu1404"
+                inventory[node_name]['os']="yk0/ubuntu-xenial"
                 inventory[node_name]['memory']="512"
                 inventory[node_name]['config'] = "./helper_scripts/extra_server_config.sh"
 
