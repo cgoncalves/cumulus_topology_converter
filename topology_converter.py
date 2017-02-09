@@ -37,7 +37,7 @@ class styles:
     ENDC = '\033[0m'
 
 parser = argparse.ArgumentParser(description='Topology Converter -- Convert topology.dot files into Vagrantfiles')
-parser.add_argument('topology_file', 
+parser.add_argument('topology_file',
                    help='provide a topology file as input')
 parser.add_argument('-v','--verbose', action='store_true',
                    help='enables verbose logging mode')
@@ -80,6 +80,7 @@ synced_folder=False
 display_datastructures=False
 VAGRANTFILE='Vagrantfile'
 VAGRANTFILE_template='templates/Vagrantfile.j2'
+customer = os.path.basename(os.path.dirname(os.getcwd()))
 TEMPLATES=[[VAGRANTFILE_template,VAGRANTFILE]]
 arg_string=" ".join(sys.argv)
 if args.topology_file: topology_file=args.topology_file
@@ -125,7 +126,7 @@ dhcp_mac_file="./dhcp_mac_map"
 ######################################################
 
 #Hardcoded Variables
-script_storage="./helper_scripts" 
+script_storage="./helper_scripts"
 epoch_time = str(int(time.time()))
 mac_map={}
 
@@ -327,12 +328,12 @@ def parse_topology(topology_file):
 
 
         left_mac_address=""
-        if edge.get('left_mac') != None : 
+        if edge.get('left_mac') != None :
             temp_left_mac=edge.get('left_mac').replace('"','').replace(':','')
             left_mac_address=add_mac_colon(temp_left_mac)
         else: left_mac_address=mac_fetch(left_device,left_interface)
         right_mac_address=""
-        if edge.get('right_mac') != None : 
+        if edge.get('right_mac') != None :
             temp_right_mac=edge.get('right_mac').replace('"','').replace(':','')
             right_mac_address=add_mac_colon(temp_right_mac)
         else: right_mac_address=mac_fetch(right_device,right_interface)
@@ -424,7 +425,7 @@ def parse_topology(topology_file):
         else:
             if "mgmt_ip" not in inventory[mgmt_server]:
                 inventory[mgmt_server]["mgmt_ip"] = "192.168.200.254"
-    
+
         inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
         if provider=="libvirt":
             inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
@@ -433,7 +434,7 @@ def parse_topology(topology_file):
         inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
 
         #Hardcode mgmt switch parameters
-            
+
         if mgmt_switch == None and create_mgmt_network:
             if "oob-mgmt-switch" in inventory:
                 print styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-switch must be set to function = "oob-switch"' + styles.ENDC
@@ -484,7 +485,7 @@ def parse_topology(topology_file):
                 mgmt_switch_swp_val="swp"+str(mgmt_switch_swp)
                 left_mac=mac_fetch(mgmt_switch,mgmt_switch_swp_val)
                 right_mac=mac_fetch(device,"eth0")
-            
+
                 half1_exists=False
                 half2_exists=False
                 #Check to see if components of the link already exist
@@ -730,7 +731,7 @@ def populate_data_structures(inventory):
     for device in devices_clean:
         if device['function'] not in function_group: function_group[device['function']] = []
         function_group[device['function']].append(device['hostname'])
-    
+
     return devices_clean
 
 def render_jinja_templates(devices):
@@ -774,6 +775,7 @@ def render_jinja_templates(devices):
                                               synced_folder=synced_folder,
                                               provider=provider,
                                               version=version,
+					      customer=customer,
                                               topology_file=topology_file,
                                               arg_string=arg_string,
                                               epoch_time=epoch_time,

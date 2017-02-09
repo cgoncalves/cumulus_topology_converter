@@ -8,8 +8,8 @@
 #       KNOBS
 #######################
 
-REPOSITORY="https://github.com/CumulusNetworks/example"
-REPONAME="example"
+REPOSITORY="https://github.com/CumulusNetworks/{{customer}}"
+REPONAME="{{customer}}"
 
 #Install Automation Tools
 puppet=0
@@ -158,7 +158,7 @@ sudo /opt/puppetlabs/bin/puppet module install puppetlabs-stdlib
 #sudo bash -c 'echo "certname = {{ mgmt_ips[0] }}" >> /etc/puppetlabs/puppet/puppet.conf'
 echo " ### STARTING PUPPETSERVER... ###"
 echo "     (this may take a while 30 secs or so...)"
-sudo systemctl restart puppetserver.service  
+sudo systemctl restart puppetserver.service
 EOT
 fi
 if [ $ansible -eq 1 ]; then
