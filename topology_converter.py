@@ -785,7 +785,7 @@ def render_jinja_templates(devices):
                                               function_group=function_group,
                                               network_functions=network_functions,)
                              )
-    #Render the main Vagrantfile
+   #Render the main Vagrantfile
     if display_datastructures: print_datastructures(devices)
     if create_mgmt_device and create_mgmt_configs_only:
         return 0
@@ -868,13 +868,15 @@ def main():
 
     generate_ansible_files()
 
-if __name__ == "__main__":
-    main()
     if create_mgmt_configs_only:
         print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: MGMT Network Templates have been regenerated!\n############" + styles.ENDC
     else:
         print styles.GREEN + styles.BOLD + "\n############\nSUCCESS: Vagrantfile has been generated!\n############" + styles.ENDC
+        print styles.GREEN + styles.BOLD + "\n            %s devices under simulation." %(len(devices)) + styles.ENDC
     for warn_msg in warning:
         print warn_msg
     print "\nDONE!\n"
+
+if __name__ == "__main__":
+    main()
 exit(0)
