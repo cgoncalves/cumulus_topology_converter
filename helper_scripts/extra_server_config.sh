@@ -12,7 +12,7 @@ if [ "$?" == "0" ]; then
     echo -e "note: ubuntu device detected"
     #Install LLDP
     apt-get update -qy && apt-get install lldpd -qy
-    echo "configure lldp portidsubtype ifname" > etc/lldpd.d/port_info.conf
+    echo "configure lldp portidsubtype ifname" > /etc/lldpd.d/port_info.conf
 
     #Replace existing network interfaces file
     echo -e "auto lo" > /etc/network/interfaces
