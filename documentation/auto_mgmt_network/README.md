@@ -1,6 +1,6 @@
-#Automated Management Network Builder
+# Automated Management Network Builder
 
-##Table of Contents
+## Table of Contents
 * [Writing a Topology.dot File](#writing-a-topologydot-file)
 * [Default Automatic Behaviors](#default-automatic-behaviors)
 * [Implementation Details](#implementation-details)
@@ -12,7 +12,7 @@ The '-c' option can be used and TC will automatically build a management network
 
 ![Automatically Built Devices and Links](./automated_mgmt_network.png)
 
-###Writing a Topology.dot File
+### Writing a Topology.dot File
 Here is a sample topology.dot file that works with the automated management network builder feature. Notice that mgmt_ip is specified for various nodes, these will be the eth0 ip addresses that will be mapped to DHCP entries on the oob-mgmt-server.
 
 ```
@@ -40,7 +40,7 @@ graph dc1 {
 }
 ```
 
-###Default Automatic Behaviors
+### Default Automatic Behaviors
 * OOB-mgmt-server is created using Ubuntu1604
 * OOB-mgmt-switch is created using the default CumulusCommunity/cumulus-vx image
   * A link between the oob-mgmt-server:mgmt_net <--> oob-mgmt-switch:swp1 is created
@@ -56,7 +56,7 @@ graph dc1 {
 * /etc/hosts file pre-built on oob-mgmt-server
 
 
-###Implementation Details
+### Implementation Details
 In order for the automated management network builder to create all of this extra configuration it uses a series of extra templates which are rendered along with the template which renders the Vagrantfile while Topology Converter is being executed. Those templates exist in the ./templates/auto_mgmt_network/ directory and include:
 * ansible_hostfile.j2
 * dhcpd.conf.j2
@@ -73,7 +73,7 @@ These templates, once rendered will be placed on the OOB-mgmt-server in the appr
 
 New templates can be added to this directory and they will be automatically rendered to the ./helper_scripts/auto_mgmt_network/ directory however the standard ./templates/Vagrantfile.j2 template would need to be extended to process any new files.
 
-###Sample Output
+### Sample Output
 From the output below it is possible to see the managment links being automatically created. If you use the '-v' option you will see even more as all of the extra individual template files are rendered.
 
 ```
