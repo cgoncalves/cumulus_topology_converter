@@ -49,7 +49,6 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
         mv -v /etc/init.d/rename_eth_swp /etc/init.d/rename_eth_swp.backup
 
         echo "### Rebooting to Apply Remap..."
-        reboot
 
     elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
         echo "  INFO: Detected a 3.x Based Release"
