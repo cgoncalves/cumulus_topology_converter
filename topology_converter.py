@@ -173,7 +173,7 @@ def lint_topo_file(topology_file):
             try:
                 line.encode('ascii','ignore')
             except UnicodeDecodeError as e:
-                print(styles.FAIL + styles.BOLD + " ### ERROR: Line %s:\n %s\n         --> \"%s\" \n     Has hidden unicode characters in it which prevent it from being converted to ASCII cleanly. Try manually typing it instead of copying and pasting." % (count,line,line.decode('utf-8').encode('ascii','replace')) + styles.ENDC)
+                print(styles.FAIL + styles.BOLD + " ### ERROR: Line %s:\n %s\n         --> \"%s\" \n     Has hidden unicode characters in it which prevent it from being converted to ASCII cleanly. Try manually typing it instead of copying and pasting." % (count,line,re.sub(r'[^\x00-\x7F]+','?', line)) + styles.ENDC)
                 exit(1)
 
             if line.count("\"")%2 == 1:
@@ -227,7 +227,7 @@ def parse_topology(topology_file):
         try:
             node_name.encode('ascii','ignore')
         except UnicodeDecodeError as e:
-            print(styles.FAIL + styles.BOLD + " ### ERROR: Node name \"%s\" --> \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (node_name,node_name.decode('utf-8').encode('ascii','replace')) + styles.ENDC)
+            print(styles.FAIL + styles.BOLD + " ### ERROR: Node name \"%s\" --> \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (node_name,re.sub(r'[^\x00-\x7F]+',' ', node_name)) + styles.ENDC)
             exit(1)
 
         if node_name not in inventory:
@@ -323,7 +323,7 @@ def parse_topology(topology_file):
             try:
                 value.encode('ascii','ignore')
             except UnicodeDecodeError as e:
-                print(styles.FAIL + styles.BOLD + " ### ERROR: in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        Link component: \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (left_device,left_interface,right_device,right_interface,value.decode('utf-8').encode('ascii','replace')) + styles.ENDC)
+                print(styles.FAIL + styles.BOLD + " ### ERROR: in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        Link component: \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (left_device,left_interface,right_device,right_interface,re.sub(r'[^\x00-\x7F]+',' ', value)) + styles.ENDC)
                 exit(1)
 
 
