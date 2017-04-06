@@ -161,7 +161,7 @@ def mac_fetch(hostname,interface):
 def add_mac_colon(mac_address):
     global verbose
     if verbose: print("MAC ADDRESS IS: \"%s\"" % mac_address)
-    return str(':'.join(s.encode('hex') for s in mac_address.decode('hex')))
+    return ':'.join(map(''.join, zip(*[iter(mac_address)]*2)))
 
 def lint_topo_file(topology_file):
     with open(topology_file,"r") as topo_file:
