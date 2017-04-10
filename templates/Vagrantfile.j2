@@ -4,7 +4,7 @@
 #    built with the following args: {{ arg_string }}
 #
 #    NOTE: in order to use this Vagrantfile you will need:
-#       -Vagrant(v1.8.1+) installed: http://www.vagrantup.com/downloads
+#       -Vagrant(v1.8.6+) installed: http://www.vagrantup.com/downloads
 #       -the "helper_scripts" directory that comes packaged with topology-converter.py
 {% if provider == 'virtualbox' %}#       -Virtualbox installed: https://www.virtualbox.org/wiki/Downloads
 
@@ -17,10 +17,10 @@
 #Set the default provider to libvirt in the case they forget --provider=libvirt or if someone destroys a machine it reverts to virtualbox
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-Vagrant.require_version ">= 1.8.6", "< 1.9.2"
+Vagrant.require_version ">= 1.8.6", "< 1.9.4"
 
 # Check required plugins
-REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt vagrant-mutate)
+REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt)
 exit unless REQUIRED_PLUGINS_LIBVIRT.all? do |plugin|
   Vagrant.has_plugin?(plugin) || (
     puts "The #{plugin} plugin is required. Please install it with:"
@@ -83,7 +83,7 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
 fi
 echo "### DONE ###"
 echo "### Rebooting Device to Apply Remap..."
-nohup bash -c 'sleep 2; shutdown now -r "Rebooting to Remap Interfaces"' &
+nohup bash -c 'sleep 10; shutdown now -r "Rebooting to Remap Interfaces"' &
 SCRIPT
 
 Vagrant.configure("2") do |config|
