@@ -270,7 +270,7 @@ def parse_topology(topology_file):
             if value.startswith('"') or value.startswith("'"): value=value[1:]
             if value.endswith('"') or value.endswith("'"): value=value[:-1]
             inventory[node_name][attribute] = value
-            if attribute is "config" and not os.path.isfile(value):
+            if (attribute == "config") and (not os.path.isfile(value)):
                 warning.append(styles.WARNING + styles.BOLD + "    WARNING: Node \""+node_name+"\" Config file for device does not exist" + styles.ENDC)
 
         if provider == 'libvirt':
