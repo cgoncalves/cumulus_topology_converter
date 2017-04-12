@@ -224,19 +224,8 @@ In the below example, the network oob connections are defined:
   "leaf02":"eth0" -- "oob-mgmt-switch":"swp103" [left_mac="00:25:90:b2:30:bd"]
   }
 
+####Rebuilding DHCP and /etc/hosts without rebuilding Vagrantfile
 
+When using topology_converter, sometimes the DHCP mac-to-ip mapping information for the oob management network may need to be tweaked. This requires editing the topology.dot file. Since no actual connection information is changed, and only the MAC to IP mapping, the entire Vagrantfile does not need to be recreated.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+In this case, issue the -cco option with topology_converter to recreate all the necessary oob files without having to recreate the entire Vagrantfile.
