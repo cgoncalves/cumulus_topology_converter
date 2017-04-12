@@ -270,6 +270,8 @@ def parse_topology(topology_file):
             if value.startswith('"') or value.startswith("'"): value=value[1:]
             if value.endswith('"') or value.endswith("'"): value=value[:-1]
             inventory[node_name][attribute] = value
+            if attribute is "config" and not os.path.isfile(value):
+                warning.append(styles.WARNING + styles.BOLD + "    WARNING: Node \""+node_name+"\" Config file for device does not exist" + styles.ENDC)
 
         if provider == 'libvirt':
             if 'os' in inventory[node_name]:
@@ -475,7 +477,8 @@ def parse_topology(topology_file):
             for device in inventory:
                 if inventory[device]["function"]=="oob-server" or inventory[device]["function"]=="oob-switch": continue
                 elif inventory[device]["function"] in network_functions:
-                    inventory[device]["config"] = "./helper_scripts/extra_switch_config.sh"
+                    if config not in inventory[device]:
+                        inventory[device]["config"] = "./helper_scripts/extra_switch_config.sh"
                 mgmt_switch_swp+=1
                 net_number+=1
                 if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
