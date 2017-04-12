@@ -477,7 +477,7 @@ def parse_topology(topology_file):
             for device in inventory:
                 if inventory[device]["function"]=="oob-server" or inventory[device]["function"]=="oob-switch": continue
                 elif inventory[device]["function"] in network_functions:
-                    if config not in inventory[device]:
+                    if "config" not in inventory[device]:
                         inventory[device]["config"] = "./helper_scripts/extra_switch_config.sh"
                 mgmt_switch_swp+=1
                 net_number+=1
