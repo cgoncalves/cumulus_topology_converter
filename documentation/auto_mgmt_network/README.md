@@ -46,7 +46,7 @@ graph dc1 {
   * A link between the oob-mgmt-server:mgmt_net <--> oob-mgmt-switch:swp1 is created
   * A link from Eth0 of each device is created to the next available port on oob-mgmt-switch starting with swp2
 * DHCP Server installed on oob-mgmt-server
-  * If "mgmt_ip=" is specified on the oob-mgmt-server that IP address (multiple can be specified in CSV format) will be applied to the mgmt_net interface. DHCP will be configured for each of the mgmt_ip subnets as /24 class C networks with the 201-250 addresses being reserved for generic DHCP. 
+  * If "mgmt_ip=" is specified on the oob-mgmt-server that IP address (multiple can be specified in CSV format) will be applied to the mgmt_net interface. DHCP will be configured for each of the mgmt_ip subnets as /24 class C networks with the 201-250 addresses being reserved for generic DHCP.
     * It is recommended to have your nodes configured with a last octet mgmt_ip between 1-200
     * It is recommended to have your oob-mgmt-server mgmt_ip configured with .254 as the last octet
   * If "mgmt_ip=" is not specified in the oob-mgmt-server node definition, a default value of 192.168.200.254 is assumed and DHCP will be handled using the 192.168.200.0/24 subnet (192.168.200.201-192.168.200.250).
@@ -69,7 +69,7 @@ These templates, once rendered will be placed on the OOB-mgmt-server in the appr
 * dhcpd.conf --> /etc/dhcpd/dhcpd.conf
 * dhcpd.hosts --> /etc/dhcpd/dhcpd.hosts
 * hosts --> /etc/hosts
-* OOB_Server_Config_auto_mgmt.sh --> executed on bootup 
+* OOB_Server_Config_auto_mgmt.sh --> executed on bootup
 
 New templates can be added to this directory and they will be automatically rendered to the ./helper_scripts/auto_mgmt_network/ directory however the standard ./templates/Vagrantfile.j2 template would need to be extended to process any new files.
 
@@ -192,4 +192,40 @@ DONE!
 
 ```
 
+###Customizations
 
+####User defined management connections
+
+Sometimes the user wants to define the OOB connections to better emulate production behaviour. The -c option automatically defines MAC addresses and port ordering. The -cmd option lets the user map the oob connections, but then still leverage topology_converter to create all the DHCP and /etc/hosts mappings.
+
+The -cmd option requires that the oob-mgmt-switch and oob-mgmt-server are defined manually, and explicitly called by these static names.
+
+In the below example, the network oob connections are defined:
+ graph vx {
+  "leaf01" [function="leaf" os="CumulusCommunity/cumulus-vx" version="3.2.1" memory="512" config="./helper_scripts/config_switch.sh" mgmt_ip="10.128.0.101"]
+  "leaf02" [function="leaf" os="CumulusCommunity/cumulus-vx" version="3.2.1" memory="512" config="./helper_scripts/config_switch.sh" mgmt_ip="10.128.0.102"]
+  "server01" [function="host" os="yk0/ubuntu-xenial" memory="512" ubuntu=True config="./helper_scripts/config_server.sh" mgmt_ip="10.128.0.31"]
+  "server02" [function="host" os="yk0/ubuntu-xenial" memory="512" ubuntu=True config="./helper_scripts/config_server.sh" mgmt_ip="10.128.0.32"]
+  "oob-mgmt-switch" [function="oob-switch" version="3.2.1" config="./helper_scripts/oob_switch_config.sh" mgmt_ip="10.128.0.254"]
+  "oob-mgmt-server" [function="oob-server" memory="1024" mgmt_ip="10.128.0.1"]
+
+  "leaf01":"swp51" -- "leaf02":"swp51"
+  "leaf01":"swp52" -- "leaf02":"swp52"
+
+  "server01":"eth1" -- "leaf01":"swp1"
+  "server01":"eth2" -- "leaf02":"swp1"
+  "server02":"eth1" -- "leaf01":"swp2"
+  "server02":"eth2" -- "leaf02":"swp2"
+
+  "oob-mgmt-server":"mgmt_net" -- "oob-mgmt-switch":"swp99"
+  "server01":"eth0" -- "oob-mgmt-switch":"swp100" [left_mac="A0:00:00:00:00:31"]
+  "server02":"eth0" -- "oob-mgmt-switch":"swp101" [left_mac="A0:00:00:00:00:32"]
+  "leaf01":"eth0" -- "oob-mgmt-switch":"swp102" [left_mac="00:25:90:b2:27:0b"]
+  "leaf02":"eth0" -- "oob-mgmt-switch":"swp103" [left_mac="00:25:90:b2:30:bd"]
+  }
+
+####Rebuilding DHCP and /etc/hosts without rebuilding Vagrantfile
+
+When using topology_converter, sometimes the DHCP mac-to-ip mapping information for the oob management network may need to be tweaked. This requires editing the topology.dot file. Since no actual connection information is changed, and only the MAC to IP mapping, the entire Vagrantfile does not need to be recreated.
+
+In this case, issue the -cco option with topology_converter to recreate all the necessary oob files without having to recreate the entire Vagrantfile.
