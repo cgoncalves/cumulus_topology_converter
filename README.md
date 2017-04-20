@@ -33,20 +33,13 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
-## New Features in v4.6.1
+## Features in v4.6.1
 * Fixed LLDP path error on Ubuntu hosts (PR #58)
 * Fixed Docs for CMD CCO command line options (Issue #55)
 * Added host config file check for -c workflows so any provided values are not overwritten (Issue #46)
 * Added versioning for templates (Issue #53)
 * Fixed reboot failures in some configurations
 * Added MOTD and better defaults for OOB-MGMT-Server (now using eth1 instead of mgmt_net)
-
-
-### Bugfixes:
-* Fixed many aspects of the Auto Mgmt Workflow (-c)
-  * Added Mgmt Subnet check to DHCP IP Host Template
-* Added linting and Sanity checking for unicode characters, quotes and other typos in topology file
-* Fixed MAC address conversion issue on Windows machines
 
 
 ## Changelog:
