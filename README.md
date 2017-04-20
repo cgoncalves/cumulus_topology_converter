@@ -33,15 +33,13 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
-## New Features in v4.6.0
-* Updated oob-mgmt-server image to yk0
-* Added support for NCLU on the Vagrant User
-* Added a version argument
-* Added -cco (Create Mgmt Configs Only) option to allow for regeneration of templates without regeneration of the vagrantfile.
-* Added -cmd (Create Mgmt Device Only) option to create the oob-mgmt-server without creatin the oob-mgmt-switch as well.
-* Added node_name sanity checking
-* Added ports node attribute for libvirt simulations for more realistic simulation environments
-* Set the functional default for hosts and oob-servers to yk0/ubuntu-xenial
+## New Features planned for in v4.6.2
+* Acceptance Testing for PR #61 (Python3 Support)
+* Fixes for:
+  * Issue #49
+  * Issue #51
+  * Issue #52
+  * Issue #54
 
 ### Bugfixes:
 * Fixed many aspects of the Auto Mgmt Workflow (-c)
