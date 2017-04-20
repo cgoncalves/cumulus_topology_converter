@@ -204,8 +204,8 @@ In the below example, the network oob connections are defined:
  graph vx {
   "leaf01" [function="leaf" os="CumulusCommunity/cumulus-vx" version="3.2.1" memory="512" config="./helper_scripts/config_switch.sh" mgmt_ip="10.128.0.101"]
   "leaf02" [function="leaf" os="CumulusCommunity/cumulus-vx" version="3.2.1" memory="512" config="./helper_scripts/config_switch.sh" mgmt_ip="10.128.0.102"]
-  "server01" [function="host" os="yk0/ubuntu-xenial" memory="512" ubuntu=True config="./helper_scripts/config_server.sh" mgmt_ip="10.128.0.31"]
-  "server02" [function="host" os="yk0/ubuntu-xenial" memory="512" ubuntu=True config="./helper_scripts/config_server.sh" mgmt_ip="10.128.0.32"]
+  "server01" [function="host" os="yk0/ubuntu-xenial" memory="512" config="./helper_scripts/config_server.sh" mgmt_ip="10.128.0.31"]
+  "server02" [function="host" os="yk0/ubuntu-xenial" memory="512" config="./helper_scripts/config_server.sh" mgmt_ip="10.128.0.32"]
   "oob-mgmt-switch" [function="oob-switch" version="3.2.1" config="./helper_scripts/oob_switch_config.sh" mgmt_ip="10.128.0.254"]
   "oob-mgmt-server" [function="oob-server" memory="1024" mgmt_ip="10.128.0.1"]
 
