@@ -1,6 +1,6 @@
-#Topology Converter Documentation
+# Topology Converter Documentation
 
-##Table of Contents
+## Table of Contents
 * [Glossary](#glossary)
 * [Features](#features)
 * [Installation](#installation)
@@ -45,16 +45,16 @@
                                                                        +------------+
 ```
 
-##Glossary:
-###Topology File
+## Glossary:
+### Topology File
 Usually a file ending in the ".dot" suffix. This file describes the network topology link-by-link. Written in https://en.wikipedia.org/wiki/DOT_(graph_description_language). This file can be the same one used as part of the [Perscriptive Topology Manager (PTM) feature](https://docs.cumulusnetworks.com/display/DOCS/Prescriptive+Topology+Manager+-+PTM) in Cumulus Linux.
-###Provider
+### Provider
 Similar to a hypervisor, providers are Vagrant's term for the device that is either directoy hosting the VM (virtualbox) or the subsystem that vagrant is communicating with to further orchestratrate the creation of the VM (libvirt)
-###Interface Remapping
+### Interface Remapping
 Interface remapping is the process by which interfaces are renamed to match the interfaces specified in the topology file. Interface Remapping uses UDEV rules that are orchestrated in the Vagrantfile and applied by rebooting the machines under simulation. This process allows a device in a topologyfile to simulate ports like "swp49" without having to simulate ports swp1-48. See the "[Miscellaneous Info](#miscellaneous-info)" Section for additional information.
 
 
-##Features
+## Features
 * Converts a topology file "topology.dot" into a Vagrantfile
 * 1 file is modified by the user (topology.dot) to create a suitable Vagrantfile
 * Handles interface remapping on Vx instances (and hosts) to match the interfaces used in the provided topology file
@@ -63,9 +63,9 @@ Interface remapping is the process by which interfaces are renamed to match the 
 * Does not require Vagrant/Virtualbox/libvirt to be installed to create the Vagrantfile
 * Supports the Virtualbox and Libvirt Vagrant Providers (Hypervisors)
 
-##Installation
+## Installation
 
-###Ubuntu
+### Ubuntu
 Both 16.04 and 14.04.
 
 ```
@@ -76,7 +76,7 @@ sudo pip install pydotplus
 sudo pip install jinja2
 ```
 
-###Mac
+### Mac
 
 
 ```
@@ -88,12 +88,12 @@ sudo pip install jinja2
 ```
 
 
-##Using Topology Converter
+## Using Topology Converter
 To use Topology Converter [TC] you need to work with one file: topology.dot
 
 The actual name of the topology file is irrelevant. Your "topology.dot" file could be named "HAPPYHAPPYJOYJOY.dot" and that would be just fine.
 
-###The Basic Workflow
+### The Basic Workflow
 **1). Create a Topology File**
 Create a topology.dot file or borrow a provided ".dot" file from the "topology_converter/examples/" directory
 In this example, we'll work with the topology_converter / examples / 2switch_1server.dot file shown below:
@@ -138,12 +138,12 @@ or if using Libvirt:
       $ vagrant up --provider=libvirt
 ```
 
-###What is happening when you run Topology Converter?
+### What is happening when you run Topology Converter?
 1. When topology_converter (TC) is called, TC reads the provided topology file line by line and learns information about each node and each link in the topology.
 2. This information is stored in a variables datastructure. (View this datastructure using the "python ./topology_converter.py [topology_file] -dd" option)
 3. A jinja2 template "Vagrantfile.j2" (stored in the /templates directory) is used to render a Vagrantfile based on the variables datastructure.
 
-###Functional Defaults
+### Functional Defaults
 Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
 
 **For Functions:** "oob-switch" "exit" "superspine" "spine" "leaf" "tor"
@@ -160,7 +160,7 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
 
-###Vagrant Box Selection
+### Vagrant Box Selection
 There are a number of different sources of Vagrant box images however there are several that we consistently use in simulations. Here is a list of those commonly used images.
 
 For Virtualbox:
@@ -182,10 +182,10 @@ For Libvirt:
 
 *Note: Mutation is the process of converting an image which was written for use with one hypervisor to run under another hypervisor, to learn how to mutate a box that was built for the virtualbox provider to use the libvirt provider check out this [community post](https://community.cumulusnetworks.com/cumulus/topics/converting-cumulus-vx-virtualbox-vagrant-box-gt-libvirt-vagrant-box).
 
-###Supported Attributes
+### Supported Attributes
 Note: This list cannot be exhaustive because users can define new [passthrough attributes](#passthrough-attributes) and use them with custom templates. These are simply the attributes that the default template (Vagrantfile.j2) has support for.
 
-####Node(Device) Level Attributes
+#### Node(Device) Level Attributes
 * os -- Sets the Operating System (i.e. the vagrant box) to be booted. This can also be provided indirectly when using a "function" as discussed in the [Functional Defaults](#functional-defaults) section or in the "function" attribute below.
 * config -- This defines a provisioning script to be called on the VM during the initial boot process. This script applies a basic interface configuration so the machine will be able to be controlled by vagrant after the interface remap. This can be overloaded with whatever additional configuration you may want your devices to have but keep in mind this script will be executed prior to having [interfaces remapped](#interface-remapping) so any configuration that requires the presence of particular interfaces (like running "ifreload -a") will not be able to complete here.
 * memory -- (mostly optional) Sets the amount of memory (in MB) to be provided to the VM.
@@ -201,15 +201,15 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 * ssh_port -- (optional) Specify a port (greater than 1024) to be used for SSH to a specific node.
 * vagrant -- (optional) This option controls the name of the vagrant interface which vagrant will use to communicate with the guest. The default name of the vagrant interface is set to "vagrant". When using this option it will be necessary to modify the config=./helper_script/xxx.sh" script to reflect the name that has been choosen.
 
-####Link Level Attributes
+#### Link Level Attributes
 * left_ and right_ -- These arguments can be prepended to any link attribute to map the attribute to a single side of the link.
 * left_mac and right_mac -- (optional) Defines the mac addresses on either side of the link.
 * pxebootinterface -- (optional) Defines which interface will be used for pxeboot. (In the future multiple interfaces may be allowed but for now, only one primary interface can be defined for pxeboot)
 
 
-##Optional Features (Everything Else)
+## Optional Features (Everything Else)
 
-###Providers
+### Providers
 Topology Converter supports the use of two providers, Virtualbox and Libvirt (/w KVM). Virtualbox is the default provider.
 
 To use Libvirt/KVM specify the "-p libvirt" option
@@ -245,7 +245,7 @@ When running multiple libvirt simulations at the same time, default UDP port num
 
 Vagrantfiles written for the libvirt provider will come up in parallel by default regardless of the order specified in the Vagrantfile this give libvirt an obvious advantage for simulations with many nodes. To avoid this use "vagrant up --provider=libvirt --no-parallel
 
-###Faked Devices
+### Faked Devices
 In virtual environments it may not always be possible to simulate every single device due to memory restrictions, interest, proprietary OSes etc. Faked devices give Topology Converter a way to know that a device in a topology.dot file is not actually going to be simulated. However when a faked device is connected to a real device the real device MUST create an interface as if the faked device was actually present.
 Creating the interface allows for the simulation of interface configuration that would face the faked device. If no interface was present, the interface configuration may fail which could inhibit automation tooling tests and ultimately provide a less accurate simulation. To specify that a device is to be faked, add it to the "function" attribute of the node definition in the topology file.
 
@@ -258,7 +258,7 @@ graph dc1 {
 }
 ```
 
-###Boot Ordering
+### Boot Ordering
 Boot ordering is accomplished in Virtualbox by using the "function" attribute of the node:
 Order:
 
@@ -282,7 +282,7 @@ Order:
 
 The boot order directly relates to the location of the VM's definition in the generated Vagrantfile... VMs at the top of the Vagrantfile will boot first.
 
-###MAC Handout
+### MAC Handout
 If a MAC address is not specified using the format shown below then it will be auto assigned starting from the address [ 44:38:39:00:00:00 ] which is Cumulus' private MAC address range; otherwise MAC addresses are assigned to members of a link using the "left_mac" and "right_mac" syntax. It is not necessary to specify both MAC addresses if only one it known; in other words, one is not required to use both left_mac and right_mac attributes in the same line.
 
 ```
@@ -310,7 +310,7 @@ leaf2,swp3,4438391eaf23
 leaf2,swp4,4438391eaf24
 ```
 
-###Ansible Hostfile Generation
+### Ansible Hostfile Generation
 When the "-a" option is specified, Ansible hostfiles will be generated by Vagrant. TC will create a dummy playbook in the helper_scripts directory (called: empty_playbook.yml) with one task (shell: "uname -a") which will force Vagrant to create a hostfile which can be used to run other Ansible playbooks later if you chose. TC will also create an "ansible.cfg" file for use with Ansible.
 
 ```
@@ -322,7 +322,7 @@ When the "-a" option is specified, Ansible hostfiles will be generated by Vagran
 *Note: this will also create ansible groups in the inventory file based on the functions to which nodes belong. So for instance it is possible to run an ad-hoc command like so $ ansible -m ping leaf*
 
 
-###Inter-Hypervisor Simulation
+### Inter-Hypervisor Simulation
 ![InterHypervisor Simulation](interhypervisor_simulation.png)
 
 It is possible to strech simulations across an L3 fabric to place different simulated devices on different physical nodes. This can only be done using the Libvirt provider option and only with libvirt v 1.2.20+ which contains the relevent patches to support the UDP tunnel infrastructure which Cumulus engineers contributed to the libvirt codebase. This is possible using the "tunnel_ip" node-parameter. When not specified for a libvirt simulation the default of 127.0.0.1 is assumed for a fully contained local simulation.
@@ -339,7 +339,7 @@ graph dc1 {
 ```
 
 
-###Custom Templates
+### Custom Templates
 TC works by reading information from a topology file into variables which are then used to populate a Jinja2 template for the Vagrantfile (called: ./templates/Vagrantfile.j2). TC allows you to specify additional templates that can be filled in using the same information from the topology file.
 
 To see a list of the variables that will be passed to a template use the "-dd" which is short for "display datastructure" option.
@@ -358,7 +358,7 @@ To specify a custom template use the "-t" option:
 
 ```
 
-###Passthrough Attributes
+### Passthrough Attributes
 When working with custom templates or when modifying the included Vagrantfile template (called: ./templates/Vagrantfile.j2) it may be useful to provide additional parameters to populate variables in your customized template. By default any variable specified at the node level is automatically passed through to the templates whether or not TC actually uses it. This allows for maximum flexibility for end-users to add custom information about nodes and attributes.
 
 **Note: for links it is possible to override the attributes generated for the link by TC since passthrough attributes are applied last. One could use this to manually specify a particular network number for the virtualbox provider. For attributes specified on links, any attrubutes which are not "left_mac" or "right_mac" will be applied to both ends of the link.**
@@ -381,7 +381,7 @@ graph dc1 {
 ```
 **Note: As of v4.1.0 it is now possible to specify which side of the link will receive any custom passthrough attribute by prepending the "left_" or "right_" keywords to the beginning of the attribute.**
 
-###Provisioning Scripts
+### Provisioning Scripts
 Scripts can be specified for execution on the end host using the "config=" node attribute in a topology file. In the example below, a "custom_script.sh" is used to provision the leaf1 device.
 
 ```
@@ -396,7 +396,7 @@ graph dc1 {
 }
 ```
 
-###Ansible Playbooks
+### Ansible Playbooks
 Similar to the above option, provisioning and configuration can be performed by specifying a node-specific Ansible Playbook. Specifiying a playbook here will call the Vagrant Ansible provisioner and force Vagrant to generate an Ansible hostfile.
 
 ```
@@ -413,7 +413,7 @@ graph dc1 {
 
 *Note: this will also create ansible groups in the inventory file based on the functions to which nodes belong. So for instance it is possible to run an ad-hoc command like so $ ansible -m ping leaf*
 
-###Automatically Building A Management Network
+### Automatically Building A Management Network
 One of the useful options in Topology Converter that is new as of version v4.5 is the ability to automatically create a management network. The documentation for this feature is extensive and located in its own [Automated Management Network Section](./auto_mgmt_network).
 
 The above documentation link covers three options:
@@ -422,7 +422,7 @@ The above documentation link covers three options:
 -cco    allow for regeneration of templates without regeneration of the vagrantfile.
 
 
-###PXE Booting Hosts
+### PXE Booting Hosts
 Vagrant provides the capability to boot an image with no box file specified however the provider which Vagrant uses to control Virtualbox does not support that behavior. To support PXE booting hosts, Topology Converter provides several additional node and link attributes.
 
 The "pxe_config.sh" Configuration/Provisioning script is provided in the helper scripts directory to be used for hosts that require PXE booting. This script destroys the MBR of the image that is being booted using the DD command.
@@ -444,20 +444,20 @@ graph dc1 {
 ```
 
 
-###Debugging Mode
+### Debugging Mode
 Use the -v option.
 
 ```
 -v, --verbose         enables verbose logging mode
 ```
 
-###Synced Folders
+### Synced Folders
 By default Vagrant's synced folder is disabled in Vagrantfiles built with topology converter. This is done because it has proven unreliable. In the event that you would like to share files with a VM in simulation you can use "vagrant scp" to move a file into the VM as needed.
 
 If you would like to renable the synced folder you can add the "--synced-folder" option when calling topology converter on the command line.
 
 
-##Miscellaneous Info
+## Miscellaneous Info
 * Boxcutter box images are used whenver simulation is not performed with a VX device. This is to save on the amount of RAM required to run a simulation. For example, a default ubuntu14.04 image from ubuntu consumes ~324mb of RAM at the time of this testing, a default boxcutter/ubuntu1404 image consumes ~124mb of RAM.
 * When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is related to Vagrant #7286 https://github.com/mitchellh/vagrant/issues/7286.
 * Point to Multipoint connections are not supported at this time.
