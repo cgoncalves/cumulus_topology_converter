@@ -170,12 +170,12 @@ For Virtualbox:
 * boxcutter/ubuntu1404
 * boxcutter/ubuntu1604
 * boxcutter/fedora23
-* boxcutter/debian82
+* debian/jessie64
 
 For Libvirt:
-* **Mutated** cumuluscommunity/cumulus-vx
+* cumuluscommunity/cumulus-vx
 * **Mutated** boxcutter/ubuntu1404
-* **Mutated** boxcutter/debian82
+* debian/jessie64
 * yk0/ubuntu-xenial
 
 *Note: When using Ubuntu1604 with the libvirt provider, an image that was natively built for libvirt must be used like yk0/ubuntu-xenial otherwise the machine will fail to boot. See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607 , https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609
