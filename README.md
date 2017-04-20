@@ -33,15 +33,14 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
-## New Features in v4.6.0
-* Updated oob-mgmt-server image to yk0
-* Added support for NCLU on the Vagrant User
-* Added a version argument
-* Added -cco (Create Mgmt Configs Only) option to allow for regeneration of templates without regeneration of the vagrantfile.
-* Added -cmd (Create Mgmt Device Only) option to create the oob-mgmt-server without creatin the oob-mgmt-switch as well.
-* Added node_name sanity checking
-* Added ports node attribute for libvirt simulations for more realistic simulation environments
-* Set the functional default for hosts and oob-servers to yk0/ubuntu-xenial
+## New Features in v4.6.1
+* Fixed LLDP path error on Ubuntu hosts (PR #58)
+* Fixed Docs for CMD CCO command line options (Issue #55)
+* Added host config file check for -c workflows so any provided values are not overwritten (Issue #46)
+* Added versioning for templates (Issue #53)
+* Fixed reboot failures in some configurations
+* Added MOTD and better defaults for OOB-MGMT-Server (now using eth1 instead of mgmt_net)
+
 
 ### Bugfixes:
 * Fixed many aspects of the Auto Mgmt Workflow (-c)
