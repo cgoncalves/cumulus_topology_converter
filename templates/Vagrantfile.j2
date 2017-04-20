@@ -1,10 +1,11 @@
 # Created by Topology-Converter v{{ version }}
+#    Template Revision: v4.6.1
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 #    built with the following args: {{ arg_string }}
 #
 #    NOTE: in order to use this Vagrantfile you will need:
-#       -Vagrant(v1.8.1+) installed: http://www.vagrantup.com/downloads
+#       -Vagrant(v1.8.6+) installed: http://www.vagrantup.com/downloads
 #       -the "helper_scripts" directory that comes packaged with topology-converter.py
 {% if provider == 'virtualbox' %}#       -Virtualbox installed: https://www.virtualbox.org/wiki/Downloads
 
@@ -17,10 +18,10 @@
 #Set the default provider to libvirt in the case they forget --provider=libvirt or if someone destroys a machine it reverts to virtualbox
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-Vagrant.require_version ">= 1.8.6", "< 1.9.2"
+Vagrant.require_version ">= 1.8.6", "< 1.9.4"
 
 # Check required plugins
-REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt vagrant-mutate)
+REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt)
 exit unless REQUIRED_PLUGINS_LIBVIRT.all? do |plugin|
   Vagrant.has_plugin?(plugin) || (
     puts "The #{plugin} plugin is required. Please install it with:"
@@ -49,16 +50,11 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
         mv -v /etc/init.d/rename_eth_swp /etc/init.d/rename_eth_swp.backup
 
         echo "### Rebooting to Apply Remap..."
-        reboot
 
     elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
         echo "  INFO: Detected a 3.x Based Release"
         echo "### Disabling default remap on Cumulus VX..."
         mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
-        #echo "### Applying Remap without Reboot..."
-        #~/apply_udev.py --apply
-        #echo "### Performing IFRELOAD to Apply any Latent Interface Config..."
-        #ifreload -a 2>&1
         echo "### Disabling ZTP service..."
         systemctl stop ztp.service
         ztp -d 2>&1
@@ -84,7 +80,7 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
 fi
 echo "### DONE ###"
 echo "### Rebooting Device to Apply Remap..."
-nohup bash -c 'sleep 2; shutdown now -r "Rebooting to Remap Interfaces"' &
+nohup bash -c 'sleep 10; shutdown now -r "Rebooting to Remap Interfaces"' &
 SCRIPT
 
 Vagrant.configure("2") do |config|
