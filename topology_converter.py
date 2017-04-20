@@ -317,8 +317,16 @@ def parse_topology(topology_file):
         #Set Devices/interfaces/MAC Addresses
         left_device=edge.get_source().split(":")[0].replace('"','')
         left_interface=edge.get_source().split(":")[1].replace('"','')
+        if "/" in left_interface:
+            new_left_interface = left_interface.replace('/','-')
+            warning.append(styles.WARNING + styles.BOLD + "    WARNING: Device %s interface %s has bad characters altering to this %s."%(left_device,left_interface,new_left_interface) + styles.ENDC)
+            left_interface = new_left_interface
         right_device=edge.get_destination().split(":")[0].replace('"','')
         right_interface=edge.get_destination().split(":")[1].replace('"','')
+        if "/" in right_interface:
+            new_right_interface = right_interface.replace('/','-')
+            warning.append(styles.WARNING + styles.BOLD + "    WARNING: Device %s interface %s has bad characters altering to this %s."%(right_device,right_interface,new_right_interface) + styles.ENDC)
+            right_interface = new_right_interface
 
         for value in [left_device,left_interface,right_device,right_interface]:
             #Try to encode into ascii
