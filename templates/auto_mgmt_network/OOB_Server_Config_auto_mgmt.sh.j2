@@ -1,6 +1,7 @@
 {% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
 #!/bin/bash
 # Created by Topology-Converter v{{ version }}
+#    Template Revision: v4.6.1
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
@@ -21,7 +22,7 @@ REPONAME="{{customer}}"
 #Install Automation Tools
 puppet=0
 ansible=1
-ansible_version=2.2.2.0
+ansible_version=2.3.0.0
 
 #######################
 
@@ -82,8 +83,8 @@ auto vagrant
 iface vagrant inet dhcp
 
 {% for mgmt_ip in mgmt_ips %}
-auto mgmt_net
-iface mgmt_net inet static
+auto eth1
+iface eth1 inet static
     address {{ mgmt_ip }}/24
 {% endfor %}
 EOT
@@ -184,7 +185,7 @@ sudo rm -rf /etc/puppetlabs/code/environments/production
 sudo ln -s  /home/cumulus/$REPONAME/puppet/ /etc/puppetlabs/code/environments/production
 sudo /opt/puppetlabs/bin/puppet module install puppetlabs-stdlib
 #sudo bash -c 'echo "certname = {{ mgmt_ips[0] }}" >> /etc/puppetlabs/puppet/puppet.conf'
-echo " ### STARTING PUPPETSERVER... ###"
+echo " ### Starting PUPPET Master ###"
 echo "     (this may take a while 30 secs or so...)"
 sudo systemctl restart puppetserver.service
 EOT

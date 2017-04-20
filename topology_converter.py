@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.6.1_dev"
+version = "4.6.1"
 
 
 import os
@@ -457,17 +457,17 @@ def parse_topology(topology_file):
             #Add Link between oob-mgmt-switch oob-mgmt-server
             net_number+=1
             left_mac=mac_fetch(mgmt_switch,"swp1")
-            right_mac=mac_fetch(mgmt_server,"mgmt_net")
+            right_mac=mac_fetch(mgmt_server,"eth1")
             print "  adding mgmt links:"
             if provider=="virtualbox":
-               print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,"swp1",left_mac,mgmt_server,"mgmt_net",right_mac,network_string)
+               print "    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s" % (mgmt_switch,"swp1",left_mac,mgmt_server,"eth1",right_mac,network_string)
             elif provider=="libvirt":
-                print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,"swp1",left_mac,PortA,mgmt_server,"mgmt_net",PortB,right_mac)
+                print "    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)" % (mgmt_switch,"swp1",left_mac,PortA,mgmt_server,"eth1",PortB,right_mac)
             add_link(inventory,
                      mgmt_switch,
                      mgmt_server,
                      "swp1",
-                     "mgmt_net",
+                     "eth1",
                      left_mac,
                      right_mac,
                      net_number)
