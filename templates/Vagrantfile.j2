@@ -117,7 +117,8 @@ Vagrant.configure("2") do |config|
     device.vm.box = "{{ device.os }}"{% if device.version %}
     device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
-      v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %}
+      v.name = "{{ epoch_time }}_{{ device.hostname }}"
+      v.customize ["modifyvm", :id, '--audiocontroller', 'AC97', '--audio', 'Null']{% elif provider == 'libvirt' %}
     device.vm.provider :libvirt do |v|{% if device.pxehost=="True" %}
       v.storage :file, :size => '100G', :type => 'qcow2', :bus => 'sata', :device => 'sda'
       v.boot 'hd'
