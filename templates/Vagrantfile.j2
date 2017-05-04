@@ -137,7 +137,7 @@ Vagrant.configure("2") do |config|
       # link for {{ link.local_interface }} --> {{ link.remote_device }}:{{ link.remote_interface }}
       {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "#{wbid}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
       {% elif provider == 'libvirt' %}device.vm.network "private_network",
-            :mac => "{{ link.mac|replace(':', '') }}",
+            :mac => "{{ link.mac }}",
             :libvirt__tunnel_type => 'udp',
             :libvirt__tunnel_local_ip => '{{ link.local_ip }}',
             :libvirt__tunnel_local_port => '{{ link.local_port }}',
