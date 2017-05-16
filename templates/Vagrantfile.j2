@@ -175,7 +175,7 @@ Vagrant.configure("2") do |config|
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "~/dhcpd.hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/hosts", destination: "~/hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ansible_hostfile", destination: "~/ansible_hostfile"
-    device.vm.provision "file", source: "./helper_scripts/auto_mgmt_network/ztp_oob.sh", destination: "~/ztp_oob.sh"
+    device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ztp_oob.sh", destination: "~/ztp_oob.sh"
 {% endif -%}
 {% if create_mgmt_device and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 
