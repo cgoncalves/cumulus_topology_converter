@@ -747,6 +747,7 @@ def populate_data_structures(inventory):
 
 def render_jinja_templates(devices):
     global function_group
+    if display_datastructures: print_datastructures(devices)
     if verbose: print("RENDERING JINJA TEMPLATES...")
 
     #Render the MGMT Network stuff
@@ -797,7 +798,6 @@ def render_jinja_templates(devices):
                                               network_functions=network_functions,)
                              )
    #Render the main Vagrantfile
-    if display_datastructures: print_datastructures(devices)
     if create_mgmt_device and create_mgmt_configs_only:
         return 0
     for templatefile,destination in TEMPLATES:
