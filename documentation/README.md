@@ -170,12 +170,12 @@ For Virtualbox:
 * boxcutter/ubuntu1404
 * boxcutter/ubuntu1604
 * boxcutter/fedora23
-* boxcutter/debian82
+* debian/jessie64
 
 For Libvirt:
-* **Mutated** cumuluscommunity/cumulus-vx
+* cumuluscommunity/cumulus-vx
 * **Mutated** boxcutter/ubuntu1404
-* **Mutated** boxcutter/debian82
+* debian/jessie64
 * yk0/ubuntu-xenial
 
 *Note: When using Ubuntu1604 with the libvirt provider, an image that was natively built for libvirt must be used like yk0/ubuntu-xenial otherwise the machine will fail to boot. See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607 , https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609
@@ -199,6 +199,7 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 * mgmt_ip -- (optional) Used with the [Automated Management Network](./auto_mgmt_network) feature.
 * ports -- (optional) (_libvirt only_) Used to specify a range of ports that should exist on the node in question. This option only works for devices in functional groups: oob-switch, exit,superspine,spine,leaf,ToR. Example: ports=32 would make sure that swp1-swp32 exist on the target device. This option does not support breakout ports at this time.
 * ssh_port -- (optional) Specify a port (greater than 1024) to be used for SSH to a specific node.
+* vagrant_user -- (optional) Specifies which username vagrant will attempt to login to. MUST have Vagrant Insecure Key Added ahead of time!
 * vagrant -- (optional) This option controls the name of the vagrant interface which vagrant will use to communicate with the guest. The default name of the vagrant interface is set to "vagrant". When using this option it will be necessary to modify the config=./helper_script/xxx.sh" script to reflect the name that has been choosen.
 
 #### Link Level Attributes

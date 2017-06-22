@@ -1,5 +1,5 @@
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.1
+#    Template Revision: v4.6.2
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 #    built with the following args: {{ arg_string }}
@@ -18,7 +18,7 @@
 #Set the default provider to libvirt in the case they forget --provider=libvirt or if someone destroys a machine it reverts to virtualbox
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-Vagrant.require_version ">= 1.8.6", "< 1.9.4"
+Vagrant.require_version ">= 1.8.6", "< 1.9.6"
 
 # Check required plugins
 REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt)
@@ -84,13 +84,14 @@ nohup bash -c 'sleep 10; shutdown now -r "Rebooting to Remap Interfaces"' &
 SCRIPT
 
 Vagrant.configure("2") do |config|
-  wbid = {{ epoch_time }}
 {% if provider == 'virtualbox' %}
   config.vm.provider "virtualbox" do |v|
     v.gui=false
 {% elif provider == 'libvirt' %}
   config.vm.provider :libvirt do |domain|
     # increase nic adapter count to be greater than 8 for all VMs.
+    domain.management_network_address = "10.255.1.0/24"
+    domain.management_network_name = "wbr1"
     domain.nic_adapter_count = 130{% endif %}
   end
 
@@ -115,9 +116,11 @@ Vagrant.configure("2") do |config|
     device.vm.hostname = "{{ device.hostname }}" {% if device.pxehost=="True" and provider == 'libvirt'%}
     #NO BOX USED FOR PXE DEVICE{% else %}
     device.vm.box = "{{ device.os }}"{% if device.version %}
-    device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}
+    device.vm.box_version = "{{ device.version }}"{% endif %}{% if device.vagrant_user %}
+    device.ssh.username = "{{ device.vagrant_user }}"{% endif %}{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
-      v.name = "{{ epoch_time }}_{{ device.hostname }}"{% elif provider == 'libvirt' %}
+      v.name = "{{ epoch_time }}_{{ device.hostname }}"
+      v.customize ["modifyvm", :id, '--audiocontroller', 'AC97', '--audio', 'Null']{% elif provider == 'libvirt' %}
     device.vm.provider :libvirt do |v|{% if device.pxehost=="True" %}
       v.storage :file, :size => '100G', :type => 'qcow2', :bus => 'sata', :device => 'sda'
       v.boot 'hd'
@@ -134,9 +137,9 @@ Vagrant.configure("2") do |config|
 
     # NETWORK INTERFACES{% for link in device.interfaces %}
       # link for {{ link.local_interface }} --> {{ link.remote_device }}:{{ link.remote_interface }}
-      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "#{wbid}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
+      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "{{ epoch_time }}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
       {% elif provider == 'libvirt' %}device.vm.network "private_network",
-            :mac => "{{ link.mac|replace(':', '') }}",
+            :mac => "{{ link.mac }}",
             :libvirt__tunnel_type => 'udp',
             :libvirt__tunnel_local_ip => '{{ link.local_ip }}',
             :libvirt__tunnel_local_port => '{{ link.local_port }}',
@@ -174,7 +177,7 @@ Vagrant.configure("2") do |config|
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "~/dhcpd.hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/hosts", destination: "~/hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ansible_hostfile", destination: "~/ansible_hostfile"
-    device.vm.provision "file", source: "./helper_scripts/auto_mgmt_network/ztp_oob.sh", destination: "~/ztp_oob.sh"
+    device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ztp_oob.sh", destination: "~/ztp_oob.sh"
 {% endif -%}
 {% if create_mgmt_device and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 
@@ -201,7 +204,13 @@ if [ -d "/etc/udev/rules.d/70-persistent-net.rules" ]; then
 fi
 delete_udev_directory
 
+{% if device.function == "oob-switch" and create_mgmt_device -%}
+      # Transfer Bridge File
+      device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/bridge-untagged", destination: "~/bridge-untagged"
+{% endif -%}
+
 {% for link in device.interfaces -%}
+
       device.vm.provision :shell , :inline => <<-udev_rule
 echo "  INFO: Adding UDEV Rule: {{ link.mac }} --> {{ link.local_interface }}"
 echo 'ACTION=="add", SUBSYSTEM=="net", ATTR{address}=="{{ link.mac }}", NAME="{{ link.local_interface }}", SUBSYSTEMS=="pci"' >> /etc/udev/rules.d/70-persistent-net.rules

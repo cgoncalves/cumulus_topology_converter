@@ -33,16 +33,18 @@ PRs are actively welcomed.
 3. Submit a PR on the Development Branch
 
 
-## Features in v4.6.1
-* Fixed LLDP path error on Ubuntu hosts (PR #58)
-* Fixed Docs for CMD CCO command line options (Issue #55)
-* Added host config file check for -c workflows so any provided values are not overwritten (Issue #46)
-* Added versioning for templates (Issue #53)
-* Fixed reboot failures in some configurations
-* Added MOTD and better defaults for OOB-MGMT-Server (now using eth1 instead of mgmt_net)
+## New Features in v4.6.2
+* Added support for Python3 (thanks to @telnoratti! ) PR #61
+* Added support for vagrant_user node attribute
+* Convert '/' characters to '-' now (for Cisco interface names) FR#51
 
+### Bugfixes:
+* Fixed AC97 Audio Driver issue (Virtualbox)
+* Fixed the OOB-MGMT switch out of order config (issue #54)
+* Removed reference to debian82 image (issue #52)
 
 ## Changelog:
+* v4\.6\.2 2017\_06\_22: Added support for Python3. Added support for vagrant_user node attribute. Convert '/' characters to '-' now (for Cisco interface names) FR#51. Fixed AC97 Audio Driver issue (Virtualbox). Fixed the OOB-MGMT switch out of order config (issue #54). Removed reference to debian82 image (issue #52).
 * v4\.6\.1 2017\_04\_20: Fixed reboot failures in some configurations, fixed LLDP on ubuntu hosts, Added Docs for CMD CCO, Added MOTD and better defaults for OOB-MGMT-Server, Added host config file check for -c workflows so options are not overwritten, Added versioning for templates.
 * v4\.6\.0 2017\_02\_03: Added NCLU Support for Vagrant user, Added a version argument, all references to host, oob-server and oob-mgmt-server have been moved to the yk0/ubuntu-xenial image, two new options for the -c workflow were added (-cco and -cmd) added significant linting and sanity checking for the topology.dot file and device names, fixed a MAC address conversion issue on windows python installs.
 * v4\.5\.2 2016\_12\_08: Fixed many aspects of the Auto Mgmt Workflow (-c), Added Selective install of Puppet/Ansible to OOB-MGMT-SERVER Script, Added More Compact DHCP Hosts format, Fixed Errors during software install at turnup, Added Passwordless Sudo and SSH key generation. Added more robust Reboot support for all devices. Added Arg_string printout to Vagrantfile so you can see how topology converter was called. Added the ability to specify custom ansible groups based on device function. Added ONIE DHCP fix for vagrant. Upped Max NIC count in Libvirt to 130

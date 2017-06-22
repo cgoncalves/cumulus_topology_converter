@@ -1,6 +1,6 @@
 # /etc/dhcp/dhcpd.hosts
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.1
+#    Template Revision: v4.6.2
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
@@ -18,8 +18,9 @@ group {
     ### GROUP INFORMATION CANNOT BE WRITTEN BECAUSE
          ### There is no device with function = oob-server and
          ### mgmt_ip=x.x.x.x configured{% endif %}
-{% for device in devices %}{% if device.mgmt_ip is defined %}{% if device.function != "oob-server" %}{% if device.mgmt_ip.split('.')[0:-1] == mgmt_ip.split('.')[0:-1] %}
+{% for device in devices %}{% if device.mgmt_ip is defined %}{% if device.function != "oob-server" %}{% if device.mgmt_ip.split('.')[0:-1] == mgmt_ip.split('.')[0:-1] %}{% if device.interfaces[0] is defined %}
  host {{ device.hostname }} {hardware ethernet {{ device.interfaces[0].mac }}; fixed-address {{ device.mgmt_ip }}; option host-name "{{ device.hostname }}";{% if device.function=='spine' or device.function=='leaf' or device.function=='oob-switch' or device.function=='exit' or device.function=='internet' and devices[0].function == "oob-server" and devices[0].mgmt_ip is defined %} option cumulus-provision-url "http://{{ devices[0].mgmt_ip }}/ztp_oob.sh"; {% endif %} } 
+}{% endif %}
 {% else %}
  #WARNING: IP not in MGMT server subnet
  #host {{ device.hostname }} {hardware ethernet {{ device.interfaces[0].mac }}; fixed-address {{ device.mgmt_ip }}; option host-name "{{ device.hostname }}";{% if device.function=='spine' or device.function=='leaf' or device.function=='oob-switch' or device.function=='exit' or device.function=='internet' and devices[0].function == "oob-server" and devices[0].mgmt_ip is defined %} option cumulus-provision-url "http://{{ devices[0].mgmt_ip }}/ztp_oob.sh"; {% endif %} } 
