@@ -27,7 +27,7 @@ pp = pprint.PrettyPrinter(depth=6)
 
 class styles:
     # Use these for text colors
-    HEADER = '\032[95m'
+    HEADER = '\033[95m'
     BLUE = '\033[94m'
     GREEN = '\033[92m'
     WARNING = '\033[93m'
