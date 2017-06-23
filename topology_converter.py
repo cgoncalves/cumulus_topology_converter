@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.6.2"
+version = "4.6.3_dev"
 
 
 import os
@@ -339,12 +339,12 @@ def parse_topology(topology_file):
 
         left_mac_address=""
         if edge.get('left_mac') != None :
-            temp_left_mac=edge.get('left_mac').replace('"','').replace(':','')
+            temp_left_mac=edge.get('left_mac').replace('"','').replace(':','').lower()
             left_mac_address=add_mac_colon(temp_left_mac)
         else: left_mac_address=mac_fetch(left_device,left_interface)
         right_mac_address=""
         if edge.get('right_mac') != None :
-            temp_right_mac=edge.get('right_mac').replace('"','').replace(':','')
+            temp_right_mac=edge.get('right_mac').replace('"','').replace(':','').lower()
             right_mac_address=add_mac_colon(temp_right_mac)
         else: right_mac_address=mac_fetch(right_device,right_interface)
 
