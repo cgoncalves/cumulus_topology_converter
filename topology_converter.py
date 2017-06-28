@@ -21,6 +21,7 @@ import jinja2
 import argparse
 import importlib
 import pydotplus
+import ipaddress
 from operator import itemgetter
 
 pp = pprint.PrettyPrinter(depth=6)
@@ -426,15 +427,43 @@ def parse_topology(topology_file):
                 exit(1)
             inventory["oob-mgmt-server"] = {}
             inventory["oob-mgmt-server"]["function"] = "oob-server"
-            inventory["oob-mgmt-server"]["mgmt_ip"] = "192.168.200.254"
+
+            intf = ipaddress.ip_interface(u'192.168.200.254/24')
+
             inventory["oob-mgmt-server"]["interfaces"] = {}
             mgmt_server="oob-mgmt-server"
             if provider == "libvirt":
                 if 'tunnel_ip' not in inventory["oob-mgmt-server"]: inventory["oob-mgmt-server"]['tunnel_ip']='127.0.0.1'
 
+            inventory["oob-mgmt-server"]["mgmt_ip"] = ("%s"%intf.ip)
+            inventory["oob-mgmt-server"]["mgmt_network"] = ("%s"%intf.network[0])
+            inventory["oob-mgmt-server"]["mgmt_cidrmask"] = ("/%s"%intf.network.prefixlen)
+            inventory["oob-mgmt-server"]["mgmt_netmask"] = ("%s"%intf.netmask)
+
         else:
             if "mgmt_ip" not in inventory[mgmt_server]:
-                inventory[mgmt_server]["mgmt_ip"] = "192.168.200.254"
+                intf = ipaddress.ip_interface(u'192.168.200.254/24')
+
+            else:
+                if "/" in inventory[mgmt_server]["mgmt_ip"]:
+                    intf = ipaddress.ip_interface(unicode(inventory[mgmt_server]["mgmt_ip"]))
+
+                else:
+                    intf = ipaddress.ip_interface(unicode(inventory[mgmt_server]["mgmt_ip"]+"/24"))
+
+            inventory[mgmt_server]["mgmt_ip"] = ("%s"%intf.ip)
+            inventory[mgmt_server]["mgmt_network"] = ("%s"%intf.network[0])
+            inventory[mgmt_server]["mgmt_cidrmask"] = ("/%s"%intf.network.prefixlen)
+            inventory[mgmt_server]["mgmt_netmask"] = ("%s"%intf.netmask)
+
+            try:
+                inventory[mgmt_server]["mgmt_dhcp_start"] = ("%s"%intf.network[10])
+                inventory[mgmt_server]["mgmt_dhcp_stop"] = ("%s"%intf.network[50])
+            except IndexError:
+                print("ERROR: Prefix Length on the Out Of Band Server is not big enough to support usage of the 10th-50th IP addresses being used for DHCP")
+                exit(1)
+
+
 
         inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
         if provider=="libvirt":

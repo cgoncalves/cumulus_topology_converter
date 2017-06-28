@@ -1,18 +1,16 @@
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.2
+#    Template Revision: v4.6.3
 
 {% if devices[0].function == "oob-server" %}
 127.0.0.1 localhost 
 127.0.1.1 {{ devices[0].hostname }}
 
-{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
-{% for mgmt_ip in mgmt_ips %}
-{{ mgmt_ip }} {{ devices[0].hostname }} {% endfor %}
+{{ devices[0].mgmt_ip }} {{ devices[0].hostname }}
 
 {% for device in devices %}{% if device.mgmt_ip is defined %}{% if device.function != "oob-server" %}
 {{ device.mgmt_ip }} {{ device.hostname }}{% endif %}{% endif %}{% endfor %}{% else %}
     #### HOSTS CANNOT BE WRITTEN BECAUSE
-            NO DEVICE has FUNCTION="oob-server"
+    ####     NO DEVICE has FUNCTION="oob-server"
 {% endif %}
 
 
