@@ -27,7 +27,7 @@ graph dc1 {
 }
 ```
 
-When used with another example topology.dot file like the one below, a default mgmt_ip of 192.168.200.254 will be assumed on the oob-mgmt-server and DHCP will be handed out in a first-come-first-serve fashion from 192.168.200.201-192.168.200.250 in the 192.168.200.0/24 subnet for all eth0 ports on the leaves.
+When used with another example topology.dot file like the one below, a default mgmt_ip of 192.168.200.254 will be assumed on the oob-mgmt-server and DHCP will be handed out in a first-come-first-serve fashion from 192.168.200.10-192.168.200.50 in the 192.168.200.0/24 subnet for all eth0 ports on the leaves.
 
 ```
 graph dc1 {
@@ -46,11 +46,12 @@ graph dc1 {
   * A link between the oob-mgmt-server:mgmt_net <--> oob-mgmt-switch:swp1 is created
   * A link from Eth0 of each device is created to the next available port on oob-mgmt-switch starting with swp2
 * DHCP Server installed on oob-mgmt-server
-  * If "mgmt_ip=" is specified on the oob-mgmt-server that IP address (multiple can be specified in CSV format) will be applied to the mgmt_net interface. DHCP will be configured for each of the mgmt_ip subnets as /24 class C networks with the 201-250 addresses being reserved for generic DHCP.
-    * It is recommended to have your nodes configured with a last octet mgmt_ip between 1-200
+  * If "mgmt_ip=" is specified on the oob-mgmt-server that IP address will be applied to the eth1 interface. DHCP will be configured for the mgmt_ip subnet based on the CIDR mask that is provided.
+    * The first 10-50 hosts of any subnet are reserved as a generic DHCP range.
+    * It is recommended to statically assign mgmt_ip addresses for other hosts outside the first 10-50 hosts in the subnet to avoid collisions with the generic DHCP range.
     * It is recommended to have your oob-mgmt-server mgmt_ip configured with .254 as the last octet
-  * If "mgmt_ip=" is not specified in the oob-mgmt-server node definition, a default value of 192.168.200.254 is assumed and DHCP will be handled using the 192.168.200.0/24 subnet (192.168.200.201-192.168.200.250).
-  * If "mgmt_ip=" is specified in node definitions, a MAC entry will be created for the Eth0 port on each device associated with the provided "mgmt_ip" address for that node.
+  * If "mgmt_ip=" is not specified in the oob-mgmt-server node definition, a default value of 192.168.200.254 is assumed and DHCP will be handled using the 192.168.200.0/24 subnet (192.168.200.10-192.168.200.50).
+  * If "mgmt_ip=" is specified in node definitions, a MAC entry will be created for the Eth0 port on each device associated with the provided "mgmt_ip" address for that node. (OOB-Switch will be statically addressed)
 * Ansible Installed on oob-mgmt-server
   * Ansible Hostfile prebuilt and installed to /etc/ansible/hosts based on nodes and management IPs
 * /etc/hosts file pre-built on oob-mgmt-server
@@ -82,18 +83,24 @@ python ./topology_converter.py ./examples/2switch_auto_mgmt.dot -c
 ######################################
           Topology Converter
 ######################################
+           originally written by Eric Pulvino
   adding mgmt links:
-    oob-mgmt-switch:swp1 (mac: 44:38:39:00:00:09) --> oob-mgmt-server:mgmt_net (mac: 44:38:39:00:00:0a)     network_string:net6
+    oob-mgmt-switch:swp1 (mac: 44:38:39:00:00:09) --> oob-mgmt-server:eth1 (mac: 44:38:39:00:00:0a)     network_string:net4
     oob-mgmt-switch:swp2 (mac: 44:38:39:00:00:0b) --> leaf1:eth0 (mac: 44:38:39:00:00:0c)     network_string:net7
     oob-mgmt-switch:swp3 (mac: 44:38:39:00:00:0d) --> leaf2:eth0 (mac: 44:38:39:00:00:0e)     network_string:net8
 >> DEVICE: oob-mgmt-server
-     code: boxcutter/ubuntu1604
+     code: yk0/ubuntu-xenial
      memory: 512
      function: oob-server
      mgmt_ip: 192.168.200.254
      hostname: oob-mgmt-server
+     mgmt_cidrmask: /24
+     mgmt_dhcp_start: 192.168.200.10
      config: ./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh
-       LINK: mgmt_net
+     mgmt_network: 192.168.200.0
+     mgmt_dhcp_stop: 192.168.200.50
+     mgmt_netmask: 255.255.255.0
+       LINK: eth1
                remote_device: oob-mgmt-switch
                mac: 44:38:39:00:00:0a
                network: net6
@@ -103,12 +110,12 @@ python ./topology_converter.py ./examples/2switch_auto_mgmt.dot -c
      memory: 512
      function: oob-switch
      hostname: oob-mgmt-switch
-     config: ./helper_scripts/auto_mgmt_network/OOB_Switch_Config.sh
+     config: ./helper_scripts/oob_switch_config.sh
        LINK: swp1
                remote_device: oob-mgmt-server
                mac: 44:38:39:00:00:09
                network: net6
-               remote_interface: mgmt_net
+               remote_interface: eth1
        LINK: swp2
                remote_device: leaf1
                mac: 44:38:39:00:00:0b
@@ -125,7 +132,7 @@ python ./topology_converter.py ./examples/2switch_auto_mgmt.dot -c
      function: leaf
      mgmt_ip: 192.168.200.10
      hostname: leaf1
-     config: ./helper_scripts/auto_mgmt_network/Extra_Switch_Config_auto_mgmt.sh
+     config: ./helper_scripts/extra_switch_config.sh
        LINK: eth0
                remote_device: oob-mgmt-switch
                mac: 44:38:39:00:00:0c
@@ -157,7 +164,7 @@ python ./topology_converter.py ./examples/2switch_auto_mgmt.dot -c
      function: leaf
      mgmt_ip: 192.168.200.20
      hostname: leaf2
-     config: ./helper_scripts/auto_mgmt_network/Extra_Switch_Config_auto_mgmt.sh
+     config: ./helper_scripts/extra_switch_config.sh
        LINK: eth0
                remote_device: oob-mgmt-switch
                mac: 44:38:39:00:00:0e
@@ -187,6 +194,8 @@ python ./topology_converter.py ./examples/2switch_auto_mgmt.dot -c
 ############
 SUCCESS: Vagrantfile has been generated!
 ############
+
+            4 devices under simulation.
 
 DONE!
 

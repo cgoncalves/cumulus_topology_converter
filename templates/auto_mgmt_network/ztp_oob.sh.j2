@@ -1,15 +1,13 @@
 #!/bin/bash
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.2
+#    Template Revision: v4.6.3
 
 function error() {
   echo -e "\e[0;33mERROR: The Zero Touch Provisioning script failed while running the command $BASH_COMMAND at line $BASH_LINENO.\e[0m" >&2
 }
 trap error ERR
 
-{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
-
-SSH_URL="http://{{mgmt_ips[0]}}/authorized_keys"
+SSH_URL="http://{{ devices[0].mgmt_ip }}/authorized_keys"
 #Setup SSH key authentication for Ansible
 mkdir -p /home/cumulus/.ssh
 wget -O /home/cumulus/.ssh/authorized_keys $SSH_URL

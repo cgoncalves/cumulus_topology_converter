@@ -25,6 +25,7 @@ EOT
 #sed -i 's/eth0//g' /etc/network/interfaces.d/bridge
 #sed -i 's/iface bridge-untagged/iface bridge-untagged inet dhcp/' /etc/network/interfaces.d/bridge
 
+cp /home/vagrant/bridge-untagged /etc/network/interfaces.d/bridge-untagged
 
 
 

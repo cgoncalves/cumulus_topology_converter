@@ -5,6 +5,9 @@ echo "  Running Extra_Server_Config.sh"
 echo "#################################"
 sudo su
 
+adduser cumulus -m 
+echo "cumulus:CumulusLinux!" | chpasswd
+
 #Test for Debian-Based Host
 which apt &> /dev/null
 if [ "$?" == "0" ]; then

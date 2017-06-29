@@ -1,6 +1,6 @@
 # /etc/dhcp/dhcpd.conf
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.2
+#    Template Revision: v4.6.3
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
@@ -41,23 +41,18 @@ class "onie-vendor-classes" {
 }
 
 # OOB Management subnet
-{% set mgmt_ips = devices[0].mgmt_ip.split(',') -%}
 shared-network LOCAL-NET{
-{% for mgmt_ip in mgmt_ips %}
-{% set octets = mgmt_ip.split('.') -%}
-{% set subnet = octets[0]+"."+octets[1]+"."+octets[2] -%}
-subnet {{ subnet }}.0 netmask 255.255.255.0 {
-  range {{ subnet }}.201 {{ subnet }}.250;
-  option domain-name-servers {{ mgmt_ip }};
+subnet {{ devices[0].mgmt_network }} netmask {{ devices[0].mgmt_netmask }} {
+  range {{ devices[0].mgmt_dhcp_start }} {{ devices[0].mgmt_dhcp_stop }};
+  option domain-name-servers {{ devices[0].mgmt_ip }};
   option domain-name "simulation";
   default-lease-time 172800;  #2 days
   max-lease-time 345600;      #4 days
-  option www-server {{ mgmt_ip }};
-  option default-url = "http://{{ mgmt_ip }}/onie-installer";
-  option cumulus-provision-url "http://{{ mgmt_ip }}/ztp_oob.sh";
-  option ntp-servers {{ mgmt_ip }};
+  option www-server {{ devices[0].mgmt_ip }};
+  option default-url = "http://{{ devices[0].mgmt_ip }}/onie-installer";
+  option cumulus-provision-url "http://{{ devices[0].mgmt_ip }}/ztp_oob.sh";
+  option ntp-servers {{ devices[0].mgmt_ip }};
 }
-{% endfor %}
 }
 
 #include "/etc/dhcp/dhcpd.pools";

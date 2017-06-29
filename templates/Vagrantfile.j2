@@ -54,7 +54,7 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
     elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
         echo "  INFO: Detected a 3.x Based Release"
         echo "### Disabling default remap on Cumulus VX..."
-        mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup
+        mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup &> /dev/null
         echo "### Disabling ZTP service..."
         systemctl stop ztp.service
         ztp -d 2>&1
@@ -71,9 +71,11 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             umount /tmp/foo
         fi
         if [[ $DISTRIB_RELEASE =~ ^3.[2-9].* ]]; then
-            echo "### Giving Vagrant User Ability to Run NCLU Commands ###"
-            sed -i 's/users_with_edit = root, cumulus/users_with_edit = root, cumulus, vagrant/g' /etc/netd.conf
-            sed -i 's/users_with_show = root, cumulus/users_with_show = root, cumulus, vagrant/g' /etc/netd.conf
+            if [[ $(grep "vagrant" /etc/netd.conf | wc -l ) == 0 ]]; then
+                echo "### Giving Vagrant User Ability to Run NCLU Commands ###"
+                sed -i 's/users_with_edit = root, cumulus/users_with_edit = root, cumulus, vagrant/g' /etc/netd.conf
+                sed -i 's/users_with_show = root, cumulus/users_with_show = root, cumulus, vagrant/g' /etc/netd.conf
+            fi
         fi
 
     fi
@@ -186,6 +188,12 @@ Vagrant.configure("2") do |config|
     device.vm.provision :shell, privileged: false, inline: "sudo mv ~/topology.dot /etc/ptm.d/topology.dot"
 
 {% endif -%}
+
+{% if device.function == "oob-switch" and create_mgmt_device -%}
+      # Transfer Bridge File
+      device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/bridge-untagged", destination: "~/bridge-untagged"
+{% endif -%}
+
 {% if device.config is defined %}
     # Run the Config specified in the Node Attributes
     device.vm.provision :shell , privileged: false, :inline => 'echo "$(whoami)" > /tmp/normal_user'
@@ -202,12 +210,8 @@ Vagrant.configure("2") do |config|
 if [ -d "/etc/udev/rules.d/70-persistent-net.rules" ]; then
     rm -rfv /etc/udev/rules.d/70-persistent-net.rules &> /dev/null
 fi
+rm -rfv /etc/udev/rules.d/70-persistent-net.rules &> /dev/null
 delete_udev_directory
-
-{% if device.function == "oob-switch" and create_mgmt_device -%}
-      # Transfer Bridge File
-      device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/bridge-untagged", destination: "~/bridge-untagged"
-{% endif -%}
 
 {% for link in device.interfaces -%}
 

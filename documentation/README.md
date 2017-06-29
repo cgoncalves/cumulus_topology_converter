@@ -74,6 +74,7 @@ sudo pip install --upgrade pip
 sudo pip install setuptools
 sudo pip install pydotplus
 sudo pip install jinja2
+sudo pip install ipaddress
 ```
 
 ### Mac
@@ -85,6 +86,7 @@ sudo pip install --upgrade pip
 sudo pip install setuptools
 sudo pip install pydotplus
 sudo pip install jinja2
+sudo pip install ipaddress
 ```
 
 
