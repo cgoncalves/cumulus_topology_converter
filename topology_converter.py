@@ -568,6 +568,8 @@ def parse_topology(topology_file):
         #Add Dummy Eth0 Link
         for device in inventory:
             if inventory[device]["function"] not in network_functions: continue
+            if 'vagrant' in inventory[device]:
+                if inventory[device]['vagrant'] == 'eth0': continue
             #Check to see if components of the link already exist
             if "eth0" not in inventory[device]['interfaces']:
                 net_number+=1
