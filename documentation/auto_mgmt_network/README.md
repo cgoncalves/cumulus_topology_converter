@@ -17,7 +17,7 @@ Here is a sample topology.dot file that works with the automated management netw
 
 ```
 graph dc1 {
- "oob-mgmt-server" [function="oob-server" mgmt_ip="192.168.200.254"]
+ "oob-mgmt-server" [function="oob-server" mgmt_ip="192.168.200.254/24"]
  "leaf1" [function="leaf" mgmt_ip="192.168.200.10"]
  "leaf2" [function="leaf" mgmt_ip="192.168.200.20"]
    "leaf1":"swp1" -- "leaf2":"swp1"
