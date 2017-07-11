@@ -115,11 +115,14 @@ Vagrant.configure("2") do |config|
 {% for device in devices %}
   ##### DEFINE VM for {{ device.hostname }} #####
   config.vm.define "{{ device.hostname }}" do |device|
-    device.vm.hostname = "{{ device.hostname }}" {% if device.pxehost=="True" and provider == 'libvirt'%}
+    device.vm.hostname = "{{ device.hostname }}" {% if device.pxehost=="True" %} 
+    device.ssh.insert_key = false
+    {%  if provider == 'libvirt'%}
     #NO BOX USED FOR PXE DEVICE{% else %}
+    device.vm.box = "{{ device.os }}"{% endif %}{% else %}
     device.vm.box = "{{ device.os }}"{% if device.version %}
-    device.vm.box_version = "{{ device.version }}"{% endif %}{% if device.vagrant_user %}
-    device.ssh.username = "{{ device.vagrant_user }}"{% endif %}{% endif %}
+    device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}{% if device.vagrant_user %}
+    device.ssh.username = "{{ device.vagrant_user }}"{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
       v.name = "{{ epoch_time }}_{{ device.hostname }}"
       v.customize ["modifyvm", :id, '--audiocontroller', 'AC97', '--audio', 'Null']{% elif provider == 'libvirt' %}
