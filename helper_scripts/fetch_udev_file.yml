@@ -72,5 +72,5 @@
       register: ip_output
 
     - name: Show Interfaces
-      debug: msg="{{ ip_output.std_out.split('\n') }}"
+      debug: msg="{{ ip_output.stdout.split('\n') }}"
 
