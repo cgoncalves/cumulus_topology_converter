@@ -87,6 +87,8 @@ SCRIPT
 
 Vagrant.configure("2") do |config|
 {% if provider == 'virtualbox' %}
+  wbid = {{ epoch_time }}
+
   config.vm.provider "virtualbox" do |v|
     v.gui=false
 {% elif provider == 'libvirt' %}
@@ -124,7 +126,7 @@ Vagrant.configure("2") do |config|
     device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}{% if device.vagrant_user %}
     device.ssh.username = "{{ device.vagrant_user }}"{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
-      v.name = "{{ epoch_time }}_{{ device.hostname }}"
+      v.name = "#{wbid}_{{ device.hostname }}"
       v.customize ["modifyvm", :id, '--audiocontroller', 'AC97', '--audio', 'Null']{% elif provider == 'libvirt' %}
     device.vm.provider :libvirt do |v|{% if device.pxehost=="True" %}
       v.storage :file, :size => '100G', :type => 'qcow2', :bus => 'sata', :device => 'sda'
@@ -142,7 +144,7 @@ Vagrant.configure("2") do |config|
 
     # NETWORK INTERFACES{% for link in device.interfaces %}
       # link for {{ link.local_interface }} --> {{ link.remote_device }}:{{ link.remote_interface }}
-      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "{{ epoch_time }}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
+      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "#{wbid}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
       {% elif provider == 'libvirt' %}device.vm.network "private_network",
             :mac => "{{ link.mac }}",
             :libvirt__tunnel_type => 'udp',

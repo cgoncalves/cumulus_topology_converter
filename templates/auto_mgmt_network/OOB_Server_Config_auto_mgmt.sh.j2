@@ -73,13 +73,19 @@ base64 -d /etc/motd.base64 > /etc/motd
 rm /etc/motd.base64
 chmod 755 /etc/motd
 
+
 echo " ### Overwriting /etc/network/interfaces ###"
 cat <<EOT > /etc/network/interfaces
 auto lo
 iface lo inet loopback
 
+{% if devices[0].vagrant is defined %}
+auto {{ devices[0].vagrant }}
+iface {{ devices[0].vagrant }} inet dhcp
+{% else %}
 auto vagrant
 iface vagrant inet dhcp
+{% endif %}
 
 auto eth1
 iface eth1 inet static
