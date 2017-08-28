@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.6.3"
+version = "4.6.4"
 
 
 import os
@@ -818,7 +818,7 @@ def render_jinja_templates(devices):
                                               synced_folder=synced_folder,
                                               provider=provider,
                                               version=version,
-					      customer=customer,
+                                              customer=customer,
                                               topology_file=topology_file,
                                               arg_string=arg_string,
                                               epoch_time=epoch_time,
