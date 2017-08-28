@@ -1,6 +1,6 @@
 #!/bin/bash
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.3
+#    Template Revision: v4.6.4
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
@@ -73,13 +73,19 @@ base64 -d /etc/motd.base64 > /etc/motd
 rm /etc/motd.base64
 chmod 755 /etc/motd
 
+
 echo " ### Overwriting /etc/network/interfaces ###"
 cat <<EOT > /etc/network/interfaces
 auto lo
 iface lo inet loopback
 
+{% if devices[0].vagrant is defined %}
+auto {{ devices[0].vagrant }}
+iface {{ devices[0].vagrant }} inet dhcp
+{% else %}
 auto vagrant
 iface vagrant inet dhcp
+{% endif %}
 
 auto eth1
 iface eth1 inet static

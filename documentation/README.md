@@ -213,11 +213,7 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 ## Optional Features (Everything Else)
 
 ### Providers
-<<<<<<< HEAD
-Topology Converter supports the use of two providers, Virtualbox and Libvirt (/w KVM). Virtualbox is the default provider. 
-=======
 Topology Converter supports the use of two providers, Virtualbox and Libvirt (/w KVM). Virtualbox is the default provider.
->>>>>>> development
 
 To use Libvirt/KVM specify the "-p libvirt" option
 
@@ -451,11 +447,7 @@ graph dc1 {
 ```
 
 
-<<<<<<< HEAD
 ### Debugging Mode 
-=======
-### Debugging Mode
->>>>>>> development
 Use the -v option.
 
 ```
@@ -467,11 +459,6 @@ By default Vagrant's synced folder is disabled in Vagrantfiles built with topolo
 
 If you would like to renable the synced folder you can add the "--synced-folder" option when calling topology converter on the command line.
 
-<<<<<<< HEAD
- 
-=======
-
->>>>>>> development
 ## Miscellaneous Info
 * Boxcutter box images are used whenver simulation is not performed with a VX device. This is to save on the amount of RAM required to run a simulation. For example, a default ubuntu14.04 image from ubuntu consumes ~324mb of RAM at the time of this testing, a default boxcutter/ubuntu1404 image consumes ~124mb of RAM.
 * When simulating with Vagrant, vagrant will usually create two extra interfaces in addition to all of the interfaces that are needed for simulation. The reason for this behavior is related to Vagrant #7286 https://github.com/mitchellh/vagrant/issues/7286.

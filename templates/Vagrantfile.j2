@@ -1,5 +1,5 @@
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.3
+#    Template Revision: v4.6.4
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 #    built with the following args: {{ arg_string }}
@@ -18,7 +18,7 @@
 #Set the default provider to libvirt in the case they forget --provider=libvirt or if someone destroys a machine it reverts to virtualbox
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-Vagrant.require_version ">= 1.8.6", "< 1.9.6"
+Vagrant.require_version ">= 1.8.6", "< 1.9.8"
 
 # Check required plugins
 REQUIRED_PLUGINS_LIBVIRT = %w(vagrant-libvirt)
@@ -87,6 +87,8 @@ SCRIPT
 
 Vagrant.configure("2") do |config|
 {% if provider == 'virtualbox' %}
+  simid = {{ epoch_time }}
+
   config.vm.provider "virtualbox" do |v|
     v.gui=false
 {% elif provider == 'libvirt' %}
@@ -115,13 +117,16 @@ Vagrant.configure("2") do |config|
 {% for device in devices %}
   ##### DEFINE VM for {{ device.hostname }} #####
   config.vm.define "{{ device.hostname }}" do |device|
-    device.vm.hostname = "{{ device.hostname }}" {% if device.pxehost=="True" and provider == 'libvirt'%}
+    device.vm.hostname = "{{ device.hostname }}" {% if device.pxehost=="True" %} 
+    device.ssh.insert_key = false
+    {%  if provider == 'libvirt'%}
     #NO BOX USED FOR PXE DEVICE{% else %}
+    device.vm.box = "{{ device.os }}"{% endif %}{% else %}
     device.vm.box = "{{ device.os }}"{% if device.version %}
-    device.vm.box_version = "{{ device.version }}"{% endif %}{% if device.vagrant_user %}
-    device.ssh.username = "{{ device.vagrant_user }}"{% endif %}{% endif %}
+    device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}{% if device.vagrant_user %}
+    device.ssh.username = "{{ device.vagrant_user }}"{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
-      v.name = "{{ epoch_time }}_{{ device.hostname }}"
+      v.name = "#{simid}_{{ device.hostname }}"
       v.customize ["modifyvm", :id, '--audiocontroller', 'AC97', '--audio', 'Null']{% elif provider == 'libvirt' %}
     device.vm.provider :libvirt do |v|{% if device.pxehost=="True" %}
       v.storage :file, :size => '100G', :type => 'qcow2', :bus => 'sata', :device => 'sda'
@@ -139,7 +144,7 @@ Vagrant.configure("2") do |config|
 
     # NETWORK INTERFACES{% for link in device.interfaces %}
       # link for {{ link.local_interface }} --> {{ link.remote_device }}:{{ link.remote_interface }}
-      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "{{ epoch_time }}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
+      {% if provider == 'virtualbox' %}device.vm.network "private_network", virtualbox__intnet: "#{simid}_{{ link.network }}", auto_config: false , :mac => "{{ link.mac|replace(':', '') }}"
       {% elif provider == 'libvirt' %}device.vm.network "private_network",
             :mac => "{{ link.mac }}",
             :libvirt__tunnel_type => 'udp',

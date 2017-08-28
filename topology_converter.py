@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.6.3"
+version = "4.6.4"
 
 
 import os
@@ -456,12 +456,12 @@ def parse_topology(topology_file):
             inventory[mgmt_server]["mgmt_cidrmask"] = ("/%s"%intf.network.prefixlen)
             inventory[mgmt_server]["mgmt_netmask"] = ("%s"%intf.netmask)
 
-            try:
-                inventory[mgmt_server]["mgmt_dhcp_start"] = ("%s"%intf.network[10])
-                inventory[mgmt_server]["mgmt_dhcp_stop"] = ("%s"%intf.network[50])
-            except IndexError:
-                print("ERROR: Prefix Length on the Out Of Band Server is not big enough to support usage of the 10th-50th IP addresses being used for DHCP")
-                exit(1)
+        try:
+            inventory[mgmt_server]["mgmt_dhcp_start"] = ("%s"%intf.network[10])
+            inventory[mgmt_server]["mgmt_dhcp_stop"] = ("%s"%intf.network[50])
+        except IndexError:
+            print("ERROR: Prefix Length on the Out Of Band Server is not big enough to support usage of the 10th-50th IP addresses being used for DHCP")
+            exit(1)
 
 
 
@@ -818,7 +818,7 @@ def render_jinja_templates(devices):
                                               synced_folder=synced_folder,
                                               provider=provider,
                                               version=version,
-					      customer=customer,
+                                              customer=customer,
                                               topology_file=topology_file,
                                               arg_string=arg_string,
                                               epoch_time=epoch_time,
