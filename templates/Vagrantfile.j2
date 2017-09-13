@@ -1,5 +1,5 @@
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.4
+#    Template Revision: v4.6.5
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 #    built with the following args: {{ arg_string }}
@@ -117,7 +117,9 @@ Vagrant.configure("2") do |config|
 {% for device in devices %}
   ##### DEFINE VM for {{ device.hostname }} #####
   config.vm.define "{{ device.hostname }}" do |device|
-    device.vm.hostname = "{{ device.hostname }}" {% if device.pxehost=="True" %} 
+    {% if device.legacy is not defined %}
+    device.vm.hostname = "{{ device.hostname }}" 
+    {% endif %}{% if device.pxehost=="True" %} 
     device.ssh.insert_key = false
     {%  if provider == 'libvirt'%}
     #NO BOX USED FOR PXE DEVICE{% else %}
