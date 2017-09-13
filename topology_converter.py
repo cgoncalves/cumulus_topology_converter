@@ -413,6 +413,7 @@ def parse_topology(topology_file):
     if create_mgmt_device:
         mgmt_server=None
         mgmt_switch=None
+        # Look for Managment Server/Switch
         for device in inventory:
             if inventory[device]["function"] == "oob-switch": mgmt_switch=device
             elif inventory[device]["function"] == "oob-server": mgmt_server=device
@@ -420,7 +421,7 @@ def parse_topology(topology_file):
         if verbose:
             print(" detected mgmt_server: %s" % mgmt_server)
             print("          mgmt_switch: %s" % mgmt_switch)
-        #Hardcode mgmt server parameters
+        # Hardcode mgmt server parameters
         if mgmt_server == None:
             if "oob-mgmt-server" in inventory:
                 print(styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-server must be set to function = "oob-server"' + styles.ENDC)
@@ -439,6 +440,7 @@ def parse_topology(topology_file):
             inventory["oob-mgmt-server"]["mgmt_network"] = ("%s"%intf.network[0])
             inventory["oob-mgmt-server"]["mgmt_cidrmask"] = ("/%s"%intf.network.prefixlen)
             inventory["oob-mgmt-server"]["mgmt_netmask"] = ("%s"%intf.netmask)
+            mgmt_server == "oob-mgmt-server"
 
         else:
             if "mgmt_ip" not in inventory[mgmt_server]:
@@ -460,7 +462,7 @@ def parse_topology(topology_file):
             inventory[mgmt_server]["mgmt_dhcp_start"] = ("%s"%intf.network[10])
             inventory[mgmt_server]["mgmt_dhcp_stop"] = ("%s"%intf.network[50])
         except IndexError:
-            print("ERROR: Prefix Length on the Out Of Band Server is not big enough to support usage of the 10th-50th IP addresses being used for DHCP")
+            print(styles.FAIL + styles.BOLD + " ### ERROR: Prefix Length on the Out Of Band Server is not big enough to support usage of the 10th-50th IP addresses being used for DHCP")
             exit(1)
 
 
@@ -472,8 +474,7 @@ def parse_topology(topology_file):
             inventory[mgmt_server]["memory"] = "512"
         inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
 
-        #Hardcode mgmt switch parameters
-
+        # Hardcode mgmt switch parameters
         if mgmt_switch == None and create_mgmt_network:
             if "oob-mgmt-switch" in inventory:
                 print(styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-switch must be set to function = "oob-switch"' + styles.ENDC)
@@ -564,13 +565,41 @@ def parse_topology(topology_file):
                              left_mac,
                              right_mac,
                              net_number,)
+
+        # Determine Used MGMT IPs
+        print("  MGMT_IP ADDRESS for OOB_SERVER IS: %s%s"%(inventory[mgmt_server]["mgmt_ip"],inventory["oob-mgmt-server"]["mgmt_cidrmask"]))
+        intf = ipaddress.ip_interface(unicode("%s%s"%(inventory[mgmt_server]["mgmt_ip"],inventory["oob-mgmt-server"]["mgmt_cidrmask"])))
+        network = ipaddress.ip_network(unicode("%s"%(intf.network)))
+        acceptable_host_addresses=list(intf.network.hosts())
+        for device in inventory:
+            if 'mgmt_ip' in inventory[device]:
+                node_mgmt_ip=ipaddress.ip_address(unicode(inventory[device]['mgmt_ip']))
+                # Check that Defined Mgmt_IP is in same Subnet as OOB-SERVER
+                if node_mgmt_ip not in network:
+                    print(styles.FAIL + styles.BOLD + " ### ERROR: IP address (%s) is not in the Management Server subnet %s"%(node_mgmt_ip,network))
+                    exit(1)
+                # Remove Address from Valid Assignable Address Pool
+                try:
+                    acceptable_host_addresses.remove(node_mgmt_ip)
+                    if verbose: print("  INFO: Removing MGMT_IP Address %s from Assignable Pool. Address already assigned to %s"%(node_mgmt_ip,device))
+                except:
+                    print(styles.FAIL + styles.BOLD + " ### ERROR: Cannot mark the mgmt_ip (%s) as used."%(node_mgmt_ip))
+                    exit(1)
+
+        # Add Mgmt_IP if not configured
+        for device in inventory:
+            if 'mgmt_ip' not in inventory[device]:
+                new_mgmt_ip=acceptable_host_addresses.pop(0)
+                inventory[device]['mgmt_ip']="%s"%(new_mgmt_ip)
+                print("    Device: \"%s\" was assigned mgmt_ip %s"%(device,new_mgmt_ip))
+
     else:
-        #Add Dummy Eth0 Link
+        # Add Dummy Eth0 Link
         for device in inventory:
             if inventory[device]["function"] not in network_functions: continue
             if 'vagrant' in inventory[device]:
                 if inventory[device]['vagrant'] == 'eth0': continue
-            #Check to see if components of the link already exist
+            # Check to see if components of the link already exist
             if "eth0" not in inventory[device]['interfaces']:
                 net_number+=1
 
@@ -583,7 +612,7 @@ def parse_topology(topology_file):
                          "NOTHING",
                          net_number,)
 
-    #Add Extra Port Ranges (if needed)
+    # Add Extra Port Ranges (if needed)
     for device in inventory:
         if "ports" in inventory[device] and inventory[device]["function"] in network_functions:
             if provider!="libvirt":
@@ -915,6 +944,9 @@ def main():
     else:
         print(styles.GREEN + styles.BOLD + "\n############\nSUCCESS: Vagrantfile has been generated!\n############" + styles.ENDC)
         print(styles.GREEN + styles.BOLD + "\n            %s devices under simulation." %(len(devices)) + styles.ENDC)
+    for device in inventory:
+        print(styles.GREEN + styles.BOLD + "                %s" %(inventory[device]['hostname']) + styles.ENDC)
+
     for warn_msg in warning:
         print(warn_msg)
     print("\nDONE!\n")

@@ -35,3 +35,18 @@ python ./topology_converter.py ./examples/2switch_auto_mgmt.dot -c -p libvirt &&
 
 check_state
 
+echo "####################################"
+echo "############# TEST 5 ###############"
+echo "####################################"
+python ./topology_converter.py ./examples/2switch_auto_mgmt_ip.dot -c && vagrant status
+
+check_state
+
+echo "####################################"
+echo "############# TEST 6 ###############"
+echo "####################################"
+python ./topology_converter.py ./examples/2switch_auto_mgmt_ip.dot -c -p libvirt && vagrant status
+
+check_state
+
+
