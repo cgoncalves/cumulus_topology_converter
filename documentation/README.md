@@ -203,6 +203,7 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 * ssh_port -- (optional) Specify a port (greater than 1024) to be used for SSH to a specific node.
 * vagrant_user -- (optional) Specifies which username vagrant will attempt to login to. MUST have Vagrant Insecure Key Added ahead of time!
 * vagrant -- (optional) This option controls the name of the vagrant interface which vagrant will use to communicate with the guest. The default name of the vagrant interface is set to "vagrant". When using this option it will be necessary to modify the config=./helper_script/xxx.sh" script to reflect the name that has been choosen.
+* legacy -- (optional) This value controls whether or not the hostname is set in the VM. Typically used when simulating with 2.5.x versions of Vx.
 
 #### Link Level Attributes
 * left_ and right_ -- These arguments can be prepended to any link attribute to map the attribute to a single side of the link.
