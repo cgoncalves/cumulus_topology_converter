@@ -33,15 +33,17 @@ PRs are actively welcomed.
 3. Submit a PR on the **Development Branch**
 
 
-## New Features in v4.6.4
-* Support for Vagrant v1.9.7
-* Support for Easy edits for simultaneous simulations in Vbox via SIMid parameter.
+## New Features in v4.6.5
+* Support for Vagrant versions 1.8.6+
+* Added enhancements to Helper Scripts to improve DHCP Request Timing
+* Added Automatic MGMT_IP Assignment for devices using the -c Workflow
+* Added Limited support for booting older 2.5.x versions of Vx.
 
 ### Bugfixes:
-* Fix for Issue #65
-* Fix for DHCP range code not being invoked in -c workflow
+* N/A
 
 ## Changelog:
+* v4\.6\.5 2017\_09\_13: Support for Vagrant versions 1.8.6+. Added enhancements to Helper Scripts to improve DHCP Request timing. Added Automatic Management IP Address assignment for all devices when using the "-c" workflow. Added Limited support for booting older 2.5.x versions of Vx.
 * v4\.6\.4 2017\_08\_28: Removed Errant reference_topology.dot file. Fixing PXEboot semantics and fetch_udev_file.yml playbook. Fixed DHCP Range issue with the "-c" workflow. Added support for vagrant= on the oob-mgmt-server in oob-mgmt-server /w "-c" workflow. Added support for simid in virtualbox. Fix for Issue #65.
 * v4\.6\.3 2017\_06\_28: Added support for new prefixes other than /24 for the "-c" workflow. Fixed Issue #62 and a regression in automatic NCLU support for the vagrant user.
 * v4\.6\.2 2017\_06\_22: Added support for Python3. Added support for vagrant_user node attribute. Convert '/' characters to '-' now (for Cisco interface names) FR#51. Fixed AC97 Audio Driver issue (Virtualbox). Fixed the OOB-MGMT switch out of order config (issue #54). Removed reference to debian82 image (issue #52).
