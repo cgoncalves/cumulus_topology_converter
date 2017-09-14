@@ -81,8 +81,3 @@ PRs are actively welcomed.
 "vagrant" interface remapping for hosts and switches, warnings for interface reuse, added optional support for OOB switch.
 * v1\.0 2015\_10\_19 Initial version constructed
 
-## To Do List
-* Enhanced PXEBOOT Libvirt Support -- Blank OS value should be allowed
-* Null Audio Driver
-* os.path.abspath("./helper_scripts")
-* Investigate Ruby Vagrantfile Segmentation (based on yaml)
