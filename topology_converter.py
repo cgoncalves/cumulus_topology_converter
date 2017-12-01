@@ -230,32 +230,55 @@ def mac_fetch(hostname, interface):
 
 def add_mac_colon(mac_address):
     global verbose
-    if verbose: print("MAC ADDRESS IS: \"%s\"" % mac_address)
-    return ':'.join(map(''.join, zip(*[iter(mac_address)]*2)))
+    if verbose:
+        print("MAC ADDRESS IS: \"%s\"" % mac_address)
+    return ':'.join(map(''.join, zip(*[iter(mac_address)] * 2)))
+
 
 def lint_topo_file(topology_file):
-    with open(topology_file,"r") as topo_file:
-        line_list=topo_file.readlines()
-        count=0
+    with open(topology_file, "r") as topo_file:
+        line_list = topo_file.readlines()
+        count = 0
+
         for line in line_list:
-            count +=1
-            #Try to encode into ascii
+            count += 1
+            # Try to encode into ascii
             try:
-                line.encode('ascii','ignore')
+                line.encode('ascii', 'ignore')
+
             except UnicodeDecodeError as e:
-                print(styles.FAIL + styles.BOLD + " ### ERROR: Line %s:\n %s\n         --> \"%s\" \n     Has hidden unicode characters in it which prevent it from being converted to ASCII cleanly. Try manually typing it instead of copying and pasting." % (count,line,re.sub(r'[^\x00-\x7F]+','?', line)) + styles.ENDC)
+                print(styles.FAIL + styles.BOLD +
+                      " ### ERROR: Line %s:\n %s\n         --> \"%s\" \n     \
+                      Has hidden unicode characters in it which prevent it \
+                      from being converted to ASCII cleanly. Try manually \
+                      typing it instead of copying and pasting."
+                      % (count, line, re.sub(r'[^\x00-\x7F]+', '?', line)) + styles.ENDC)
                 exit(1)
 
-            if line.count("\"")%2 == 1:
-                print(styles.FAIL + styles.BOLD + " ### ERROR: Line %s: Has an odd number of quotation characters (\").\n     %s\n"%(count,line) + styles.ENDC)
+            if line.count("\"") % 2 == 1:
+                print(styles.FAIL + styles.BOLD +
+                      " ### ERROR: Line %s: Has an odd \
+                      number of quotation characters \
+                      (\").\n     %s\n" % (count, line) + styles.ENDC)
                 exit(1)
-            if line.count("'")%2 == 1:
-                print(styles.FAIL + styles.BOLD + " ### ERROR: Line %s: Has an odd number of quotation characters (').\n     %s\n"%(count,line) + styles.ENDC)
+
+            if line.count("'") % 2 == 1:
+                print(styles.FAIL + styles.BOLD +
+                      " ### ERROR: Line %s: Has an odd \
+                      number of quotation characters \
+                      (').\n     %s\n" % (count, line) + styles.ENDC)
                 exit(1)
+
             if line.count(":") == 2:
                 if " -- " not in line:
-                    print(styles.FAIL + styles.BOLD + " ### ERROR: Line %s: Does not contain the following sequence \" -- \" to seperate the different ends of the link.\n     %s\n"%(count,line) + styles.ENDC)
+                    print(styles.FAIL + styles.BOLD +
+                          " ### ERROR: Line %s: Does not \
+                          contain the following sequence \" -- \" \
+                          to seperate the different ends of the link.\n     %s\n"
+                          % (count, line) + styles.ENDC)
+
                     exit(1)
+
 
 def parse_topology(topology_file):
     global provider
