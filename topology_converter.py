@@ -26,6 +26,7 @@ from operator import itemgetter
 
 pp = pprint.PrettyPrinter(depth=6)
 
+
 class styles:
     # Use these for text colors
     HEADER = '\033[95m'
@@ -37,33 +38,71 @@ class styles:
     UNDERLINE = '\033[4m'
     ENDC = '\033[0m'
 
-parser = argparse.ArgumentParser(description='Topology Converter -- Convert topology.dot files into Vagrantfiles')
+
+parser = argparse.ArgumentParser(description='Topology Converter -- Convert \
+                                 topology.dot files into Vagrantfiles')
 parser.add_argument('topology_file',
-                   help='provide a topology file as input')
-parser.add_argument('-v','--verbose', action='store_true',
-                   help='enables verbose logging mode')
-parser.add_argument('-p','--provider', choices=["libvirt","virtualbox"],
-                   help='specifies the provider to be used in the Vagrantfile, script supports "virtualbox" or "libvirt", default is virtualbox.')
-parser.add_argument('-a','--ansible-hostfile', action='store_true',
-                   help='When specified, ansible hostfile will be generated from a dummy playbook run.')
-parser.add_argument('-c','--create-mgmt-network', action='store_true',
-                   help='When specified, a mgmt switch and server will be created. A /24 is assumed for the mgmt network. mgmt_ip=X.X.X.X will be read from each device to create a Static DHCP mapping for the oob-mgmt-server.')
-parser.add_argument('-cco','--create-mgmt-configs-only', action='store_true',
-                   help='Calling this option does NOT regenerate the Vagrantfile but it DOES regenerate the configuration files that come packaged with the mgmt-server in the "-c" option. This option is typically used after the "-c" has been called to generate a Vagrantfile with an oob-mgmt-server and oob-mgmt-switch to modify the configuraiton files placed on the oob-mgmt-server device. Useful when you do not want to regenerate the vagrantfile but you do want to make changes to the OOB-mgmt-server configuration templates.')
-parser.add_argument('-cmd','--create-mgmt-device', action='store_true',
-                   help='Calling this option creates the mgmt device and runs the auto_mgmt_network template engine to load configurations on to the mgmt device but it does not create the OOB-MGMT-SWITCH or associated connections. Useful when you are manually specifying the construction of the management network but still want to have the OOB-mgmt-server created automatically.')
-parser.add_argument('-t','--template', action='append', nargs=2,
-                   help='Specify an additional jinja2 template and a destination for that file to be rendered to.')
-parser.add_argument('-s','--start-port', type=int,
-                   help='FOR LIBVIRT PROVIDER: this option overrides the default starting-port 8000 with a new value. Use ports over 1024 to avoid permissions issues. If using this option with the virtualbox provider it will be ignored.')
-parser.add_argument('-g','--port-gap', type=int,
-                   help='FOR LIBVIRT PROVIDER: this option overrides the default port-gap of 1000 with a new value. This number is added to the start-port value to determine the port to be used by the remote-side. Port-gap also defines the max number of links that can exist in the topology. EX. If start-port is 8000 and port-gap is 1000 the first link will use ports 8001 and 9001 for the construction of the UDP tunnel. If using this option with the virtualbox provider it will be ignored.')
-parser.add_argument('-dd','--display-datastructures', action='store_true',
-                   help='When specified, the datastructures which are passed to the template are displayed to screen. Note: Using this option does not write a Vagrantfile and supercedes other options.')
+                    help='provide a topology file as input')
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help='enables verbose logging mode')
+parser.add_argument('-p', '--provider', choices=["libvirt", "virtualbox"],
+                    help='specifies the provider to be used in the Vagrantfile, \
+                    script supports "virtualbox" or "libvirt", default is virtualbox.')
+parser.add_argument('-a', '--ansible-hostfile', action='store_true',
+                    help='When specified, ansible hostfile will be generated \
+                    from a dummy playbook run.')
+parser.add_argument('-c', '--create-mgmt-network', action='store_true',
+                    help='When specified, a mgmt switch and server will be created. \
+                    A /24 is assumed for the mgmt network. mgmt_ip=X.X.X.X will be \
+                    read from each device to create a Static DHCP mapping for \
+                    the oob-mgmt-server.')
+parser.add_argument('-cco', '--create-mgmt-configs-only', action='store_true',
+                    help='Calling this option does NOT regenerate the Vagrantfile \
+                    but it DOES regenerate the configuration files that come \
+                    packaged with the mgmt-server in the "-c" option. This option \
+                    is typically used after the "-c" has been called to generate \
+                    a Vagrantfile with an oob-mgmt-server and oob-mgmt-switch to \
+                    modify the configuraiton files placed on the oob-mgmt-server \
+                    device. Useful when you do not want to regenerate the \
+                    vagrantfile but you do want to make changes to the \
+                    OOB-mgmt-server configuration templates.')
+parser.add_argument('-cmd', '--create-mgmt-device', action='store_true',
+                    help='Calling this option creates the mgmt device and runs the \
+                    auto_mgmt_network template engine to load configurations on to \
+                    the mgmt device but it does not create the OOB-MGMT-SWITCH or \
+                    associated connections. Useful when you are manually specifying \
+                    the construction of the management network but still want to have \
+                    the OOB-mgmt-server created automatically.')
+parser.add_argument('-t', '--template', action='append', nargs=2,
+                    help='Specify an additional jinja2 template and a destination \
+                    for that file to be rendered to.')
+parser.add_argument('-s', '--start-port', type=int,
+                    help='FOR LIBVIRT PROVIDER: this option overrides \
+                    the default starting-port 8000 with a new value. \
+                    Use ports over 1024 to avoid permissions issues. If using \
+                    this option with the virtualbox provider it will be ignored.')
+parser.add_argument('-g', '--port-gap', type=int,
+                    help='FOR LIBVIRT PROVIDER: this option overrides the \
+                    default port-gap of 1000 with a new value. This number \
+                    is added to the start-port value to determine the port \
+                    to be used by the remote-side. Port-gap also defines the \
+                    max number of links that can exist in the topology. EX. \
+                    If start-port is 8000 and port-gap is 1000 the first link \
+                    will use ports 8001 and 9001 for the construction of the \
+                    UDP tunnel. If using this option with the virtualbox \
+                    provider it will be ignored.')
+parser.add_argument('-dd', '--display-datastructures', action='store_true',
+                    help='When specified, the datastructures which are passed \
+                    to the template are displayed to screen. Note: Using \
+                    this option does not write a Vagrantfile and \
+                    supercedes other options.')
 parser.add_argument('--synced-folder', action='store_true',
-                   help='Using this option enables the default Vagrant synced folder which we disable by default. See: https://www.vagrantup.com/docs/synced-folders/basic_usage.html')
-parser.add_argument('--version', action='version', version="Topology Converter version is v%s" % version,
-                   help='Using this option displays the version of Topology Converter')
+                    help='Using this option enables the default Vagrant \
+                    synced folder which we disable by default. \
+                    See: https://www.vagrantup.com/docs/synced-folders/basic_usage.html')
+parser.add_argument('--version', action='version', version="Topology \
+                    Converter version is v%s" % version,
+                    help='Using this option displays the version of Topology Converter')
 args = parser.parse_args()
 
 #Parse Arguments
