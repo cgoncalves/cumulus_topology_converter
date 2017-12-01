@@ -1334,7 +1334,6 @@ callback_whitelist = profile_tasks
 jinja2_extensions=jinja2.ext.do""")
 
 
-
 def main():
     global mac_map
     print(styles.HEADER + "\n######################################")
@@ -1344,7 +1343,7 @@ def main():
 
     inventory = parse_topology(topology_file)
 
-    devices=populate_data_structures(inventory)
+    devices = populate_data_structures(inventory)
 
     remove_generated_files()
 
@@ -1355,17 +1354,29 @@ def main():
     generate_ansible_files()
 
     if create_mgmt_configs_only:
-        print(styles.GREEN + styles.BOLD + "\n############\nSUCCESS: MGMT Network Templates have been regenerated!\n############" + styles.ENDC)
+        print(styles.GREEN + styles.BOLD +
+              "\n############\nSUCCESS: MGMT Network Templates have been regenerated!\n############" +
+              styles.ENDC)
     else:
-        print(styles.GREEN + styles.BOLD + "\n############\nSUCCESS: Vagrantfile has been generated!\n############" + styles.ENDC)
-        print(styles.GREEN + styles.BOLD + "\n            %s devices under simulation." %(len(devices)) + styles.ENDC)
+        print(styles.GREEN + styles.BOLD +
+              "\n############\nSUCCESS: Vagrantfile has been generated!\n############" +
+              styles.ENDC)
+        print(styles.GREEN + styles.BOLD +
+              "\n            %s devices under simulation." % (len(devices)) +
+              styles.ENDC)
+
     for device in inventory:
-        print(styles.GREEN + styles.BOLD + "                %s" %(inventory[device]['hostname']) + styles.ENDC)
+        print(styles.GREEN + styles.BOLD +
+              "                %s" % (inventory[device]['hostname']) +
+              styles.ENDC)
 
     for warn_msg in warning:
         print(warn_msg)
+
     print("\nDONE!\n")
+
 
 if __name__ == "__main__":
     main()
+
 exit(0)
