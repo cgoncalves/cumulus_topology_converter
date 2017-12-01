@@ -105,47 +105,68 @@ parser.add_argument('--version', action='version', version="Topology \
                     help='Using this option displays the version of Topology Converter')
 args = parser.parse_args()
 
-#Parse Arguments
-network_functions=['oob-switch','internet','exit','superspine','spine','leaf','tor']
-function_group={}
-provider="virtualbox"
-generate_ansible_hostfile=False
-create_mgmt_device=False
-create_mgmt_network=False
-create_mgmt_configs_only=False
-verbose=False
-start_port=8000
-port_gap=1000
-synced_folder=False
-display_datastructures=False
-VAGRANTFILE='Vagrantfile'
-VAGRANTFILE_template='templates/Vagrantfile.j2'
+# Parse Arguments
+network_functions = ['oob-switch', 'internet', 'exit', 'superspine', 'spine', 'leaf', 'tor']
+function_group = {}
+provider = "virtualbox"
+generate_ansible_hostfile = False
+create_mgmt_device = False
+create_mgmt_network = False
+create_mgmt_configs_only = False
+verbose = False
+start_port = 8000
+port_gap = 1000
+synced_folder = False
+display_datastructures = False
+VAGRANTFILE = 'Vagrantfile'
+VAGRANTFILE_template = 'templates/Vagrantfile.j2'
 customer = os.path.basename(os.path.dirname(os.getcwd()))
-TEMPLATES=[[VAGRANTFILE_template,VAGRANTFILE]]
-arg_string=" ".join(sys.argv)
-if args.topology_file: topology_file=args.topology_file
-if args.verbose: verbose=args.verbose
-if args.provider: provider=args.provider
-if args.ansible_hostfile: generate_ansible_hostfile=True
+TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
+arg_string = " ".join(sys.argv)
+
+if args.topology_file:
+    topology_file = args.topology_file
+
+if args.verbose:
+    verbose = args.verbose
+
+if args.provider:
+    provider = args.provider
+
+if args.ansible_hostfile:
+    generate_ansible_hostfile = True
+
 if args.create_mgmt_device:
-    create_mgmt_device=True
+    create_mgmt_device = True
+
 if args.create_mgmt_network:
-    create_mgmt_device=True
-    create_mgmt_network=True
+    create_mgmt_device = True
+    create_mgmt_network = True
+
 if args.create_mgmt_configs_only:
-    create_mgmt_configs_only=True
+    create_mgmt_configs_only = True
 
 if args.template:
-    for templatefile,destination in args.template:
-        TEMPLATES.append([templatefile,destination])
-for templatefile,destination in TEMPLATES:
+    for templatefile, destination in args.template:
+        TEMPLATES.append([templatefile, destination])
+
+for templatefile, destination in TEMPLATES:
     if not os.path.isfile(templatefile):
-        print(styles.FAIL + styles.BOLD + " ### ERROR: provided template file-- \"" + templatefile + "\" does not exist!" + styles.ENDC)
+        print(styles.FAIL + styles.BOLD + " ### ERROR: provided template file-- \"" +
+              templatefile + "\" does not exist!" + styles.ENDC)
         exit(1)
-if args.start_port: start_port=args.start_port
-if args.port_gap: port_gap=args.port_gap
-if args.display_datastructures: display_datastructures=True
-if args.synced_folder: synced_folder=True
+
+if args.start_port:
+    start_port = args.start_port
+
+if args.port_gap:
+    port_gap = args.port_gap
+
+if args.display_datastructures:
+    display_datastructures = True
+
+if args.synced_folder:
+    synced_folder = True
 
 if verbose:
     print("Arguments:")
