@@ -1089,13 +1089,19 @@ def clean_datastructure(devices):
         del devices[index]
     return devices
 
+
 def remove_generated_files():
-    if display_datastructures: return
-    if verbose: print("Removing existing DHCP FILE...")
-    if os.path.isfile(dhcp_mac_file):  os.remove(dhcp_mac_file)
+    if display_datastructures:
+        return
+    if verbose:
+        print("Removing existing DHCP FILE...")
+    if os.path.isfile(dhcp_mac_file):
+        os.remove(dhcp_mac_file)
 
 
 _nsre = re.compile('([0-9]+)')
+
+
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(_nsre, s)]
@@ -1103,38 +1109,63 @@ def natural_sort_key(s):
 
 def getKeyDevices(device):
     # Used to order the devices for printing into the vagrantfile
-    if device['function'] == "oob-server": return 1
-    elif device['function'] == "oob-switch": return 2
-    elif device['function'] == "exit": return 3
-    elif device['function'] == "superspine": return 4
-    elif device['function'] == "spine": return 5
-    elif device['function'] == "leaf": return 6
-    elif device['function'] == "tor": return 7
-    elif device['function'] == "host": return 8
-    else: return 9
+    if device['function'] == "oob-server":
+        return 1
+    elif device['function'] == "oob-switch":
+        return 2
+    elif device['function'] == "exit":
+        return 3
+    elif device['function'] == "superspine":
+        return 4
+    elif device['function'] == "spine":
+        return 5
+    elif device['function'] == "leaf":
+        return 6
+    elif device['function'] == "tor":
+        return 7
+    elif device['function'] == "host":
+        return 8
+    else:
+        return 9
+
 
 def sorted_interfaces(interface_dictionary):
-    sorted_list=[]
-    interface_list=[]
+    sorted_list = []
+    interface_list = []
+
     for link in interface_dictionary:
         sorted_list.append(link)
+
     sorted_list.sort(key=natural_sort_key)
+
     for link in sorted_list:
-        interface_dictionary[link]["local_interface"]= link
+        interface_dictionary[link]["local_interface"] = link
         interface_list.append(interface_dictionary[link])
+
     return interface_list
 
+
 def generate_dhcp_mac_file(mac_map):
-    if verbose: print("GENERATING DHCP MAC FILE...")
-    mac_file = open(dhcp_mac_file,"a")
-    if '' in mac_map: del mac_map['']
-    dhcp_display_list=[]
+    if verbose:
+        print("GENERATING DHCP MAC FILE...")
+
+    mac_file = open(dhcp_mac_file, "a")
+
+    if '' in mac_map:
+        del mac_map['']
+
+    dhcp_display_list = []
+
     for line in mac_map:
-        dhcp_display_list.append(mac_map[line]+","+line)
+        dhcp_display_list.append(mac_map[line] + "," + line)
+
     dhcp_display_list.sort()
+
     for line in dhcp_display_list:
-        mac_file.write(line+"\n")
+        mac_file.write(line + "\n")
+
     mac_file.close()
+
 
 def populate_data_structures(inventory):
     global function_group
