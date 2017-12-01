@@ -177,23 +177,25 @@ if verbose:
 ###################################
 
 # The starting MAC for assignment for any devices not in mac_map
-#Cumulus Range ( https://support.cumulusnetworks.com/hc/en-us/articles/203837076-Reserved-MAC-Address-Range-for-Use-with-Cumulus-Linux )
-start_mac="443839000000"
-#This file is generated to store the mapping between macs and mgmt interfaces
-dhcp_mac_file="./dhcp_mac_map"
+# Cumulus Range ( https://support.cumulusnetworks.com/hc/en-us/articles/203837076-Reserved-MAC-Address-Range-for-Use-with-Cumulus-Linux )
+start_mac = "443839000000"
+
+# This file is generated to store the mapping between macs and mgmt interfaces
+dhcp_mac_file = "./dhcp_mac_map"
 
 ######################################################
 #############    Everything Else     #################
 ######################################################
 
-#Hardcoded Variables
-script_storage="./helper_scripts"
+# Hardcoded Variables
+script_storage = "./helper_scripts"
 epoch_time = str(int(time.time()))
-mac_map={}
+mac_map = {}
 
-#Static Variables -- #Do not change!
-warning=[]
-libvirt_reuse_error="""
+
+# Static Variables -- #Do not change!
+warning = []
+libvirt_reuse_error = """
        When constructing a VAGRANTFILE for the libvirt provider
        interface reuse is not possible because the UDP tunnels
        which libvirt uses for communication are point-to-point in
