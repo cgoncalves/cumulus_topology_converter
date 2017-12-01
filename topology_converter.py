@@ -1190,41 +1190,62 @@ def populate_data_structures(inventory):
 
 def render_jinja_templates(devices):
     global function_group
-    if display_datastructures: print_datastructures(devices)
-    if verbose: print("RENDERING JINJA TEMPLATES...")
 
-    #Render the MGMT Network stuff
+    if display_datastructures:
+        print_datastructures(devices)
+
+    if verbose:
+        print("RENDERING JINJA TEMPLATES...")
+
+    # Render the MGMT Network stuff
     if create_mgmt_device:
-        #Check that MGMT Template Dir exists
-        mgmt_template_dir="./templates/auto_mgmt_network/"
+        # Check that MGMT Template Dir exists
+        mgmt_template_dir = "./templates/auto_mgmt_network/"
         if not os.path.isdir("./templates/auto_mgmt_network"):
-            print(styles.FAIL + styles.BOLD + "ERROR: " + mgmt_template_dir + " does not exist. Cannot populate templates!" + styles.ENDC)
+            print(styles.FAIL + styles.BOLD +
+                  "ERROR: " + mgmt_template_dir +
+                  " does not exist. Cannot populate templates!" +
+                  styles.ENDC)
+
             exit(1)
 
-        #Scan MGMT Template Dir for .j2 files
-        mgmt_templates=[]
+        # Scan MGMT Template Dir for .j2 files
+        mgmt_templates = []
+
         for file in os.listdir(mgmt_template_dir):
-            if file.endswith(".j2"): mgmt_templates.append(file)
+
+            if file.endswith(".j2"):
+                mgmt_templates.append(file)
+
         if verbose:
             print(" detected mgmt_templates:")
             print(mgmt_templates)
 
-        #Create output location for MGMT template files
-        mgmt_destination_dir="./helper_scripts/auto_mgmt_network/"
+        # Create output location for MGMT template files
+        mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
         if not os.path.isdir(mgmt_destination_dir):
-            if verbose: print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
+            if verbose:
+                print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
+
             try:
                 os.mkdir(mgmt_destination_dir)
+
             except:
-                print(styles.FAIL + styles.BOLD + "ERROR: Could not create output directory for mgmt template renders!" + styles.ENDC)
+                print(styles.FAIL + styles.BOLD +
+                      "ERROR: Could not create output directory for mgmt template renders!" +
+                      styles.ENDC)
                 exit(1)
 
-        #Render out the templates
+        # Render out the templates
         for template in mgmt_templates:
-            render_destination=os.path.join(mgmt_destination_dir,template[0:-3])
-            template_source=os.path.join(mgmt_template_dir,template)
-            if verbose: print("    Rendering: " + template + " --> " + render_destination)
+            render_destination = os.path.join(mgmt_destination_dir, template[0:-3])
+            template_source = os.path.join(mgmt_template_dir, template)
+
+            if verbose:
+                print("    Rendering: " + template + " --> " + render_destination)
+
             template = jinja2.Template(open(template_source).read())
+
             with open(render_destination, 'w') as outfile:
                 outfile.write(template.render(devices=devices,
                                               synced_folder=synced_folder,
@@ -1238,14 +1259,19 @@ def render_jinja_templates(devices):
                                               generate_ansible_hostfile=generate_ansible_hostfile,
                                               create_mgmt_device=create_mgmt_device,
                                               function_group=function_group,
-                                              network_functions=network_functions,)
-                             )
-   #Render the main Vagrantfile
+                                              network_functions=network_functions,))
+
+    # Render the main Vagrantfile
     if create_mgmt_device and create_mgmt_configs_only:
         return 0
-    for templatefile,destination in TEMPLATES:
-        if verbose: print("    Rendering: " + templatefile + " --> " + destination)
+
+    for templatefile, destination in TEMPLATES:
+
+        if verbose:
+            print("    Rendering: " + templatefile + " --> " + destination)
+
         template = jinja2.Template(open(templatefile).read())
+
         with open(destination, 'w') as outfile:
             outfile.write(template.render(devices=devices,
                                           synced_folder=synced_folder,
@@ -1258,8 +1284,7 @@ def render_jinja_templates(devices):
                                           generate_ansible_hostfile=generate_ansible_hostfile,
                                           create_mgmt_device=create_mgmt_device,
                                           function_group=function_group,
-                                          network_functions=network_functions,)
-                         )
+                                          network_functions=network_functions,))
 
 def print_datastructures(devices):
     print("\n\n######################################")
