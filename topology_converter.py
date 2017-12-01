@@ -1170,17 +1170,23 @@ def generate_dhcp_mac_file(mac_map):
 def populate_data_structures(inventory):
     global function_group
     devices = []
+
     for device in inventory:
-        inventory[device]['hostname']=device
+        inventory[device]['hostname'] = device
         devices.append(inventory[device])
+
     devices_clean = clean_datastructure(devices)
 
-    #Create Functional Group Map
+    # Create Functional Group Map
     for device in devices_clean:
-        if device['function'] not in function_group: function_group[device['function']] = []
+
+        if device['function'] not in function_group:
+            function_group[device['function']] = []
+
         function_group[device['function']].append(device['hostname'])
 
     return devices_clean
+
 
 def render_jinja_templates(devices):
     global function_group
