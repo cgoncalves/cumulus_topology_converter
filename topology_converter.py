@@ -1054,29 +1054,34 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
 
 
 def clean_datastructure(devices):
-    #Sort the devices by function
+    # Sort the devices by function
     devices.sort(key=getKeyDevices)
     for device in devices:
-        device['interfaces']=sorted_interfaces(device['interfaces'])
+        device['interfaces'] = sorted_interfaces(device['interfaces'])
 
-    if display_datastructures: return devices
+    if display_datastructures:
+        return devices
     for device in devices:
         print(styles.GREEN + styles.BOLD + ">> DEVICE: " + device['hostname'] + styles.ENDC)
         print("     code: " + device['os'])
+
         if 'memory' in device:
             print("     memory: " + device['memory'])
+
         for attribute in device:
-            if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces': continue
-            print("     "+str(attribute)+": "+ str(device[attribute]))
+            if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces':
+                continue
+            print("     " + str(attribute) + ": " + str(device[attribute]))
+
         for interface_entry in device['interfaces']:
             print("       LINK: " + interface_entry["local_interface"])
             for attribute in interface_entry:
                 if attribute != "local_interface":
-                    print("               " + attribute +": " + interface_entry[attribute])
+                    print("               " + attribute + ": " + interface_entry[attribute])
 
-    #Remove Fake Devices
-    indexes_to_remove=[]
-    for i in range(0,len(devices)):
+    # Remove Fake Devices
+    indexes_to_remove = []
+    for i in range(0, len(devices)):
         if 'function' in devices[i]:
             if devices[i]['function'] == 'fake':
                 indexes_to_remove.append(i)
