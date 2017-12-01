@@ -959,53 +959,82 @@ def parse_topology(topology_file):
 
     return inventory
 
-def add_link(inventory,left_device,right_device,left_interface,right_interface,left_mac_address,right_mac_address,net_number):
-    network_string="net"+str(net_number)
-    PortA=str(start_port+net_number)
-    PortB=str(start_port+port_gap+net_number)
-    if int(PortA) > int(start_port+port_gap) and provider=="libvirt":
-        print(styles.FAIL + styles.BOLD + " ### ERROR: Configured Port_Gap: ("+str(port_gap)+") exceeds the number of links in the topology. Read the help options to fix.\n\n" + styles.ENDC)
+
+def add_link(inventory, left_device, right_device, left_interface, right_interface, left_mac_address, right_mac_address, net_number):
+    network_string = "net" + str(net_number)
+    PortA = str(start_port + net_number)
+    PortB = str(start_port + port_gap + net_number)
+
+    if int(PortA) > int(start_port + port_gap) and provider == "libvirt":
+        print(styles.FAIL + styles.BOLD +
+              " ### ERROR: Configured Port_Gap: (" + str(port_gap) + ") \
+              exceeds the number of links in the topology. Read the help options to fix.\n\n" +
+              styles.ENDC)
+
         parser.print_help()
         exit(1)
 
     global mac_map
-    #Add a Link to the Inventory for both switches
+    # Add a Link to the Inventory for both switches
 
-    #Add left host switchport to inventory
+    # Add left host switchport to inventory
     if left_interface not in inventory[left_device]['interfaces']:
         inventory[left_device]['interfaces'][left_interface] = {}
-        inventory[left_device]['interfaces'][left_interface]['mac']=left_mac_address
+        inventory[left_device]['interfaces'][left_interface]['mac'] = left_mac_address
+
         if left_mac_address in mac_map:
-            print(styles.FAIL + styles.BOLD + " ### ERROR -- MAC Address Collision - tried to use "+left_mac_address+" on "+left_device+":"+left_interface+"\n                 but it is already in use. Check your Topology File!" + styles.ENDC)
+            print(styles.FAIL + styles.BOLD +
+                  " ### ERROR -- MAC Address Collision - tried to use " +
+                  left_mac_address + " on " + left_device + ":" + left_interface +
+                  "\n                 but it is already in use. Check your Topology File!" +
+                  styles.ENDC)
             exit(1)
-        mac_map[left_mac_address]=left_device+","+left_interface
-        if provider=="virtualbox":
+
+        mac_map[left_mac_address] = left_device + "," + left_interface
+
+        if provider == "virtualbox":
             inventory[left_device]['interfaces'][left_interface]['network'] = network_string
-        elif provider=="libvirt":
+
+        elif provider == "libvirt":
             inventory[left_device]['interfaces'][left_interface]['local_port'] = PortA
             inventory[left_device]['interfaces'][left_interface]['remote_port'] = PortB
+
     else:
         print(styles.FAIL + styles.BOLD + " ### ERROR -- Interface " + left_interface + " Already used on device: " + left_device + styles.ENDC)
         exit(1)
 
-    #Add right host switchport to inventory
+    # Add right host switchport to inventory
     if right_device == "NOTHING":
         pass
+
     elif right_interface not in inventory[right_device]['interfaces']:
         inventory[right_device]['interfaces'][right_interface] = {}
-        inventory[right_device]['interfaces'][right_interface]['mac']=right_mac_address
+        inventory[right_device]['interfaces'][right_interface]['mac'] = right_mac_address
+
         if right_mac_address in mac_map:
-            print(styles.FAIL + styles.BOLD + " ### ERROR -- MAC Address Collision - tried to use "+right_mac_address+" on "+right_device+":"+right_interface+"\n                 but it is already in use. Check your Topology File!" + styles.ENDC)
+            print(styles.FAIL + styles.BOLD +
+                  " ### ERROR -- MAC Address Collision - tried to use " +
+                  right_mac_address + " on " + right_device + ":" + right_interface +
+                  "\n                 but it is already in use. Check your Topology File!" +
+                  styles.ENDC)
+
             exit(1)
-        mac_map[right_mac_address]=right_device+","+right_interface
-        if provider=="virtualbox":
+
+        mac_map[right_mac_address] = right_device + "," + right_interface
+
+        if provider == "virtualbox":
             inventory[right_device]['interfaces'][right_interface]['network'] = network_string
-        elif provider=="libvirt":
+
+        elif provider == "libvirt":
             inventory[right_device]['interfaces'][right_interface]['local_port'] = PortB
             inventory[right_device]['interfaces'][right_interface]['remote_port'] = PortA
+
     else:
-        print(styles.FAIL + styles.BOLD + " ### ERROR -- Interface " + right_interface + " Already used on device: " + right_device + styles.ENDC)
+        print(styles.FAIL + styles.BOLD +
+              " ### ERROR -- Interface " + right_interface +
+              " Already used on device: " + right_device + styles.ENDC)
         exit(1)
+
     inventory[left_device]['interfaces'][left_interface]['remote_interface'] = right_interface
     inventory[left_device]['interfaces'][left_interface]['remote_device'] = right_device
 
