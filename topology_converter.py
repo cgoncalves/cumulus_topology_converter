@@ -1286,6 +1286,7 @@ def render_jinja_templates(devices):
                                           function_group=function_group,
                                           network_functions=network_functions,))
 
+
 def print_datastructures(devices):
     print("\n\n######################################")
     print("   DATASTRUCTURES SENT TO TEMPLATE:")
@@ -1307,10 +1308,15 @@ def print_datastructures(devices):
     pp.pprint(devices)
     exit(0)
 
+
 def generate_ansible_files():
-    if not generate_ansible_hostfile: return
-    if verbose: print("Generating Ansible Files...")
-    with open("./helper_scripts/empty_playbook.yml","w") as playbook:
+    if not generate_ansible_hostfile:
+        return
+
+    if verbose:
+        print("Generating Ansible Files...")
+
+    with open("./helper_scripts/empty_playbook.yml", "w") as playbook:
         playbook.write("""---
 - hosts: all
   user: vagrant
@@ -1318,7 +1324,8 @@ def generate_ansible_files():
   tasks:
     - command: "uname -a"
 """)
-    with open("./ansible.cfg","w") as ansible_cfg:
+
+    with open("./ansible.cfg", "w") as ansible_cfg:
         ansible_cfg.write("""[defaults]
 inventory = ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 hostfile= ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
