@@ -288,88 +288,149 @@ def parse_topology(topology_file):
     try:
         topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
     except Exception as e:
-        print(styles.FAIL + styles.BOLD + " ### ERROR: Cannot parse the provided topology.dot file (%s)\n     There is probably a syntax error of some kind, common causes include failing to close quotation marks and hidden characters from copy/pasting device names into the topology file." % (topology_file) + styles.ENDC)
+        print(styles.FAIL + styles.BOLD +
+              " ### ERROR: Cannot parse the provided topology.dot \
+              file (%s)\n     There is probably a syntax error \
+              of some kind, common causes include failing to \
+              close quotation marks and hidden characters from \
+              copy/pasting device names into the topology file."
+              % (topology_file) + styles.ENDC)
+
         exit(1)
 
     inventory = {}
+
     try:
-        nodes=topology.get_node_list()
+        nodes = topology.get_node_list()
+
     except Exception as e:
         print(e)
-        print(styles.FAIL + styles.BOLD + " ### ERROR: There is a syntax error in your topology file (%s). Read the error output above for any clues as to the source." %(topology_file) + styles.ENDC)
-        exit(1)
-    try:
-        edges=topology.get_edge_list()
-    except Exception as e:
-        print(e)
-        print(styles.FAIL + styles.BOLD + " ### ERROR: There is a syntax error in your topology file (%s). Read the error output above for any clues as to the source." %(topology_file) + styles.ENDC)
+        print(styles.FAIL + styles.BOLD +
+              " ### ERROR: There is a syntax error in your topology file \
+              (%s). Read the error output above for any clues as to the source."
+              % (topology_file) + styles.ENDC)
+
         exit(1)
 
-    #Add Nodes to inventory
+    try:
+        edges = topology.get_edge_list()
+
+    except Exception as e:
+        print(e)
+        print(styles.FAIL + styles.BOLD +
+              " ### ERROR: There is a syntax error in your topology file \
+              (%s). Read the error output above for any clues as to the source."
+              % (topology_file) + styles.ENDC)
+
+        exit(1)
+
+    # Add Nodes to inventory
     for node in nodes:
-        node_name=node.get_name().replace('"','')
+
+        node_name = node.get_name().replace('"', '')
+
         if node_name.startswith(".") or node_name.startswith("-"):
-            print(styles.FAIL + styles.BOLD + " ### ERROR: Node name cannot start with a hyphen or period. '%s' is not valid!\n"%(node_name) + styles.ENDC)
-            exit(1)
-        reg=re.compile('^[A-Za-z0-9\.-]+$')
-        if not reg.match(node_name):
-            print(styles.FAIL + styles.BOLD + " ### ERROR: Node name for the VM should only contain letters, numbers, hyphens or dots. It cannot start with a hyphen or dot.  '%s' is not valid!\n"%(node_name) + styles.ENDC)
+            print(styles.FAIL + styles.BOLD +
+                  " ### ERROR: Node name cannot start with a hyphen or period. \
+                  '%s' is not valid!\n" % (node_name) + styles.ENDC)
+
             exit(1)
 
-        #Try to encode into ascii
+        reg = re.compile('^[A-Za-z0-9\.-]+$')
+
+        if not reg.match(node_name):
+            print(styles.FAIL + styles.BOLD +
+                  " ### ERROR: Node name for the \
+                  VM should only contain letters, \
+                  numbers, hyphens or dots. It cannot \
+                  start with a hyphen or dot.  \
+                  '%s' is not valid!\n" % (node_name) + styles.ENDC)
+
+            exit(1)
+
+        # Try to encode into ascii
         try:
-            node_name.encode('ascii','ignore')
+            node_name.encode('ascii', 'ignore')
+
         except UnicodeDecodeError as e:
-            print(styles.FAIL + styles.BOLD + " ### ERROR: Node name \"%s\" --> \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (node_name,re.sub(r'[^\x00-\x7F]+',' ', node_name)) + styles.ENDC)
+            print(styles.FAIL + styles.BOLD +
+                  " ### ERROR: Node name \"%s\" --> \"%s\" \
+                  has hidden unicode characters in it which \
+                  prevent it from being converted to Ascii cleanly. \
+                  Try manually typing it instead of copying and pasting."
+                  % (node_name, re.sub(r'[^\x00-\x7F]+', ' ', node_name)) + styles.ENDC)
+
             exit(1)
 
         if node_name not in inventory:
             inventory[node_name] = {}
             inventory[node_name]['interfaces'] = {}
-        node_attr_list=node.get_attributes()
 
-        #Define Functional Defaults
+        node_attr_list = node.get_attributes()
+
+        # Define Functional Defaults
         if 'function' in node_attr_list:
-            value=node.get('function')
-            if value.startswith('"') or value.startswith("'"): value=value[1:].lower()
-            if value.endswith('"') or value.endswith("'"): value=value[:-1].lower()
+            value = node.get('function')
 
-            if value=='fake':
-                inventory[node_name]['os']="None"
-                inventory[node_name]['memory']="1"
-            if value=='oob-server':
-                inventory[node_name]['os']="yk0/ubuntu-xenial"
-                inventory[node_name]['memory']="512"
-            if value=='oob-switch':
-                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="512"
+            if value.startswith('"') or value.startswith("'"):
+                value = value[1:].lower()
+
+            if value.endswith('"') or value.endswith("'"):
+                value = value[:-1].lower()
+
+            if value == 'fake':
+                inventory[node_name]['os'] = "None"
+                inventory[node_name]['memory'] = "1"
+
+            if value == 'oob-server':
+                inventory[node_name]['os'] = "yk0/ubuntu-xenial"
+                inventory[node_name]['memory'] = "512"
+
+            if value == 'oob-switch':
+                inventory[node_name]['os'] = "CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory'] = "512"
                 inventory[node_name]['config'] = "./helper_scripts/oob_switch_config.sh"
+
             elif value in network_functions:
-                inventory[node_name]['os']="CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory']="512"
+                inventory[node_name]['os'] = "CumulusCommunity/cumulus-vx"
+                inventory[node_name]['memory'] = "512"
                 inventory[node_name]['config'] = "./helper_scripts/extra_switch_config.sh"
-            elif value=='host':
-                inventory[node_name]['os']="yk0/ubuntu-xenial"
-                inventory[node_name]['memory']="512"
+
+            elif value == 'host':
+                inventory[node_name]['os'] = "yk0/ubuntu-xenial"
+                inventory[node_name]['memory'] = "512"
                 inventory[node_name]['config'] = "./helper_scripts/extra_server_config.sh"
 
         if provider == 'libvirt' and 'pxehost' in node_attr_list:
-            if node.get('pxehost').replace('"','') == "True": inventory[node_name]['os']="N/A (PXEBOOT)"
+            if node.get('pxehost').replace('"', '') == "True":
+                inventory[node_name]['os'] = "N/A (PXEBOOT)"
 
-        #Add attributes to node inventory
+        # Add attributes to node inventory
         for attribute in node_attr_list:
-            if verbose: print(attribute + " = " + node.get(attribute))
-            value=node.get(attribute)
-            if value.startswith('"') or value.startswith("'"): value=value[1:]
-            if value.endswith('"') or value.endswith("'"): value=value[:-1]
+
+            if verbose:
+                print(attribute + " = " + node.get(attribute))
+
+            value = node.get(attribute)
+
+            if value.startswith('"') or value.startswith("'"):
+                value = value[1:]
+
+            if value.endswith('"') or value.endswith("'"):
+                value = value[:-1]
+
             inventory[node_name][attribute] = value
+
             if (attribute == "config") and (not os.path.isfile(value)):
-                warning.append(styles.WARNING + styles.BOLD + "    WARNING: Node \""+node_name+"\" Config file for device does not exist" + styles.ENDC)
+                warning.append(styles.WARNING + styles.BOLD +
+                               "    WARNING: Node \"" + node_name + "\" \
+                               Config file for device does not exist" + styles.ENDC)
 
         if provider == 'libvirt':
             if 'os' in inventory[node_name]:
-                if inventory[node_name]['os'] =='boxcutter/ubuntu1604' or inventory[node_name]['os'] =='bento/ubuntu-16.04' or inventory[node_name]['os'] =='ubuntu/xenial64':
-                    print(styles.FAIL + styles.BOLD + " ### ERROR: device " + node_name + " -- Incompatible OS for libvirt provider.")
+                if inventory[node_name]['os'] == 'boxcutter/ubuntu1604' or inventory[node_name]['os'] == 'bento/ubuntu-16.04' or inventory[node_name]['os'] == 'ubuntu/xenial64':
+                    print(styles.FAIL + styles.BOLD + " ### ERROR: device " + node_name +
+                          " -- Incompatible OS for libvirt provider.")
                     print("              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt")
                     print("              use an ubuntu1604 image which is natively built for libvirt")
                     print("              like yk0/ubuntu-xenial.")
@@ -378,78 +439,115 @@ def parse_topology(topology_file):
                     print("              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609" + styles.ENDC)
                     exit(1)
 
-        #Make sure mandatory attributes are present.
-        mandatory_attributes=['os',]
+        # Make sure mandatory attributes are present.
+        mandatory_attributes = ['os', ]
         for attribute in mandatory_attributes:
             if attribute not in inventory[node_name]:
-                print(styles.FAIL + styles.BOLD + " ### ERROR: MANDATORY DEVICE ATTRIBUTE \""+attribute+"\" not specified for "+ node_name + styles.ENDC)
+                print(styles.FAIL + styles.BOLD +
+                      " ### ERROR: MANDATORY DEVICE ATTRIBUTE \"" + attribute + "\" \
+                      not specified for " + node_name + styles.ENDC)
+
                 exit(1)
 
-        #Extra Massaging for specific attributes.
-        #   light sanity checking.
-        if 'function' not in inventory[node_name]: inventory[node_name]['function'] = "Unknown"
+        # Extra Massaging for specific attributes.
+        # light sanity checking.
+        if 'function' not in inventory[node_name]:
+            inventory[node_name]['function'] = "Unknown"
+
         if 'memory' in inventory[node_name]:
             if int(inventory[node_name]['memory']) <= 0:
-                print(styles.FAIL + styles.BOLD + " ### ERROR -- Memory must be greater than 0mb on " + node_name + styles.ENDC)
+                print(styles.FAIL + styles.BOLD +
+                      " ### ERROR -- Memory must be greater than 0mb on " +
+                      node_name + styles.ENDC)
                 exit(1)
+
         if provider == "libvirt":
-            if 'tunnel_ip' not in inventory[node_name]: inventory[node_name]['tunnel_ip']='127.0.0.1'
+            if 'tunnel_ip' not in inventory[node_name]:
+                inventory[node_name]['tunnel_ip'] = '127.0.0.1'
 
-
-    #Add All the Edges to Inventory
+    # Add All the Edges to Inventory
     net_number = 1
     for edge in edges:
-        #if provider=="virtualbox":
-        network_string="net"+str(net_number)
+        # if provider == "virtualbox":
+        network_string = "net" + str(net_number)
 
-        #elifprovider=="libvirt":
-        PortA=str(start_port+net_number)
-        PortB=str(start_port+port_gap+net_number)
+        # elif provider == "libvirt":
+        PortA = str(start_port + net_number)
+        PortB = str(start_port + port_gap + net_number)
 
+        # Set Devices/interfaces/MAC Addresses
+        left_device = edge.get_source().split(":")[0].replace('"', '')
+        left_interface = edge.get_source().split(":")[1].replace('"', '')
 
-        #Set Devices/interfaces/MAC Addresses
-        left_device=edge.get_source().split(":")[0].replace('"','')
-        left_interface=edge.get_source().split(":")[1].replace('"','')
         if "/" in left_interface:
-            new_left_interface = left_interface.replace('/','-')
-            warning.append(styles.WARNING + styles.BOLD + "    WARNING: Device %s interface %s has bad characters altering to this %s."%(left_device,left_interface,new_left_interface) + styles.ENDC)
+            new_left_interface = left_interface.replace('/', '-')
+            warning.append(styles.WARNING + styles.BOLD +
+                           "    WARNING: Device %s interface %s has bad \
+                           characters altering to this %s."
+                           % (left_device, left_interface, new_left_interface) +
+                           styles.ENDC)
             left_interface = new_left_interface
-        right_device=edge.get_destination().split(":")[0].replace('"','')
-        right_interface=edge.get_destination().split(":")[1].replace('"','')
+
+        right_device = edge.get_destination().split(":")[0].replace('"', '')
+        right_interface = edge.get_destination().split(":")[1].replace('"', '')
         if "/" in right_interface:
-            new_right_interface = right_interface.replace('/','-')
-            warning.append(styles.WARNING + styles.BOLD + "    WARNING: Device %s interface %s has bad characters altering to this %s."%(right_device,right_interface,new_right_interface) + styles.ENDC)
+            new_right_interface = right_interface.replace('/', '-')
+            warning.append(styles.WARNING + styles.BOLD +
+                           "    WARNING: Device %s interface %s has bad \
+                           characters altering to this %s."
+                           % (right_device, right_interface, new_right_interface) +
+                           styles.ENDC)
             right_interface = new_right_interface
 
-        for value in [left_device,left_interface,right_device,right_interface]:
-            #Try to encode into ascii
+        for value in [left_device, left_interface, right_device, right_interface]:
+            # Try to encode into ascii
             try:
-                value.encode('ascii','ignore')
+                value.encode('ascii', 'ignore')
             except UnicodeDecodeError as e:
-                print(styles.FAIL + styles.BOLD + " ### ERROR: in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        Link component: \"%s\" has hidden unicode characters in it which prevent it from being converted to Ascii cleanly. Try manually typing it instead of copying and pasting." % (left_device,left_interface,right_device,right_interface,re.sub(r'[^\x00-\x7F]+',' ', value)) + styles.ENDC)
+                print(styles.FAIL + styles.BOLD +
+                      " ### ERROR: in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        \
+                      Link component: \"%s\" has hidden unicode characters in it \
+                      which prevent it from being converted to Ascii cleanly. \
+                      Try manually typing it instead of copying and pasting."
+                      % (left_device, left_interface, right_device, right_interface,
+                         re.sub(r'[^\x00-\x7F]+', ' ', value)) + styles.ENDC)
+
                 exit(1)
 
+        left_mac_address = ""
 
-        left_mac_address=""
-        if edge.get('left_mac') != None :
-            temp_left_mac=edge.get('left_mac').replace('"','').replace(':','').lower()
-            left_mac_address=add_mac_colon(temp_left_mac)
-        else: left_mac_address=mac_fetch(left_device,left_interface)
-        right_mac_address=""
-        if edge.get('right_mac') != None :
-            temp_right_mac=edge.get('right_mac').replace('"','').replace(':','').lower()
-            right_mac_address=add_mac_colon(temp_right_mac)
-        else: right_mac_address=mac_fetch(right_device,right_interface)
+        if edge.get('left_mac') is not None:
+            temp_left_mac = edge.get('left_mac').replace('"', '').replace(':', '').lower()
+            left_mac_address = add_mac_colon(temp_left_mac)
 
-        #Check to make sure each device in the edge already exists in inventory
+        else:
+            left_mac_address = mac_fetch(left_device, left_interface)
+
+        right_mac_address = ""
+
+        if edge.get('right_mac') is not None:
+            temp_right_mac = edge.get('right_mac').replace('"', '').replace(':', '').lower()
+            right_mac_address = add_mac_colon(temp_right_mac)
+
+        else:
+            right_mac_address = mac_fetch(right_device, right_interface)
+
+        # Check to make sure each device in the edge already exists in inventory
         if left_device not in inventory:
-            print(styles.FAIL + styles.BOLD + " ### ERROR: device " + left_device + " is referred to in list of edges/links but not defined as a node." + styles.ENDC)
-            exit(1)
-        if right_device not in inventory:
-            print(styles.FAIL + styles.BOLD + " ### ERROR: device " + right_device + " is referred to in list of edges/links but not defined as a node." + styles.ENDC)
+            print(styles.FAIL + styles.BOLD + " ### ERROR: device " +
+                  left_device + " is referred to in list of edges/links \
+                  but not defined as a node." + styles.ENDC)
+
             exit(1)
 
-        #Adds link to inventory datastructure
+        if right_device not in inventory:
+            print(styles.FAIL + styles.BOLD +
+                  " ### ERROR: device " + right_device + " is referred to \
+                  in list of edges/links but not defined as a node." + styles.ENDC)
+
+            exit(1)
+
+        # Adds link to inventory datastructure
         add_link(inventory,
                  left_device,
                  right_device,
