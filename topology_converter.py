@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.6.5"
+version = "4.6.6_dev"
 
 
 import os
@@ -646,7 +646,7 @@ def parse_topology(topology_file):
             print(" detected mgmt_server: %s" % mgmt_server)
             print("          mgmt_switch: %s" % mgmt_switch)
         # Hardcode mgmt server parameters
-        if mgmt_server is not None:
+        if mgmt_server == None:
             if "oob-mgmt-server" in inventory:
                 print(styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-server must be set to function = "oob-server"' + styles.ENDC)
                 exit(1)
