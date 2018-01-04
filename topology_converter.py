@@ -1248,6 +1248,8 @@ def render_jinja_templates(devices):
 
             with open(render_destination, 'w') as outfile:
                 outfile.write(template.render(devices=devices,
+                                              start_port=start_port,
+                                              port_gap=port_gap,
                                               synced_folder=synced_folder,
                                               provider=provider,
                                               version=version,
@@ -1274,6 +1276,8 @@ def render_jinja_templates(devices):
 
         with open(destination, 'w') as outfile:
             outfile.write(template.render(devices=devices,
+                                          start_port=start_port,
+                                          port_gap=port_gap,
                                           synced_folder=synced_folder,
                                           provider=provider,
                                           version=version,
