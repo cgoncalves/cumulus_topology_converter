@@ -388,12 +388,12 @@ def parse_topology(topology_file):
 
             if value == 'oob-switch':
                 inventory[node_name]['os'] = "CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory'] = "512"
+                inventory[node_name]['memory'] = "768"
                 inventory[node_name]['config'] = "./helper_scripts/oob_switch_config.sh"
 
             elif value in network_functions:
                 inventory[node_name]['os'] = "CumulusCommunity/cumulus-vx"
-                inventory[node_name]['memory'] = "512"
+                inventory[node_name]['memory'] = "768"
                 inventory[node_name]['config'] = "./helper_scripts/extra_switch_config.sh"
 
             elif value == 'host':

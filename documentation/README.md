@@ -102,8 +102,8 @@ In this example, we'll work with the topology_converter / examples / 2switch_1se
 
 ```
 graph dc1 {
- "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="512" config="./helper_scripts/extra_switch_config.sh"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="512" config="./helper_scripts/extra_switch_config.sh"]
+ "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh"]
+ "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh"]
  "server1" [function="host" os="boxcutter/ubuntu1404" memory="512" config="./helper_scripts/extra_server_config.sh"]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50"
@@ -152,7 +152,7 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 
 **Functional Defaults are:**
 * os="CumulusCommunity/cumulus-vx"
-* memory="512"
+* memory="768"
 
 **For Functions:** "oob-server" and "host"
 
