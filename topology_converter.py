@@ -118,6 +118,7 @@ start_port = 8000
 port_gap = 1000
 synced_folder = False
 display_datastructures = False
+total_memory = 0
 VAGRANTFILE = 'Vagrantfile'
 VAGRANTFILE_template = 'templates/Vagrantfile.j2'
 customer = os.path.basename(os.path.dirname(os.getcwd()))
@@ -284,6 +285,7 @@ def parse_topology(topology_file):
     global provider
     global verbose
     global warning
+    global total_memory
     lint_topo_file(topology_file)
     try:
         topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
@@ -455,9 +457,16 @@ def parse_topology(topology_file):
             inventory[node_name]['function'] = "Unknown"
 
         if 'memory' in inventory[node_name]:
-            if int(inventory[node_name]['memory']) <= 0:
+            try:
+                if int(inventory[node_name]['memory']) <= 0:
+                     print(styles.FAIL + styles.BOLD +
+                           " ### ERROR -- Memory must be greater than 0mb on " +
+                           node_name + styles.ENDC)
+                     exit(1)
+                total_memory += int(inventory[node_name]['memory'])
+            except:
                 print(styles.FAIL + styles.BOLD +
-                      " ### ERROR -- Memory must be greater than 0mb on " +
+                      " ### ERROR -- There is something wrong with the memory definition on " +
                       node_name + styles.ENDC)
                 exit(1)
 
@@ -1369,10 +1378,14 @@ def main():
               "\n            %s devices under simulation." % (len(devices)) +
               styles.ENDC)
 
-    for device in inventory:
+        for device in inventory:
+            print(styles.GREEN + styles.BOLD +
+                  "                %s" % (inventory[device]['hostname']) +
+                  styles.ENDC)
         print(styles.GREEN + styles.BOLD +
-              "                %s" % (inventory[device]['hostname']) +
+              "\n            Requiring at least %s MBs of memory." % (total_memory) +
               styles.ENDC)
+
 
     for warn_msg in warning:
         print(warn_msg)
