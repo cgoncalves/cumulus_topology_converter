@@ -33,16 +33,19 @@ PRs are actively welcomed.
 3. Submit a PR on the **Development Branch**
 
 
-## New Features in v4.6.5
-* Support for Vagrant versions 1.8.6+
-* Added enhancements to Helper Scripts to improve DHCP Request Timing
-* Added Automatic MGMT_IP Assignment for devices using the -c Workflow
-* Added Limited support for booting older 2.5.x versions of Vx.
+## New Features in v4.6.6
+* Added Memory Tabulation
+* Updated functional defaults to 768mb of memory for VX devices
+* Added better port gap tracking in templates
+* Better PEP8 compliance
 
 ### Bugfixes:
-* N/A
+* Issue #71
+* Issue #74
+* Issue #77
 
 ## Changelog:
+* v4\.6\.6 2018\_01\_17: Merged Fixes for Issues #71 #74 #77. Added Memory Tabulation, Updated functional defaults to 768mb of memory for VX devices, introduced port gap tracking in templates. Merge PEP8 fixes from @plumbis.
 * v4\.6\.5 2017\_09\_13: Support for Vagrant versions 1.8.6+. Added enhancements to Helper Scripts to improve DHCP Request timing. Added Automatic Management IP Address assignment for all devices when using the "-c" workflow. Added Limited support for booting older 2.5.x versions of Vx.
 * v4\.6\.4 2017\_08\_28: Removed Errant reference_topology.dot file. Fixing PXEboot semantics and fetch_udev_file.yml playbook. Fixed DHCP Range issue with the "-c" workflow. Added support for vagrant= on the oob-mgmt-server in oob-mgmt-server /w "-c" workflow. Added support for simid in virtualbox. Fix for Issue #65.
 * v4\.6\.3 2017\_06\_28: Added support for new prefixes other than /24 for the "-c" workflow. Fixed Issue #62 and a regression in automatic NCLU support for the vagrant user.
