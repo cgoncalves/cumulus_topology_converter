@@ -201,15 +201,16 @@ DONE!
 
 ```
 
-###Customizations
+### Customizations
 
-####User defined management connections
+#### User defined management connections
 
 Sometimes the user wants to define the OOB connections to better emulate production behaviour. The -c option automatically defines MAC addresses and port ordering. The -cmd option lets the user map the oob connections, but then still leverage topology_converter to create all the DHCP and /etc/hosts mappings.
 
 The -cmd option requires that the oob-mgmt-switch and oob-mgmt-server are defined manually, and explicitly called by these static names.
 
 In the below example, the network oob connections are defined:
+```
  graph vx {
   "leaf01" [function="leaf" os="CumulusCommunity/cumulus-vx" version="3.2.1" memory="512" config="./helper_scripts/config_switch.sh" mgmt_ip="10.128.0.101"]
   "leaf02" [function="leaf" os="CumulusCommunity/cumulus-vx" version="3.2.1" memory="512" config="./helper_scripts/config_switch.sh" mgmt_ip="10.128.0.102"]
@@ -232,8 +233,9 @@ In the below example, the network oob connections are defined:
   "leaf01":"eth0" -- "oob-mgmt-switch":"swp102" [left_mac="00:25:90:b2:27:0b"]
   "leaf02":"eth0" -- "oob-mgmt-switch":"swp103" [left_mac="00:25:90:b2:30:bd"]
   }
+```
 
-####Rebuilding DHCP and /etc/hosts without rebuilding Vagrantfile
+#### Rebuilding DHCP and /etc/hosts without rebuilding Vagrantfile
 
 When using topology_converter, sometimes the DHCP mac-to-ip mapping information for the oob management network may need to be tweaked. This requires editing the topology.dot file. Since no actual connection information is changed, and only the MAC to IP mapping, the entire Vagrantfile does not need to be recreated.
 
