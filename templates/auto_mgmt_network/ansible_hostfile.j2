@@ -8,5 +8,9 @@
 {%     if loop.first %}
 [{{function}}]
 {%     endif -%}
-{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %} ansible_user=cumulus{% endfor %}
+{{device.hostname}}{% if device.mgmt_ip is defined %} ansible_host={{device.mgmt_ip}}{% endif %}{% endfor %}
 {% endfor %}
+
+[all:vars]
+ansible_user=cumulus
+ansible_ssh_pass=CumulusLinux!
