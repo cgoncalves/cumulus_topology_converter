@@ -5,7 +5,7 @@ echo "  Running Extra_Server_Config.sh"
 echo "#################################"
 sudo su
 
-useradd cumulus -m 
+useradd cumulus -m -s /bin/bash
 echo "cumulus:CumulusLinux!" | chpasswd
 
 #Test for Debian-Based Host
