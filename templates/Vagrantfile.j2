@@ -1,11 +1,11 @@
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.5
+#    Template Revision: v4.6.6
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 #    built with the following args: {{ arg_string }}
 #
 #    NOTE: in order to use this Vagrantfile you will need:
-#       -Vagrant(v1.8.6+) installed: http://www.vagrantup.com/downloads
+#       -Vagrant(v2.0.2+) installed: http://www.vagrantup.com/downloads
 #       -the "helper_scripts" directory that comes packaged with topology-converter.py
 {% if provider == 'virtualbox' %}#       -Virtualbox installed: https://www.virtualbox.org/wiki/Downloads
 
@@ -29,7 +29,7 @@ exit unless REQUIRED_PLUGINS_LIBVIRT.all? do |plugin|
   )
 end{% endif %}
 
-Vagrant.require_version ">= 1.8.6"
+Vagrant.require_version ">= 2.0.2"
 
 $script = <<-SCRIPT
 if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
