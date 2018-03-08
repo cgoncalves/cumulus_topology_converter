@@ -31,6 +31,9 @@ end{% endif %}
 
 Vagrant.require_version ">= 2.0.2"
 
+# Fix for Older versions of Vagrant to Grab Images from the Correct Location
+Vagrant::DEFAULT_SERVER_URL.replace('https://vagrantcloud.com')
+
 $script = <<-SCRIPT
 if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
     echo "### RUNNING CUMULUS EXTRA CONFIG ###"

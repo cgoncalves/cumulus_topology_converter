@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.6.6"
+version = "4.6.7_dev"
 
 
 import os
@@ -386,7 +386,7 @@ def parse_topology(topology_file):
 
             if value == 'oob-server':
                 inventory[node_name]['os'] = "yk0/ubuntu-xenial"
-                inventory[node_name]['memory'] = "512"
+                inventory[node_name]['memory'] = "1024"
 
             if value == 'oob-switch':
                 inventory[node_name]['os'] = "CumulusCommunity/cumulus-vx"
@@ -463,7 +463,6 @@ def parse_topology(topology_file):
                            " ### ERROR -- Memory must be greater than 0mb on " +
                            node_name + styles.ENDC)
                      exit(1)
-                total_memory += int(inventory[node_name]['memory'])
             except:
                 print(styles.FAIL + styles.BOLD +
                       " ### ERROR -- There is something wrong with the memory definition on " +
@@ -923,6 +922,8 @@ def parse_topology(topology_file):
 
     # Add Extra Port Ranges (if needed)
     for device in inventory:
+        # Tally up the minimum memory usage (if specified)
+        if 'memory' in inventory[device]: total_memory += int(inventory[device]['memory'])
 
         if "ports" in inventory[device] and inventory[device]["function"] in network_functions:
 
