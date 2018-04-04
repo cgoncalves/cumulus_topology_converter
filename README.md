@@ -33,13 +33,13 @@ PRs are actively welcomed.
 3. Submit a PR on the **Development Branch**
 
 
-## New Features in v4.6.7
-* Specifiying Vagrant Image Location per https://github.com/hashicorp/vagrant/issues/9442
+## New Features in v4.6.8
+* NONE
 ## Bugfixes
-* Fixed documentation formatting
-* Fixed Bad default shell for cumulus user in extra_server_config.sh
+* Fix for issue #84
 
 ## Changelog:
+* v4\.6\.8 2018\_04\_04: Fix for Vagrant2.0.3 breaking the workaround for https://github.com/hashicorp/vagrant/issues/9442
 * v4\.6\.7 2018\_03\_09: Specifiying Vagrant Image Location per https://github.com/hashicorp/vagrant/issues/9442. Fixed documentation formatting. Fixed Bad default shell for cumulus user in extra_server_config.sh
 * v4\.6\.6 2018\_01\_17: Merged Fixes for Issues #71 #74 #77. Added Memory Tabulation, Updated functional defaults to 768mb of memory for VX devices, introduced port gap tracking in templates. Merge PEP8 fixes from @plumbis.
 * v4\.6\.5 2017\_09\_13: Support for Vagrant versions 1.8.6+. Added enhancements to Helper Scripts to improve DHCP Request timing. Added Automatic Management IP Address assignment for all devices when using the "-c" workflow. Added Limited support for booting older 2.5.x versions of Vx.
