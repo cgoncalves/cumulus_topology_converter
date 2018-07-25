@@ -103,6 +103,7 @@ parser.add_argument('--synced-folder', action='store_true',
 parser.add_argument('--version', action='version', version="Topology \
                     Converter version is v%s" % version,
                     help='Using this option displays the version of Topology Converter')
+parser.add_argument('--prefix', help='Specify a prefix to be used for machines in libvirt. By default the name of the current folder is used.')
 args = parser.parse_args()
 
 # Parse Arguments
@@ -124,6 +125,7 @@ VAGRANTFILE_template = 'templates/Vagrantfile.j2'
 customer = os.path.basename(os.path.dirname(os.getcwd()))
 TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
 arg_string = " ".join(sys.argv)
+libvirt_prefix = None
 
 if args.topology_file:
     topology_file = args.topology_file
@@ -168,6 +170,9 @@ if args.display_datastructures:
 
 if args.synced_folder:
     synced_folder = True
+
+if args.prefix != None:
+    libvirt_prefix = args.prefix
 
 if verbose:
     print("Arguments:")
@@ -1255,7 +1260,6 @@ def render_jinja_templates(devices):
                 print("    Rendering: " + template + " --> " + render_destination)
 
             template = jinja2.Template(open(template_source).read())
-
             with open(render_destination, 'w') as outfile:
                 outfile.write(template.render(devices=devices,
                                               start_port=start_port,
@@ -1271,7 +1275,8 @@ def render_jinja_templates(devices):
                                               generate_ansible_hostfile=generate_ansible_hostfile,
                                               create_mgmt_device=create_mgmt_device,
                                               function_group=function_group,
-                                              network_functions=network_functions,))
+                                              network_functions=network_functions,
+                                              libvirt_prefix=libvirt_prefix,))
 
     # Render the main Vagrantfile
     if create_mgmt_device and create_mgmt_configs_only:
@@ -1298,7 +1303,8 @@ def render_jinja_templates(devices):
                                           generate_ansible_hostfile=generate_ansible_hostfile,
                                           create_mgmt_device=create_mgmt_device,
                                           function_group=function_group,
-                                          network_functions=network_functions,))
+                                          network_functions=network_functions,
+                                          libvirt_prefix=libvirt_prefix,))
 
 
 def print_datastructures(devices):
