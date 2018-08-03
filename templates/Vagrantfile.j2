@@ -64,12 +64,6 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             echo "  INFO: Detected a 3.x Based Release ($DISTRIB_RELEASE)"
             echo "### Disabling default remap on Cumulus VX..."
             mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup &> /dev/null
-            echo "### Disabling ZTP service..."
-            systemctl stop ztp.service
-            ztp -d 2>&1
-            echo "### Resetting ZTP to work next boot..."
-            ztp -R 2>&1
-            ztp -i 2>&1
             echo "  INFO: Detected Cumulus Linux v$DISTRIB_RELEASE Release"
             if [[ $DISTRIB_RELEASE =~ ^3.[1-9].* ]]; then
                 echo "### Fixing ONIE DHCP to avoid Vagrant Interface ###"
@@ -91,6 +85,12 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
                 adduser vagrant netedit
                 adduser vagrant netshow
             fi
+            echo "### Disabling ZTP service..."
+            systemctl stop ztp.service
+            ztp -d 2>&1
+            echo "### Resetting ZTP to work next boot..."
+            ztp -R 2>&1
+            ztp -i 2>&1
         fi
     fi
 fi
