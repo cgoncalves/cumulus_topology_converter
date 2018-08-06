@@ -30,6 +30,7 @@ if [ "$?" == "0" ]; then
     echo -e "iface eth0 inet dhcp\n\n" >> /etc/network/interfaces.d/eth0.cfg
 
     echo "retry 1;" >> /etc/dhcp/dhclient.conf
+    echo "timeout 600;" >> /etc/dhcp/dhclient.conf
 fi
 
 #Test for Fedora-Based Host
