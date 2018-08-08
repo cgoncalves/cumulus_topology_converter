@@ -711,8 +711,9 @@ def parse_topology(topology_file):
         if "memory" not in inventory[mgmt_server]:
             inventory[mgmt_server]["memory"] = "512"
 
-        inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
-
+        if "config" not in inventory[mgmt_server]:
+            inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
+            
         # Hardcode mgmt switch parameters
         if mgmt_switch is None and create_mgmt_network:
 
