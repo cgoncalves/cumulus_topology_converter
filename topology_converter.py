@@ -1244,7 +1244,7 @@ def render_jinja_templates(devices):
                 print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
 
             try:
-                os.mkdir(mgmt_destination_dir)
+                os.makedirs(mgmt_destination_dir)
 
             except:
                 print(styles.FAIL + styles.BOLD +
