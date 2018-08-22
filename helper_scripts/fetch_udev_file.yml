@@ -2,7 +2,7 @@
 - hosts: all
   remote_user: vagrant
   become_method: sudo
-  become: yes
+  become: true
   vars:
     ansible_user: "vagrant"
     ansible_ssh_pass: "vagrant"
@@ -12,7 +12,7 @@
     - name: create udev storage folder locally
       file: path={{destination_dir}} state=directory recurse=yes mode=0777
       delegate_to: localhost
-      become: no
+      become: false
 
     - name: collect udev file from host (so it can be restored later)
       fetch:
@@ -24,11 +24,11 @@
       shell: sleep 2 && shutdown -r now "Ansible updates triggered"
       async: 1
       poll: 0
-      become: yes
+      become: true
       ignore_errors: true
 
     - name: Waiting for Server to Comeback Post PXE First one is a False Alarm during the Install
-      become: no
+      become: false
       local_action:
         module: wait_for
         delay: 1200
@@ -37,7 +37,7 @@
         port: "{{ansible_ssh_port}}"
 
     - name: Waiting for Server to Comeback Post PXE This one is Real
-      become: no
+      become: false
       local_action:
         module: wait_for
         delay: 60
@@ -49,17 +49,17 @@
       copy:
         src={{destination_dir}}{{inventory_hostname}}/70-persistent-net.rules
         dest=/etc/udev/rules.d/70-persistent-net.rules
-      become: yes
+      become: true
 
     - name: Restart Machine
       shell: sleep 2 && shutdown -r now "Ansible updates triggered"
       async: 1
       poll: 0
-      become: yes
+      become: true
       ignore_errors: true
 
     - name: Waiting for Server to Come Back
-      become: no
+      become: false
       local_action:
         module: wait_for
         delay: 45
