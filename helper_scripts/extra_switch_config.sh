@@ -6,6 +6,7 @@ echo "#################################"
 sudo su
 
 echo "retry 1;" >> /etc/dhcp/dhclient.conf
+echo "timeout 600;" >> /etc/dhcp/dhclient.conf
 
 cat <<EOT > /etc/network/interfaces
 auto lo
