@@ -33,12 +33,19 @@ PRs are actively welcomed.
 3. Submit a PR on the **Development Branch**
 
 
-## New Features in v4.6.8
-* NONE
+## New Features in v4.6.9
+* Update of Ansible version on the oob-mgmt-server to 2.5.4 with -c workflow
+* Adding --prefix argument to handle multiple simultaneous simulations
+* Better ZTP reset behavior during simulation boot-up
+* Allow for specification of mgmt_server configuration with -c workflow
 ## Bugfixes
-* Fix for issue #84
+* Fix for fewer interfaces present in Virtualbox (CM-22592)
+* Creating necessary directories when they do not exist
+* Fix for issue #97
+
 
 ## Changelog:
+* v4\.6\.9 2018\_10\_05: Update of Ansible version on the oob-mgmt-server to 2.5.4 with -c workflow. Adding --prefix argument to handle multiple simultaneous simulations. Better ZTP reset behavior during simulation boot-up. Allow for specification of mgmt_server configuration with -c workflow. Fix for fewer interfaces present in Virtualbox (CM-22592). Creating necessary directories when they do not exist. Fix for issue #97.
 * v4\.6\.8 2018\_04\_04: Fix for Vagrant2.0.3 breaking the workaround for https://github.com/hashicorp/vagrant/issues/9442
 * v4\.6\.7 2018\_03\_09: Specifiying Vagrant Image Location per https://github.com/hashicorp/vagrant/issues/9442. Fixed documentation formatting. Fixed Bad default shell for cumulus user in extra_server_config.sh
 * v4\.6\.6 2018\_01\_17: Merged Fixes for Issues #71 #74 #77. Added Memory Tabulation, Updated functional defaults to 768mb of memory for VX devices, introduced port gap tracking in templates. Merge PEP8 fixes from @plumbis.
