@@ -1,6 +1,6 @@
 #!/bin/bash
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.6.8
+#    Template Revision: v4.6.9
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
@@ -47,8 +47,8 @@ install_ansible(){
     echo " ### Installing Ansible... ###"
     apt-get install -qy ansible sshpass libssh-dev python-dev libssl-dev libffi-dev
     pip install pip --upgrade
-    pip install setuptools --upgrade
-    pip install ansible==$ansible_version --upgrade
+    /usr/local/bin/pip install setuptools --upgrade
+    /usr/local/bin/pip install ansible==$ansible_version --upgrade
 }
 
 ## MOTD
