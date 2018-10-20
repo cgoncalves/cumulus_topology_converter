@@ -1070,9 +1070,12 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
             inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
             inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
         elif right_device == "NOTHING":
-            inventory[left_device]['interfaces'][left_interface]['local_ip'] = "127.0.0.1"
-            inventory[left_device]['interfaces'][left_interface]['remote_ip'] = "127.0.0.1"
-
+            if tunnel_ip != None: 
+                inventory[left_device]['interfaces'][left_interface]['local_ip'] = tunnel_ip
+                inventory[left_device]['interfaces'][left_interface]['remote_ip'] = tunnel_ip
+            else:
+                inventory[left_device]['interfaces'][left_interface]['local_ip'] = "127.0.0.1"
+                inventory[left_device]['interfaces'][left_interface]['remote_ip'] = "127.0.0.1"
 
 def clean_datastructure(devices):
     # Sort the devices by function
