@@ -9,7 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
-version = "4.6.9"
+version = "4.7.0"
 
 
 import os
@@ -76,6 +76,11 @@ parser.add_argument('-cmd', '--create-mgmt-device', action='store_true',
 parser.add_argument('-t', '--template', action='append', nargs=2,
                     help='Specify an additional jinja2 template and a destination \
                     for that file to be rendered to.')
+parser.add_argument('-i', '--tunnel-ip',
+                    help='FOR LIBVIRT PROVIDER: this option overrides the tunnel_ip \
+                    setting for all nodes. This option provides another method of \
+                    udp port control in that all ports are bound to the specified \
+                    ip address.')
 parser.add_argument('-s', '--start-port', type=int,
                     help='FOR LIBVIRT PROVIDER: this option overrides \
                     the default starting-port 8000 with a new value. \
@@ -115,6 +120,7 @@ create_mgmt_device = False
 create_mgmt_network = False
 create_mgmt_configs_only = False
 verbose = False
+tunnel_ip = None
 start_port = 8000
 port_gap = 1000
 synced_folder = False
@@ -127,27 +133,21 @@ TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
 arg_string = " ".join(sys.argv)
 libvirt_prefix = None
 
-if args.topology_file:
-    topology_file = args.topology_file
+if args.topology_file: topology_file = args.topology_file
 
-if args.verbose:
-    verbose = args.verbose
+if args.verbose: verbose = args.verbose
 
-if args.provider:
-    provider = args.provider
+if args.provider: provider = args.provider
 
-if args.ansible_hostfile:
-    generate_ansible_hostfile = True
+if args.ansible_hostfile: generate_ansible_hostfile = True
 
-if args.create_mgmt_device:
-    create_mgmt_device = True
+if args.create_mgmt_device: create_mgmt_device = True
 
 if args.create_mgmt_network:
     create_mgmt_device = True
     create_mgmt_network = True
 
-if args.create_mgmt_configs_only:
-    create_mgmt_configs_only = True
+if args.create_mgmt_configs_only: create_mgmt_configs_only = True
 
 if args.template:
     for templatefile, destination in args.template:
@@ -159,20 +159,17 @@ for templatefile, destination in TEMPLATES:
               templatefile + "\" does not exist!" + styles.ENDC)
         exit(1)
 
-if args.start_port:
-    start_port = args.start_port
+if args.tunnel_ip: tunnel_ip = args.tunnel_ip
 
-if args.port_gap:
-    port_gap = args.port_gap
+if args.start_port: start_port = args.start_port
 
-if args.display_datastructures:
-    display_datastructures = True
+if args.port_gap: port_gap = args.port_gap
 
-if args.synced_folder:
-    synced_folder = True
+if args.display_datastructures: display_datastructures = True
 
-if args.prefix != None:
-    libvirt_prefix = args.prefix
+if args.synced_folder: synced_folder = True
+
+if args.prefix != None: libvirt_prefix = args.prefix
 
 if verbose:
     print("Arguments:")
@@ -475,7 +472,8 @@ def parse_topology(topology_file):
                 exit(1)
 
         if provider == "libvirt":
-            if 'tunnel_ip' not in inventory[node_name]:
+            if tunnel_ip != None: inventory[node_name]['tunnel_ip'] = tunnel_ip
+            elif 'tunnel_ip' not in inventory[node_name]:
                 inventory[node_name]['tunnel_ip'] = '127.0.0.1'
 
     # Add All the Edges to Inventory
@@ -671,7 +669,8 @@ def parse_topology(topology_file):
             inventory["oob-mgmt-server"]["interfaces"] = {}
             mgmt_server = "oob-mgmt-server"
             if provider == "libvirt":
-                if 'tunnel_ip' not in inventory["oob-mgmt-server"]:
+                if tunnel_ip != None: inventory["oob-mgmt-server"]['tunnel_ip'] = tunnel_ip
+                elif 'tunnel_ip' not in inventory["oob-mgmt-server"]:
                     inventory["oob-mgmt-server"]['tunnel_ip'] = '127.0.0.1'
 
             inventory["oob-mgmt-server"]["mgmt_ip"] = ("%s" % intf.ip)
@@ -690,6 +689,12 @@ def parse_topology(topology_file):
 
                 else:
                     intf = ipaddress.ip_interface(unicode(inventory[mgmt_server]["mgmt_ip"] + "/24"))
+
+            if provider == "libvirt":
+                if tunnel_ip != None: inventory[mgmt_server]['tunnel_ip'] = tunnel_ip
+                elif 'tunnel_ip' not in inventory[mgmt_server]:
+                    inventory[mgmt_server]['tunnel_ip'] = '127.0.0.1'
+
 
             inventory[mgmt_server]["mgmt_ip"] = ("%s" % intf.ip)
             inventory[mgmt_server]["mgmt_network"] = ("%s" % intf.network[0])
@@ -731,8 +736,8 @@ def parse_topology(topology_file):
             inventory["oob-mgmt-switch"]["interfaces"] = {}
 
             if provider == "libvirt":
-
-                if 'tunnel_ip' not in inventory["oob-mgmt-switch"]:
+                if tunnel_ip != None: inventory["oob-mgmt-switch"]['tunnel_ip'] = tunnel_ip
+                elif 'tunnel_ip' not in inventory["oob-mgmt-switch"]:
                     inventory["oob-mgmt-switch"]['tunnel_ip'] = '127.0.0.1'
 
             mgmt_switch = "oob-mgmt-switch"
