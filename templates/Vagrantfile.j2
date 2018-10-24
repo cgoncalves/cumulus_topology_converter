@@ -183,14 +183,14 @@ Vagrant.configure("2") do |config|
       vbox.customize ['modifyvm', :id, '--nicpromisc{{i}}', 'allow-all', "--nictype{{i}}", "virtio"]{% endfor %}
       vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]{% if device.pxehost=="True" %}
 
-      #Setup Interfaces for PXEBOOT
-        #Adding network as a boot option.
+      # Setup Interfaces for PXEBOOT
+        # Adding network as a boot option.
         vbox.customize ["modifyvm", :id, "--boot4", "net"]
 
-        #Setting Vagrant interface to lowest boot preference
+        # Setting Vagrant interface to lowest boot preference
         vbox.customize ["modifyvm", :id, "--nicbootprio1", "0"]
 {% for link in device.interfaces %}{% if link.pxebootinterface %}{% if link.pxebootinterface == "True" %}
-        #Setting Specified interface to highest preference.
+        # Setting Specified interface to highest preference.
         vbox.customize ["modifyvm", :id, "--nicbootprio{{loop.index+1}}", "1"]{% endif %}{% endif %}{% endfor %}{% endif %}
     end{% endif %}
 
@@ -203,7 +203,7 @@ Vagrant.configure("2") do |config|
 
     {% endif -%}
 {% if device.function == "oob-server" and create_mgmt_device -%}
-    #Copy over DHCP files and MGMT Network Files
+    # Copy over DHCP files and MGMT Network Files
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.conf", destination: "~/dhcpd.conf"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "~/dhcpd.hosts"
     device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/hosts", destination: "~/hosts"
@@ -212,13 +212,13 @@ Vagrant.configure("2") do |config|
 {% endif -%}
 {% if create_mgmt_device and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 
-    #Copy over Topology.dot File
+    # Copy over Topology.dot File
     device.vm.provision "file", source: "{{ topology_file }}", destination: "~/topology.dot"
     device.vm.provision :shell, privileged: false, inline: "sudo mv ~/topology.dot /etc/ptm.d/topology.dot"
 
 {% endif -%}
 
-{% if device.function == "oob-switch" and create_mgmt_device -%}
+{% if device.function == "oob-switch" and create_mgmt_device %}
       # Transfer Bridge File
       device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/bridge-untagged", destination: "~/bridge-untagged"
 {% endif -%}
