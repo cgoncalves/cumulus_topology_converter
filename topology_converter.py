@@ -387,7 +387,7 @@ def parse_topology(topology_file):
                 inventory[node_name]['memory'] = "1"
 
             if value == 'oob-server':
-                inventory[node_name]['os'] = "yk0/ubuntu-xenial"
+                inventory[node_name]['os'] = "generic/ubuntu1804"
                 inventory[node_name]['memory'] = "1024"
 
             if value == 'oob-switch':
@@ -437,7 +437,7 @@ def parse_topology(topology_file):
                           " -- Incompatible OS for libvirt provider.")
                     print("              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt")
                     print("              use an ubuntu1604 image which is natively built for libvirt")
-                    print("              like yk0/ubuntu-xenial.")
+                    print("              like generic/ubuntu18.04.")
                     print("              See https://github.com/CumulusNetworks/topology_converter/tree/master/documentation#vagrant-box-selection")
                     print("              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607")
                     print("              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609" + styles.ENDC)
@@ -713,10 +713,10 @@ def parse_topology(topology_file):
 
             exit(1)
 
-        inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
+        inventory[mgmt_server]["os"] = "generic/ubuntu1804"
 
         if provider == "libvirt":
-            inventory[mgmt_server]["os"] = "yk0/ubuntu-xenial"
+            inventory[mgmt_server]["os"] = "generic/ubuntu1804"
 
         if "memory" not in inventory[mgmt_server]:
             inventory[mgmt_server]["memory"] = "512"

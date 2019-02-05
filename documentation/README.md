@@ -167,6 +167,7 @@ There are a number of different sources of Vagrant box images however there are 
 
 For Virtualbox:
 * cumuluscommunity/cumulus-vx
+* generic/ubuntu1804
 * yk0/ubuntu-xenial
 * ubuntu/xenial64
 * boxcutter/ubuntu1404
@@ -176,9 +177,10 @@ For Virtualbox:
 
 For Libvirt:
 * cumuluscommunity/cumulus-vx
-* **Mutated** boxcutter/ubuntu1404
-* debian/jessie64
+* generic/ubuntu1804
 * yk0/ubuntu-xenial
+* debian/jessie64
+* **Mutated** boxcutter/ubuntu1404
 
 *Note: When using Ubuntu1604 with the libvirt provider, an image that was natively built for libvirt must be used like yk0/ubuntu-xenial otherwise the machine will fail to boot. See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607 , https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609
 
