@@ -26,6 +26,7 @@ from operator import itemgetter
 
 pp = pprint.PrettyPrinter(depth=6)
 
+relpath_to_me = os.path.relpath(os.path.dirname(os.path.abspath(__file__)), os.getcwd())
 
 class styles:
     # Use these for text colors
@@ -127,7 +128,7 @@ synced_folder = False
 display_datastructures = False
 total_memory = 0
 VAGRANTFILE = 'Vagrantfile'
-VAGRANTFILE_template = 'templates/Vagrantfile.j2'
+VAGRANTFILE_template = relpath_to_me + '/templates/Vagrantfile.j2'
 customer = os.path.basename(os.path.dirname(os.getcwd()))
 TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
 arg_string = " ".join(sys.argv)
@@ -191,7 +192,7 @@ dhcp_mac_file = "./dhcp_mac_map"
 ######################################################
 
 # Hardcoded Variables
-script_storage = "./helper_scripts"
+script_storage = relpath_to_me+"/helper_scripts"
 epoch_time = str(int(time.time()))
 mac_map = {}
 
@@ -722,8 +723,8 @@ def parse_topology(topology_file):
             inventory[mgmt_server]["memory"] = "512"
 
         if "config" not in inventory[mgmt_server]:
-            
-            inventory[mgmt_server]["config"] = script_storage+"/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
+            inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
+
         # Hardcode mgmt switch parameters
         if mgmt_switch is None and create_mgmt_network:
 
@@ -1224,8 +1225,8 @@ def render_jinja_templates(devices):
     # Render the MGMT Network stuff
     if create_mgmt_device:
         # Check that MGMT Template Dir exists
-        mgmt_template_dir = "./templates/auto_mgmt_network/"
-        if not os.path.isdir("./templates/auto_mgmt_network"):
+        mgmt_template_dir = relpath_to_me+"/templates/auto_mgmt_network/"
+        if not os.path.isdir(relpath_to_me+"/templates/auto_mgmt_network"):
             print(styles.FAIL + styles.BOLD +
                   "ERROR: " + mgmt_template_dir +
                   " does not exist. Cannot populate templates!" +
@@ -1246,7 +1247,7 @@ def render_jinja_templates(devices):
             print(mgmt_templates)
 
         # Create output location for MGMT template files
-        mgmt_destination_dir = script_storage+"/auto_mgmt_network/"
+        mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
         if not os.path.isdir(mgmt_destination_dir):
             if verbose:
                 print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
@@ -1280,7 +1281,7 @@ def render_jinja_templates(devices):
                                               topology_file=topology_file,
                                               arg_string=arg_string,
                                               epoch_time=epoch_time,
-                                              script_storage=script_storage,
+                                              mgmt_destination_dir=mgmt_destination_dir,
                                               generate_ansible_hostfile=generate_ansible_hostfile,
                                               create_mgmt_device=create_mgmt_device,
                                               function_group=function_group,
@@ -1308,7 +1309,7 @@ def render_jinja_templates(devices):
                                           topology_file=topology_file,
                                           arg_string=arg_string,
                                           epoch_time=epoch_time,
-                                          script_storage=script_storage,
+                                          mgmt_destination_dir=mgmt_destination_dir,
                                           generate_ansible_hostfile=generate_ansible_hostfile,
                                           create_mgmt_device=create_mgmt_device,
                                           function_group=function_group,
