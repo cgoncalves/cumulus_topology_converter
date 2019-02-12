@@ -43,8 +43,8 @@ parser = argparse.ArgumentParser(description='Topology Converter -- Convert \
                                  topology.dot files into Vagrantfiles')
 parser.add_argument('topology_file',
                     help='provide a topology file as input')
-parser.add_argument('-v', '--verbose', action='store_true',
-                    help='enables verbose logging mode')
+parser.add_argument('-v', '--verbose', action='count', default=0,
+                    help='increases logging verbosity (repeat for more verbosity (3 max))')
 parser.add_argument('-p', '--provider', choices=["libvirt", "virtualbox"],
                     help='specifies the provider to be used in the Vagrantfile, \
                     script supports "virtualbox" or "libvirt", default is virtualbox.')
@@ -119,7 +119,7 @@ generate_ansible_hostfile = False
 create_mgmt_device = False
 create_mgmt_network = False
 create_mgmt_configs_only = False
-verbose = False
+verbose = 0
 tunnel_ip = None
 start_port = 8000
 port_gap = 1000
@@ -171,7 +171,7 @@ if args.synced_folder: synced_folder = True
 
 if args.prefix != None: libvirt_prefix = args.prefix
 
-if verbose:
+if verbose > 2:
     print("Arguments:")
     print(args)
 
@@ -225,7 +225,7 @@ def mac_fetch(hostname, interface):
         new_mac = ("%x" % (int(start_mac, 16) + 1)).lower()
     start_mac = new_mac
 
-    if verbose:
+    if verbose > 2:
         print("    Fetched new MAC ADDRESS: \"%s\"" % new_mac)
 
     return add_mac_colon(new_mac)
@@ -233,7 +233,7 @@ def mac_fetch(hostname, interface):
 
 def add_mac_colon(mac_address):
     global verbose
-    if verbose:
+    if verbose > 2:
         print("MAC ADDRESS IS: \"%s\"" % mac_address)
     return ':'.join(map(''.join, zip(*[iter(mac_address)] * 2)))
 
@@ -412,7 +412,7 @@ def parse_topology(topology_file):
         # Add attributes to node inventory
         for attribute in node_attr_list:
 
-            if verbose:
+            if verbose > 2:
                 print(attribute + " = " + node.get(attribute))
 
             value = node.get(attribute)
@@ -653,7 +653,7 @@ def parse_topology(topology_file):
             elif inventory[device]["function"] == "oob-server":
                 mgmt_server = device
 
-        if verbose:
+        if verbose > 2:
             print(" detected mgmt_server: %s" % mgmt_server)
             print("          mgmt_switch: %s" % mgmt_switch)
         # Hardcode mgmt server parameters
@@ -751,14 +751,14 @@ def parse_topology(topology_file):
             net_number += 1
             left_mac = mac_fetch(mgmt_switch, "swp1")
             right_mac = mac_fetch(mgmt_server, "eth1")
-            print("  adding mgmt links:")
-
-            if provider == "virtualbox":
-                print("    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s"
+            if verbose > 1:
+                print("  adding mgmt links:")
+                if provider == "virtualbox":
+                    print("    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:%s"
                       % (mgmt_switch, "swp1", left_mac, mgmt_server, "eth1", right_mac, network_string))
 
-            elif provider == "libvirt":
-                print("    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)"
+                elif provider == "libvirt":
+                     print("    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)"
                       % (mgmt_switch, "swp1", left_mac, PortA, mgmt_server, "eth1", PortB, right_mac))
 
             add_link(inventory,
@@ -817,7 +817,7 @@ def parse_topology(topology_file):
                               styles.ENDC)
                         exit(1)
 
-                    if verbose:
+                    if verbose > 2:
                         print("        mgmt link on %s already exists and is good." % (mgmt_switch))
 
                     half1_exists = True
@@ -838,7 +838,7 @@ def parse_topology(topology_file):
                               styles.ENDC)
                         exit(1)
 
-                    if verbose:
+                    if verbose > 2:
                         print("        mgmt link on %s already exists and is good." % (mgmt_switch))
 
                     half2_exists = True
@@ -846,13 +846,14 @@ def parse_topology(topology_file):
                 if not half1_exists and not half2_exists:
 
                     # Display add message
-                    if provider == "virtualbox":
-                        print("    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:net%s"
-                              % (mgmt_switch, mgmt_switch_swp_val, left_mac, device, "eth0", right_mac, net_number))
+                    if verbose > 1:
+                        if provider == "virtualbox":
+                            print("    %s:%s (mac: %s) --> %s:%s (mac: %s)     network_string:net%s"
+                                  % (mgmt_switch, mgmt_switch_swp_val, left_mac, device, "eth0", right_mac, net_number))
 
-                    elif provider == "libvirt":
-                        print("    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)"
-                              % (mgmt_switch, mgmt_switch_swp_val, PortA, left_mac, device, "eth0", PortB, right_mac))
+                        elif provider == "libvirt":
+                            print("    %s:%s udp_port %s (mac: %s) --> %s:%s udp_port %s (mac: %s)"
+                                  % (mgmt_switch, mgmt_switch_swp_val, PortA, left_mac, device, "eth0", PortB, right_mac))
 
                     add_link(inventory,
                              mgmt_switch,
@@ -864,8 +865,9 @@ def parse_topology(topology_file):
                              net_number,)
 
         # Determine Used MGMT IPs
-        print("  MGMT_IP ADDRESS for OOB_SERVER IS: %s%s"
-              % (inventory[mgmt_server]["mgmt_ip"], inventory["oob-mgmt-server"]["mgmt_cidrmask"]))
+        if verbose > 1:
+            print("  MGMT_IP ADDRESS for OOB_SERVER IS: %s%s"
+                  % (inventory[mgmt_server]["mgmt_ip"], inventory["oob-mgmt-server"]["mgmt_cidrmask"]))
 
         intf = ipaddress.ip_interface(unicode("%s%s" % (inventory[mgmt_server]["mgmt_ip"],
                                                         inventory["oob-mgmt-server"]["mgmt_cidrmask"])))
@@ -890,7 +892,7 @@ def parse_topology(topology_file):
                 try:
                     acceptable_host_addresses.remove(node_mgmt_ip)
 
-                    if verbose:
+                    if verbose > 2:
                         print("  INFO: Removing MGMT_IP Address %s from Assignable Pool. \
                               Address already assigned to %s" % (node_mgmt_ip, device))
 
@@ -905,7 +907,8 @@ def parse_topology(topology_file):
             if 'mgmt_ip' not in inventory[device]:
                 new_mgmt_ip = acceptable_host_addresses.pop(0)
                 inventory[device]['mgmt_ip'] = "%s" % (new_mgmt_ip)
-                print("    Device: \"%s\" was assigned mgmt_ip %s" % (device, new_mgmt_ip))
+                if verbose > 1:
+                    print("    Device: \"%s\" was assigned mgmt_ip %s" % (device, new_mgmt_ip))
 
     else:
         # Add Dummy Eth0 Link
@@ -957,7 +960,7 @@ def parse_topology(topology_file):
                 if i not in existing_port_list:
                     ports_to_create.append(i)
 
-            if verbose:
+            if verbose > 2:
                 print("  INFO: On %s will create the following ports:" % (device))
                 print(ports_to_create)
 
@@ -974,7 +977,7 @@ def parse_topology(topology_file):
                          "NOTHING",
                          net_number,)
 
-    if verbose:
+    if verbose > 2:
         print("\n\n ### Inventory Datastructure: ###")
         pp.pprint(inventory)
 
@@ -1078,6 +1081,8 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
                 inventory[left_device]['interfaces'][left_interface]['remote_ip'] = "127.0.0.1"
 
 def clean_datastructure(devices):
+    global verbose
+
     # Sort the devices by function
     devices.sort(key=getKeyDevices)
     for device in devices:
@@ -1086,22 +1091,24 @@ def clean_datastructure(devices):
     if display_datastructures:
         return devices
     for device in devices:
-        print(styles.GREEN + styles.BOLD + ">> DEVICE: " + device['hostname'] + styles.ENDC)
-        print("     code: " + device['os'])
+        if verbose > 0:
+            print(styles.GREEN + styles.BOLD + ">> DEVICE: " + device['hostname'] + styles.ENDC)
+            print("     code: " + device['os'])
 
-        if 'memory' in device:
-            print("     memory: " + device['memory'])
+            if 'memory' in device:
+                print("     memory: " + device['memory'])
 
-        for attribute in device:
-            if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces':
-                continue
-            print("     " + str(attribute) + ": " + str(device[attribute]))
+            for attribute in device:
+                if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces':
+                    continue
+                print("     " + str(attribute) + ": " + str(device[attribute]))
 
-        for interface_entry in device['interfaces']:
-            print("       LINK: " + interface_entry["local_interface"])
-            for attribute in interface_entry:
-                if attribute != "local_interface":
-                    print("               " + attribute + ": " + interface_entry[attribute])
+        if verbose > 1:
+            for interface_entry in device['interfaces']:
+                print("       LINK: " + interface_entry["local_interface"])
+                for attribute in interface_entry:
+                    if attribute != "local_interface":
+                        print("               " + attribute + ": " + interface_entry[attribute])
 
     # Remove Fake Devices
     indexes_to_remove = []
@@ -1117,7 +1124,7 @@ def clean_datastructure(devices):
 def remove_generated_files():
     if display_datastructures:
         return
-    if verbose:
+    if verbose > 2:
         print("Removing existing DHCP FILE...")
     if os.path.isfile(dhcp_mac_file):
         os.remove(dhcp_mac_file)
@@ -1170,7 +1177,7 @@ def sorted_interfaces(interface_dictionary):
 
 
 def generate_dhcp_mac_file(mac_map):
-    if verbose:
+    if verbose > 2:
         print("GENERATING DHCP MAC FILE...")
 
     mac_file = open(dhcp_mac_file, "a")
@@ -1218,7 +1225,7 @@ def render_jinja_templates(devices):
     if display_datastructures:
         print_datastructures(devices)
 
-    if verbose:
+    if verbose > 2:
         print("RENDERING JINJA TEMPLATES...")
 
     # Render the MGMT Network stuff
@@ -1241,14 +1248,14 @@ def render_jinja_templates(devices):
             if file.endswith(".j2"):
                 mgmt_templates.append(file)
 
-        if verbose:
+        if verbose > 2:
             print(" detected mgmt_templates:")
             print(mgmt_templates)
 
         # Create output location for MGMT template files
         mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
         if not os.path.isdir(mgmt_destination_dir):
-            if verbose:
+            if verbose > 2:
                 print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
 
             try:
@@ -1265,7 +1272,7 @@ def render_jinja_templates(devices):
             render_destination = os.path.join(mgmt_destination_dir, template[0:-3])
             template_source = os.path.join(mgmt_template_dir, template)
 
-            if verbose:
+            if verbose > 2:
                 print("    Rendering: " + template + " --> " + render_destination)
 
             template = jinja2.Template(open(template_source).read())
@@ -1293,7 +1300,7 @@ def render_jinja_templates(devices):
 
     for templatefile, destination in TEMPLATES:
 
-        if verbose:
+        if verbose > 2:
             print("    Rendering: " + templatefile + " --> " + destination)
 
         template = jinja2.Template(open(templatefile).read())
@@ -1342,7 +1349,7 @@ def generate_ansible_files():
     if not generate_ansible_hostfile:
         return
 
-    if verbose:
+    if verbose > 2:
         print("Generating Ansible Files...")
 
     with open("./helper_scripts/empty_playbook.yml", "w") as playbook:
