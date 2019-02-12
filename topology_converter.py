@@ -721,7 +721,23 @@ def parse_topology(topology_file):
         if "memory" not in inventory[mgmt_server]:
             inventory[mgmt_server]["memory"] = "512"
 
-        if "config" not in inventory[mgmt_server]:
+        if "config" in inventory[mgmt_server]:
+            print(styles.FAIL + styles.BOLD + '''
+### WARNING: You have requested automatic creation of out-of-band
+management network. This includes preparing the out-of-band
+management server which is done by one of the helper scripts.
+However, you have manually set the configuration script for the
+out-of-band management server (which overrides ours). This might
+result in issues if you are relying on the OOB server in your
+topology. If you want all the nice things topology_converter has
+for you on the OOB server then you might want to remove the
+script for the device with function="oob-mgmt-server" in the
+topology.dot file.
+
+Refer to OOB_Server_Config_auto_mgmt.sh script in helper scripts
+folder to see how we set up the OOB server for you..''' + styles.ENDC)
+
+        else:
             inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
             
         # Hardcode mgmt switch parameters
