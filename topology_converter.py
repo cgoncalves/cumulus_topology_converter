@@ -81,7 +81,7 @@ parser.add_argument('-i', '--tunnel-ip',
                     help='FOR LIBVIRT PROVIDER: this option overrides the tunnel_ip \
                     setting for all nodes. This option provides another method of \
                     udp port control in that all ports are bound to the specified \
-                    ip address.')
+                    ip address. Specify "random" to use a random localhost IP.')
 parser.add_argument('-s', '--start-port', type=int,
                     help='FOR LIBVIRT PROVIDER: this option overrides \
                     the default starting-port 8000 with a new value. \
@@ -160,7 +160,21 @@ for templatefile, destination in TEMPLATES:
               templatefile + "\" does not exist!" + styles.ENDC)
         exit(1)
 
-if args.tunnel_ip: tunnel_ip = args.tunnel_ip
+if args.tunnel_ip:
+    if provider == 'libvirt':
+        tunnel_ip = args.tunnel_ip
+        if tunnel_ip != 'random':
+            try:
+                ipaddress.ip_address(tunnel_ip)
+            except ValueError as e:
+                print(styles.FAIL + styles.BOLD + " ### ERROR: " + str(e) + "."
+                      + " Specify 'random' to use a random localhost IPv4 address."
+                      + styles.ENDC)
+                exit(1)
+    else:
+        print(styles.FAIL + styles.BOLD + " ### ERROR: tunnel IP was specified but " +
+              "provider is not libvirt." + styles.ENDC)
+        exit(1)
 
 if args.start_port: start_port = args.start_port
 
@@ -239,6 +253,13 @@ def add_mac_colon(mac_address):
     return ':'.join(map(''.join, zip(*[iter(mac_address)] * 2)))
 
 
+def get_random_localhost_ip():
+    subnet = ipaddress.IPv4Network("127.0.0.0/8")
+    bits = random.getrandbits(subnet.max_prefixlen - subnet.prefixlen)
+    addr = ipaddress.IPv4Address(subnet.network_address + bits)
+    return str(addr)
+
+
 def lint_topo_file(topology_file):
     with open(topology_file, "r") as topo_file:
         line_list = topo_file.readlines()
@@ -289,6 +310,7 @@ def parse_topology(topology_file):
     global verbose
     global warning
     global total_memory
+    global tunnel_ip
     lint_topo_file(topology_file)
     try:
         topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
@@ -304,6 +326,10 @@ def parse_topology(topology_file):
         exit(1)
 
     inventory = {}
+
+    # Generate a random localhost IP for libvirt tunnels (if needed)
+    if tunnel_ip == 'random':
+        tunnel_ip = get_random_localhost_ip()
 
     try:
         nodes = topology.get_node_list()
