@@ -129,6 +129,7 @@ display_datastructures = False
 total_memory = 0
 VAGRANTFILE = 'Vagrantfile'
 VAGRANTFILE_template = relpath_to_me + '/templates/Vagrantfile.j2'
+mgmt_destination_dir = relpath_to_me + '/helper_scripts/auto_mgmt_network/'
 customer = os.path.basename(os.path.dirname(os.getcwd()))
 TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
 arg_string = " ".join(sys.argv)
@@ -1296,7 +1297,6 @@ def render_jinja_templates(devices):
             print(mgmt_templates)
 
         # Create output location for MGMT template files
-        mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
         if not os.path.isdir(mgmt_destination_dir):
             if verbose > 2:
                 print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
