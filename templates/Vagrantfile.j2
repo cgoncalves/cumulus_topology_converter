@@ -204,11 +204,11 @@ Vagrant.configure("2") do |config|
     {% endif -%}
 {% if device.function == "oob-server" and create_mgmt_device -%}
     # Copy over DHCP files and MGMT Network Files
-    device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.conf", destination: "~/dhcpd.conf"
-    device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/dhcpd.hosts", destination: "~/dhcpd.hosts"
-    device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/hosts", destination: "~/hosts"
-    device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ansible_hostfile", destination: "~/ansible_hostfile"
-    device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/ztp_oob.sh", destination: "~/ztp_oob.sh"
+    device.vm.provision "file", source: "{{ mgmt_destination_dir }}dhcpd.conf", destination: "~/dhcpd.conf"
+    device.vm.provision "file", source: "{{ mgmt_destination_dir }}dhcpd.hosts", destination: "~/dhcpd.hosts"
+    device.vm.provision "file", source: "{{ mgmt_destination_dir }}hosts", destination: "~/hosts"
+    device.vm.provision "file", source: "{{ mgmt_destination_dir }}ansible_hostfile", destination: "~/ansible_hostfile"
+    device.vm.provision "file", source: "{{ mgmt_destination_dir }}ztp_oob.sh", destination: "~/ztp_oob.sh"
 {% endif -%}
 {% if create_mgmt_device and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 
@@ -220,7 +220,7 @@ Vagrant.configure("2") do |config|
 
 {% if device.function == "oob-switch" and create_mgmt_device %}
       # Transfer Bridge File
-      device.vm.provision "file", source: "{{ script_storage }}/auto_mgmt_network/bridge-untagged", destination: "~/bridge-untagged"
+      device.vm.provision "file", source: "{{ mgmt_destination_dir }}bridge-untagged", destination: "~/bridge-untagged"
 {% endif -%}
 
 {% if device.config is defined %}
