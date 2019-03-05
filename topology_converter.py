@@ -393,17 +393,17 @@ def parse_topology(topology_file):
             if value == 'oob-switch':
                 inventory[node_name]['os'] = "CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory'] = "768"
-                inventory[node_name]['config'] = "./helper_scripts/oob_switch_config.sh"
+                inventory[node_name]['config'] = script_storage+"/oob_switch_config.sh"
 
             elif value in network_functions:
                 inventory[node_name]['os'] = "CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory'] = "768"
-                inventory[node_name]['config'] = "./helper_scripts/extra_switch_config.sh"
+                inventory[node_name]['config'] = script_storage+"/extra_switch_config.sh"
 
             elif value == 'host':
                 inventory[node_name]['os'] = "yk0/ubuntu-xenial"
                 inventory[node_name]['memory'] = "512"
-                inventory[node_name]['config'] = "./helper_scripts/extra_server_config.sh"
+                inventory[node_name]['config'] = script_storage+"/extra_server_config.sh"
 
         if provider == 'libvirt' and 'pxehost' in node_attr_list:
             if node.get('pxehost').replace('"', '') == "True":
@@ -722,8 +722,8 @@ def parse_topology(topology_file):
             inventory[mgmt_server]["memory"] = "512"
 
         if "config" not in inventory[mgmt_server]:
-            inventory[mgmt_server]["config"] = "./helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
             
+            inventory[mgmt_server]["config"] = script_storage+"/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh"
         # Hardcode mgmt switch parameters
         if mgmt_switch is None and create_mgmt_network:
 
@@ -745,7 +745,7 @@ def parse_topology(topology_file):
         if create_mgmt_network:
             inventory[mgmt_switch]["os"] = "CumulusCommunity/cumulus-vx"
             inventory[mgmt_switch]["memory"] = "512"
-            inventory[mgmt_switch]["config"] = "./helper_scripts/oob_switch_config.sh"
+            inventory[mgmt_switch]["config"] = script_storage+"/oob_switch_config.sh"
 
             # Add Link between oob-mgmt-switch oob-mgmt-server
             net_number += 1
@@ -778,7 +778,7 @@ def parse_topology(topology_file):
                     continue
                 elif inventory[device]["function"] in network_functions:
                     if "config" not in inventory[device]:
-                        inventory[device]["config"] = "./helper_scripts/extra_switch_config.sh"
+                        inventory[device]["config"] = script_storage+"/extra_switch_config.sh"
 
                 mgmt_switch_swp += 1
                 net_number += 1
@@ -1253,7 +1253,7 @@ def render_jinja_templates(devices):
             print(mgmt_templates)
 
         # Create output location for MGMT template files
-        mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
+        mgmt_destination_dir = script_storage+"/auto_mgmt_network/"
         if not os.path.isdir(mgmt_destination_dir):
             if verbose > 2:
                 print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
@@ -1352,7 +1352,7 @@ def generate_ansible_files():
     if verbose > 2:
         print("Generating Ansible Files...")
 
-    with open("./helper_scripts/empty_playbook.yml", "w") as playbook:
+    with open(script_storage+"/empty_playbook.yml", "w") as playbook:
         playbook.write("""---
 - hosts: all
   user: vagrant
