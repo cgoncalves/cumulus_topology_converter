@@ -192,6 +192,12 @@ Note: This list cannot be exhaustive because users can define new [passthrough a
 #### Node(Device) Level Attributes
 * os -- Sets the Operating System (i.e. the vagrant box) to be booted. This can also be provided indirectly when using a "function" as discussed in the [Functional Defaults](#functional-defaults) section or in the "function" attribute below.
 * config -- This defines a provisioning script to be called on the VM during the initial boot process. This script applies a basic interface configuration so the machine will be able to be controlled by vagrant after the interface remap. This can be overloaded with whatever additional configuration you may want your devices to have but keep in mind this script will be executed prior to having [interfaces remapped](#interface-remapping) so any configuration that requires the presence of particular interfaces (like running "ifreload -a") will not be able to complete here.
+* ztp -- (optional) This parameter defines the relative location of a ZTP script which can be loaded into the /var/lib/cumulus/ztp directory for use by the VM during a subsequent reboot.
+Example:
+```
+     "leaf01" [function="leaf" os="CumulusCommunity/cumulus-vx" version="3.7.3" memory="1024" config="./helper_scripts/config_leaf.sh" ztp="../ztp/leaf_ztp.py" ]
+
+```
 * memory -- (mostly optional) Sets the amount of memory (in MB) to be provided to the VM.
 * version -- (optional) Sets the version of the vagrant box to be used.
 * function -- (optional) Correspondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM. This can specify other attributes like OS and Memory.

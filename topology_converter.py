@@ -954,29 +954,28 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
                 if verbose > 1:
                     print("    Device: \"%s\" was assigned mgmt_ip %s" % (device, new_mgmt_ip))
 
-    else:
-        # Add Dummy Eth0 Link
-        for device in inventory:
+    # Add Dummy Eth0 Link
+    for device in inventory:
 
-            if inventory[device]["function"] not in network_functions:
+        if inventory[device]["function"] not in network_functions:
+            continue
+
+        if 'vagrant' in inventory[device]:
+            if inventory[device]['vagrant'] == 'eth0':
                 continue
 
-            if 'vagrant' in inventory[device]:
-                if inventory[device]['vagrant'] == 'eth0':
-                    continue
+        # Check to see if components of the link already exist
+        if "eth0" not in inventory[device]['interfaces']:
+            net_number += 1
 
-            # Check to see if components of the link already exist
-            if "eth0" not in inventory[device]['interfaces']:
-                net_number += 1
-
-                add_link(inventory,
-                         device,
-                         "NOTHING",
-                         "eth0",
-                         "NOTHING",
-                         mac_fetch(device, "eth0"),
-                         "NOTHING",
-                         net_number,)
+            add_link(inventory,
+                     device,
+                     "NOTHING",
+                     "eth0",
+                     "NOTHING",
+                     mac_fetch(device, "eth0"),
+                     "NOTHING",
+                     net_number,)
 
     # Add Extra Port Ranges (if needed)
     for device in inventory:

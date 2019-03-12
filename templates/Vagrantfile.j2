@@ -91,6 +91,18 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             echo "### Resetting ZTP to work next boot..."
             ztp -R 2>&1
             ztp -i 2>&1
+            ls -lha /tmp/cumulus-ztp
+            mv /tmp/cumulus-ztp /var/lib/cumulus/ztp/cumulus-ztp
+            chmod +x /var/lib/cumulus/ztp/cumulus-ztp
+            ls -lha /var/lib/cumulus/ztp/cumulus-ztp
+
+            if [ -z /tmp/cumulus-ztp ]; then
+                echo "  ### Found ZTP Script, moving into preload directory...
+                mv /tmp/cumulus-ztp /var/lib/cumulus/ztp/cumulus-ztp
+                chmod +x /var/lib/cumulus/ztp/cumulus-ztp
+                ls -lha /var/lib/cumulus/ztp/cumulus-ztp
+            fi
+
         fi
     fi
 fi
@@ -282,6 +294,16 @@ vagrant_interface_rule
     # NO REMAP APPLICATION Required
 
 {% else -%}
+
+{%   if 'ztp' in device %}
+    # Copy over ZTP Script
+    device.vm.provision "file", source: "{{ device.ztp }}", destination: "/tmp/cumulus-ztp"
+    device.vm.provision :shell , :inline => <<-ztp_push_check
+echo "  INFO: Pushing ZTP Script to node."
+ls -lha /tmp/cumulus-ztp
+ztp_push_check
+{%   endif %}
+
     # Run Any Platform Specific Code and Apply the interface Re-map
     #   (may or may not perform a reboot depending on platform)
     device.vm.provision :shell , :inline => $script
