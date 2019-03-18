@@ -66,22 +66,22 @@ Interface remapping is the process by which interfaces are renamed to match the 
 ## Installation
 
 ### Ubuntu
-Both 16.04 and 14.04.
+Both 18.04 and 16.04.
 
 ```
-sudo apt install python-pip
-sudo pip install --upgrade pip
-sudo pip install setuptools
-sudo pip install pydotplus
-sudo pip install jinja2
-sudo pip install ipaddress
+sudo apt install python3-pip
+sudo pip3 install --upgrade pip
+sudo pip3 install setuptools
+sudo pip3 install pydotplus
+sudo pip3 install jinja2
+sudo pip3 install ipaddress
 ```
 
 ### Mac
 
 
 ```
-sudo easy_install pip
+brew install python3
 sudo pip install --upgrade pip
 sudo pip install setuptools
 sudo pip install pydotplus
