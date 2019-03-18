@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 #    Topology Converter
@@ -129,7 +129,7 @@ display_datastructures = False
 total_memory = 0
 VAGRANTFILE = 'Vagrantfile'
 VAGRANTFILE_template = relpath_to_me + '/templates/Vagrantfile.j2'
-mgmt_destination_dir = relpath_to_me + '/helper_scripts/auto_mgmt_network/'
+#mgmt_destination_dir = relpath_to_me + '/helper_scripts/auto_mgmt_network/'
 customer = os.path.basename(os.path.dirname(os.getcwd()))
 TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
 arg_string = " ".join(sys.argv)
@@ -713,10 +713,10 @@ def parse_topology(topology_file):
 
             else:
                 if "/" in inventory[mgmt_server]["mgmt_ip"]:
-                    intf = ipaddress.ip_interface(unicode(inventory[mgmt_server]["mgmt_ip"]))
+                    intf = ipaddress.ip_interface(inventory[mgmt_server]["mgmt_ip"])
 
                 else:
-                    intf = ipaddress.ip_interface(unicode(inventory[mgmt_server]["mgmt_ip"] + "/24"))
+                    intf = ipaddress.ip_interface(inventory[mgmt_server]["mgmt_ip"] + "/24")
 
             if provider == "libvirt":
                 if tunnel_ip != None: inventory[mgmt_server]['tunnel_ip'] = tunnel_ip
@@ -913,16 +913,16 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
             print("  MGMT_IP ADDRESS for OOB_SERVER IS: %s%s"
                   % (inventory[mgmt_server]["mgmt_ip"], inventory["oob-mgmt-server"]["mgmt_cidrmask"]))
 
-        intf = ipaddress.ip_interface(unicode("%s%s" % (inventory[mgmt_server]["mgmt_ip"],
-                                                        inventory["oob-mgmt-server"]["mgmt_cidrmask"])))
-        network = ipaddress.ip_network(unicode("%s" % (intf.network)))
+        intf = ipaddress.ip_interface("%s%s" % (inventory[mgmt_server]["mgmt_ip"],
+                                                        inventory["oob-mgmt-server"]["mgmt_cidrmask"]))
+        network = ipaddress.ip_network("%s" % (intf.network))
 
         acceptable_host_addresses = list(intf.network.hosts())
 
         for device in inventory:
 
             if 'mgmt_ip' in inventory[device]:
-                node_mgmt_ip = ipaddress.ip_address(unicode(inventory[device]['mgmt_ip']))
+                node_mgmt_ip = ipaddress.ip_address(inventory[device]['mgmt_ip'])
 
                 # Check that Defined Mgmt_IP is in same Subnet as OOB-SERVER
                 if node_mgmt_ip not in network:
@@ -1296,6 +1296,7 @@ def render_jinja_templates(devices):
             print(mgmt_templates)
 
         # Create output location for MGMT template files
+        mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
         if not os.path.isdir(mgmt_destination_dir):
             if verbose > 2:
                 print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
