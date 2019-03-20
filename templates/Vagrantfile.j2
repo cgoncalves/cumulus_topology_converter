@@ -91,13 +91,9 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             echo "### Resetting ZTP to work next boot..."
             ztp -R 2>&1
             ztp -i 2>&1
-            ls -lha /tmp/cumulus-ztp
-            mv /tmp/cumulus-ztp /var/lib/cumulus/ztp/cumulus-ztp
-            chmod +x /var/lib/cumulus/ztp/cumulus-ztp
-            ls -lha /var/lib/cumulus/ztp/cumulus-ztp
 
             if [ -z /tmp/cumulus-ztp ]; then
-                echo "  ### Found ZTP Script, moving into preload directory...
+                echo "  ### Found ZTP Script, moving into preload directory... ###"
                 mv /tmp/cumulus-ztp /var/lib/cumulus/ztp/cumulus-ztp
                 chmod +x /var/lib/cumulus/ztp/cumulus-ztp
                 ls -lha /var/lib/cumulus/ztp/cumulus-ztp
