@@ -1272,6 +1272,7 @@ def render_jinja_templates(devices):
         print("RENDERING JINJA TEMPLATES...")
 
     # Render the MGMT Network stuff
+    mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
     if create_mgmt_device:
         # Check that MGMT Template Dir exists
         mgmt_template_dir = relpath_to_me+"/templates/auto_mgmt_network/"
@@ -1296,7 +1297,6 @@ def render_jinja_templates(devices):
             print(mgmt_templates)
 
         # Create output location for MGMT template files
-        mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
         if not os.path.isdir(mgmt_destination_dir):
             if verbose > 2:
                 print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
