@@ -1173,10 +1173,9 @@ def remove_generated_files():
         os.remove(dhcp_mac_file)
 
 
-_nsre = re.compile('([0-9]+)')
-
-
 def natural_sort_key(s):
+    _nsre = re.compile('([0-9]+)')
+    if s == 'eth0': return ['A',0,'']
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(_nsre, s)]
 
