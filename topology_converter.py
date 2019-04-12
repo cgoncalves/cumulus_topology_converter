@@ -402,12 +402,6 @@ def parse_topology(topology_file):
         if node.attr.get('function'):
             value = node.attr.get('function')
 
-            if value.startswith('"') or value.startswith("'"):
-                value = value[1:].lower()
-
-            if value.endswith('"') or value.endswith("'"):
-                value = value[:-1].lower()
-
             if value == 'fake':
                 inventory[node_name]['os'] = "None"
                 inventory[node_name]['memory'] = "1"
@@ -441,12 +435,6 @@ def parse_topology(topology_file):
 
             if verbose > 2:
                 print(attribute + " = " + value)
-
-            if value.startswith('"') or value.startswith("'"):
-                value = value[1:]
-
-            if value.endswith('"') or value.endswith("'"):
-                value = value[:-1]
 
             inventory[node_name][attribute] = value
 
@@ -605,12 +593,6 @@ def parse_topology(topology_file):
                                "\" specified twice. Using second value." + styles.ENDC)
 
             value = edge.attr.get(attribute)
-
-            if value.startswith('"') or value.startswith("'"):
-                value = value[1:]
-
-            if value.endswith('"') or value.endswith("'"):
-                value = value[:-1]
 
             if attribute.startswith('left_'):
                 inventory[left_device]['interfaces'][left_interface][attribute[5:]] = value
