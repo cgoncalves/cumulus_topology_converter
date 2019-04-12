@@ -9,6 +9,7 @@
 #  hosted @ https://github.com/cumulusnetworks/topology_converter
 #
 #
+
 version = "4.7.0"
 
 
@@ -16,13 +17,12 @@ import os
 import re
 import sys
 import time
+import random
 import pprint
 import jinja2
 import argparse
-import importlib
 import pydotplus
 import ipaddress
-from operator import itemgetter
 
 pp = pprint.PrettyPrinter(depth=6)
 
