@@ -21,7 +21,7 @@ import random
 import pprint
 import jinja2
 import argparse
-import pydotplus
+import pygraphviz
 import ipaddress
 
 pp = pprint.PrettyPrinter(depth=6)
@@ -314,7 +314,7 @@ def parse_topology(topology_file):
     global tunnel_ip
     lint_topo_file(topology_file)
     try:
-        topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
+        topology = pygraphviz.AGraph(topology_file)
     except Exception as e:
         print(styles.FAIL + styles.BOLD +
               " ### ERROR: Cannot parse the provided topology.dot \
@@ -333,7 +333,7 @@ def parse_topology(topology_file):
         tunnel_ip = get_random_localhost_ip()
 
     try:
-        nodes = topology.get_node_list()
+        nodes = topology.nodes()
 
     except Exception as e:
         print(e)
@@ -345,7 +345,7 @@ def parse_topology(topology_file):
         exit(1)
 
     try:
-        edges = topology.get_edge_list()
+        edges = topology.edges()
 
     except Exception as e:
         print(e)
@@ -359,7 +359,7 @@ def parse_topology(topology_file):
     # Add Nodes to inventory
     for node in nodes:
 
-        node_name = node.get_name().replace('"', '')
+        node_name = str(node)
 
         if node_name.startswith(".") or node_name.startswith("-"):
             print(styles.FAIL + styles.BOLD +
@@ -398,11 +398,9 @@ def parse_topology(topology_file):
             inventory[node_name] = {}
             inventory[node_name]['interfaces'] = {}
 
-        node_attr_list = node.get_attributes()
-
         # Define Functional Defaults
-        if 'function' in node_attr_list:
-            value = node.get('function')
+        if node.attr.get('function'):
+            value = node.attr.get('function')
 
             if value.startswith('"') or value.startswith("'"):
                 value = value[1:].lower()
@@ -433,17 +431,16 @@ def parse_topology(topology_file):
                 inventory[node_name]['memory'] = "512"
                 inventory[node_name]['config'] = script_storage+"/extra_server_config.sh"
 
-        if provider == 'libvirt' and 'pxehost' in node_attr_list:
-            if node.get('pxehost').replace('"', '') == "True":
+        if provider == 'libvirt' and node.attr.get('pxehost'):
+            if node.attr.get('pxehost').replace('"', '') == "True":
                 inventory[node_name]['os'] = "N/A (PXEBOOT)"
 
         # Add attributes to node inventory
-        for attribute in node_attr_list:
+        for attribute in node.attr:
+            value = node.attr.get(attribute)
 
             if verbose > 2:
-                print(attribute + " = " + node.get(attribute))
-
-            value = node.get(attribute)
+                print(attribute + " = " + value)
 
             if value.startswith('"') or value.startswith("'"):
                 value = value[1:]
@@ -515,8 +512,8 @@ def parse_topology(topology_file):
         PortB = str(start_port + port_gap + net_number)
 
         # Set Devices/interfaces/MAC Addresses
-        left_device = edge.get_source().split(":")[0].replace('"', '')
-        left_interface = edge.get_source().split(":")[1].replace('"', '')
+        left_device = str(edge[0])
+        left_interface = edge.attr.get('tailport')
 
         if "/" in left_interface:
             new_left_interface = left_interface.replace('/', '-')
@@ -527,8 +524,8 @@ def parse_topology(topology_file):
                            styles.ENDC)
             left_interface = new_left_interface
 
-        right_device = edge.get_destination().split(":")[0].replace('"', '')
-        right_interface = edge.get_destination().split(":")[1].replace('"', '')
+        right_device = str(edge[1])
+        right_interface = edge.attr.get('headport')
         if "/" in right_interface:
             new_right_interface = right_interface.replace('/', '-')
             warning.append(styles.WARNING + styles.BOLD +
@@ -555,8 +552,8 @@ def parse_topology(topology_file):
 
         left_mac_address = ""
 
-        if edge.get('left_mac') is not None:
-            temp_left_mac = edge.get('left_mac').replace('"', '').replace(':', '').lower()
+        if edge.attr.get('left_mac') is not None:
+            temp_left_mac = edge.attr.get('left_mac').replace('"', '').replace(':', '').lower()
             left_mac_address = add_mac_colon(temp_left_mac)
 
         else:
@@ -564,8 +561,8 @@ def parse_topology(topology_file):
 
         right_mac_address = ""
 
-        if edge.get('right_mac') is not None:
-            temp_right_mac = edge.get('right_mac').replace('"', '').replace(':', '').lower()
+        if edge.attr.get('right_mac') is not None:
+            temp_right_mac = edge.attr.get('right_mac').replace('"', '').replace(':', '').lower()
             right_mac_address = add_mac_colon(temp_right_mac)
 
         else:
@@ -598,8 +595,8 @@ def parse_topology(topology_file):
 
         # Handle Link-based Passthrough Attributes
         edge_attributes = {}
-        for attribute in edge.get_attributes():
-            if attribute == "left_mac" or attribute == "right_mac":
+        for attribute in edge.attr:
+            if attribute in ['left_mac', 'right_mac', 'tailport', 'headport']:
                 continue
 
             if attribute in edge_attributes:
@@ -607,7 +604,7 @@ def parse_topology(topology_file):
                                "    WARNING: Attribute \"" + attribute +
                                "\" specified twice. Using second value." + styles.ENDC)
 
-            value = edge.get(attribute)
+            value = edge.attr.get(attribute)
 
             if value.startswith('"') or value.startswith("'"):
                 value = value[1:]

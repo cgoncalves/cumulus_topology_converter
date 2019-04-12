@@ -1,4 +1,4 @@
 setuptools
 jinja2
-pydotplus
+pygraphviz
 ipaddress
