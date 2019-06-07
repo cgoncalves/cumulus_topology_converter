@@ -911,10 +911,10 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
         # Determine Used MGMT IPs
         if verbose > 1:
             print("  MGMT_IP ADDRESS for OOB_SERVER IS: %s%s"
-                  % (inventory[mgmt_server]["mgmt_ip"], inventory["oob-mgmt-server"]["mgmt_cidrmask"]))
+                  % (inventory[mgmt_server]["mgmt_ip"], inventory[mgmt_server]["mgmt_cidrmask"]))
 
         intf = ipaddress.ip_interface("%s%s" % (inventory[mgmt_server]["mgmt_ip"],
-                                                        inventory["oob-mgmt-server"]["mgmt_cidrmask"]))
+                                                        inventory[mgmt_server]["mgmt_cidrmask"]))
         network = ipaddress.ip_network("%s" % (intf.network))
 
         acceptable_host_addresses = list(intf.network.hosts())
