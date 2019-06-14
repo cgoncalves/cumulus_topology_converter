@@ -188,7 +188,7 @@ Vagrant.configure("2") do |config|
             auto_config: false{% endif %}{% endfor %}
 
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |vbox|{% for i in range(2, 2+device.interfaces.__len__()) %}
-      vbox.customize ['modifyvm', :id, '--nicpromisc{{i}}', 'allow-all', "--nictype{{i}}", "virtio"]{% endfor %}
+      vbox.customize ['modifyvm', :id, '--nicpromisc{{i}}', 'allow-all']{% endfor %}
       vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]{% if device.pxehost=="True" %}
 
       # Setup Interfaces for PXEBOOT
