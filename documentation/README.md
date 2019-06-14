@@ -211,6 +211,7 @@ Example:
 * ssh_port -- (optional) Specify a port (greater than 1024) to be used for SSH to a specific node.
 * vagrant_user -- (optional) Specifies which username vagrant will attempt to login to. MUST have Vagrant Insecure Key Added ahead of time!
 * vagrant -- (optional) This option controls the name of the vagrant interface which vagrant will use to communicate with the guest. The default name of the vagrant interface is set to "vagrant". When using this option it will be necessary to modify the config=./helper_script/xxx.sh" script to reflect the name that has been choosen.
+* ztp -- (optional) Allows for the specification of a ZTP script to be loaded into the /var/lib/cumulus/ztp directory of the target node. Note: _Only for Cumulus Vx VMs._
 * legacy -- (optional) This value controls whether or not the hostname is set in the VM. Typically used when simulating with 2.5.x versions of Vx.
 
 #### Link Level Attributes

@@ -40,7 +40,7 @@ $script = <<-SCRIPT
 if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
     echo "### RUNNING CUMULUS EXTRA CONFIG ###"
     source /etc/lsb-release
-    if [ -z /etc/app-release ]; then
+    if [ -e /etc/app-release ]; then
         echo "  INFO: Detected NetQ TS Server"
         source /etc/app-release
         echo "  INFO: Running NetQ TS Appliance Version $APPLIANCE_VERSION"
@@ -92,7 +92,7 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             ztp -R 2>&1
             ztp -i 2>&1
 
-            if [ -z /tmp/cumulus-ztp ]; then
+            if [ -e /tmp/cumulus-ztp ]; then
                 echo "  ### Found ZTP Script, moving into preload directory... ###"
                 mv /tmp/cumulus-ztp /var/lib/cumulus/ztp/cumulus-ztp
                 chmod +x /var/lib/cumulus/ztp/cumulus-ztp
