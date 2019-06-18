@@ -33,19 +33,20 @@ PRs are actively welcomed.
 3. Submit a PR on the **Development Branch**
 
 
-## New Features in v4.6.9
-* Update of Ansible version on the oob-mgmt-server to 2.5.4 with -c workflow
-* Adding --prefix argument to handle multiple simultaneous simulations
-* Better ZTP reset behavior during simulation boot-up
-* Allow for specification of mgmt_server configuration with -c workflow
+## New Features in v4.7.0
+* Added Support for Python3
+* Added the -i option for libvirt simulations instead of controlling ports
+* Updated the -c workflow to use an OOB-mgmt-server based on Ubuntu 18.04
+* Updated the Host functional default to use Ubuntu 18.04
+* Less verbose default output, (regain full verbosity with -vvv)
+* Added support for the ZTP node attribute to specify ZTP for initial config
 ## Bugfixes
-* Fix for fewer interfaces present in Virtualbox (CM-22592)
-* Creating necessary directories when they do not exist
-* Fix for issue #97
-* Fix for issue #109
-
+* Improved relative pathing behavior for helper scripts
+* Fix for Issue #123
+* Reverted change from dc23e3c which broke older libvirt hosts
 
 ## Changelog:
+* v4\.7\.0 2019\_06\_07: Added Support for Python3. Added the -i option for libvirt simulations instead of controlling ports. Updated the -c workflow to use an OOB-mgmt-server based on Ubuntu 18.04.Updated the Host functional default to use Ubuntu 18.04. Less verbose default output, (regain full verbosity with -vvv). Added support for the ZTP node attribute to specify ZTP for initial config. Improved relative pathing behavior for helper scripts. Fix for Issue #123. Reverted change from dc23e3c which broke older libvirt hosts.
 * v4\.6\.9 2018\_10\_05: Update of Ansible version on the oob-mgmt-server to 2.5.4 with -c workflow. Adding --prefix argument to handle multiple simultaneous simulations. Better ZTP reset behavior during simulation boot-up. Allow for specification of mgmt_server configuration with -c workflow. Fix for fewer interfaces present in Virtualbox (CM-22592). Creating necessary directories when they do not exist. Fix for issue #97. Fix for issue #109.
 * v4\.6\.8 2018\_04\_04: Fix for Vagrant2.0.3 breaking the workaround for https://github.com/hashicorp/vagrant/issues/9442
 * v4\.6\.7 2018\_03\_09: Specifiying Vagrant Image Location per https://github.com/hashicorp/vagrant/issues/9442. Fixed documentation formatting. Fixed Bad default shell for cumulus user in extra_server_config.sh
