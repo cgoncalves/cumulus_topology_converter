@@ -45,7 +45,7 @@ install_puppet(){
 
 install_ansible(){
     echo " ### Installing Ansible... ###"
-    apt-get install -qy sshpass libssh-dev python3-dev libssl-dev libffi-dev python3-pip
+    apt-get install -qy sshpass libssh-dev python3-dev libssl-dev libffi-dev python3-pip DEBIAN_FRONTEND=noninteractive
     /usr/bin/pip3 install setuptools --upgrade
     /usr/bin/pip3 install ansible==$ansible_version --upgrade
 }

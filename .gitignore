@@ -3,3 +3,4 @@
 Vagrantfile*
 *.dot
 dhcp_mac_map
+.DS_Store
