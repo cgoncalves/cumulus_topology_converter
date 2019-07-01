@@ -1,6 +1,6 @@
 #!/bin/bash
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.7.0
+#    Template Revision: v4.7.1
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
@@ -74,8 +74,8 @@ chmod 755 /etc/motd
 
 echo " ### Overwriting DNS Server to 8.8.8.8 ###"
 #Required because the installation of DNSmasq throws off DNS momentarily
-sed '/DNS=/d' /etc/systemd/resolved.conf
-sed '/\[Resolve\]/a DNS=8.8.8.8 1.1.1.1' /etc/systemd/resolved.conf
+sed -i '/DNS=/d' /etc/systemd/resolved.conf
+sed -i '/\[Resolve\]/a DNS=8.8.8.8 1.1.1.1' /etc/systemd/resolved.conf
 systemctl restart systemd-resolved.service
 
 echo " ### Updating APT Repository... ###"
