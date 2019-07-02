@@ -26,8 +26,6 @@ from operator import itemgetter
 
 pp = pprint.PrettyPrinter(depth=6)
 
-relpath_to_me = os.path.relpath(os.path.dirname(os.path.abspath(__file__)), os.getcwd())
-
 class styles:
     # Use these for text colors
     HEADER = '\033[95m'
@@ -112,6 +110,27 @@ parser.add_argument('--version', action='version', version="Topology \
 parser.add_argument('--prefix', help='Specify a prefix to be used for machines in libvirt. By default the name of the current folder is used.')
 args = parser.parse_args()
 
+# Dynamic Variables
+relpath_to_me = os.path.relpath(os.path.dirname(os.path.abspath(__file__)), os.getcwd())
+
+# Determine whether local or global helper_scripts will be used.
+script_storage = None
+if os.path.isdir('./helper_scripts'):
+    script_storage = './helper_scripts'
+else:
+    script_storage = relpath_to_me+"/helper_scripts"
+
+# Determine whether local or global templates will be used.
+template_storage = None
+VAGRANTFILE = 'Vagrantfile'
+if os.path.isdir('./templates'):
+    template_storage = './templates'
+else:
+    template_storage = relpath_to_me + '/templates'
+VAGRANTFILE_template = template_storage + "/Vagrantfile.j2"
+customer = os.path.basename(os.path.dirname(os.getcwd()))
+TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
+
 # Parse Arguments
 network_functions = ['oob-switch', 'internet', 'exit', 'superspine', 'spine', 'leaf', 'tor']
 function_group = {}
@@ -127,11 +146,6 @@ port_gap = 1000
 synced_folder = False
 display_datastructures = False
 total_memory = 0
-VAGRANTFILE = 'Vagrantfile'
-VAGRANTFILE_template = relpath_to_me + '/templates/Vagrantfile.j2'
-#mgmt_destination_dir = relpath_to_me + '/helper_scripts/auto_mgmt_network/'
-customer = os.path.basename(os.path.dirname(os.getcwd()))
-TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
 arg_string = " ".join(sys.argv)
 libvirt_prefix = None
 
@@ -190,6 +204,9 @@ if args.prefix != None: libvirt_prefix = args.prefix
 if verbose > 2:
     print("Arguments:")
     print(args)
+    
+if verbose > 2: 
+    print("relpath_to_me: {}".format(relpath_to_me))
 
 ###################################
 #### MAC Address Configuration ####
@@ -199,7 +216,7 @@ if verbose > 2:
 # Cumulus Range ( https://support.cumulusnetworks.com/hc/en-us/articles/203837076-Reserved-MAC-Address-Range-for-Use-with-Cumulus-Linux )
 start_mac = "443839000000"
 
-# This file is generated to store the mapping between macs and mgmt interfaces
+# This file is generated to store the mapping between macs and interfaces
 dhcp_mac_file = "./dhcp_mac_map"
 
 ######################################################
@@ -207,13 +224,11 @@ dhcp_mac_file = "./dhcp_mac_map"
 ######################################################
 
 # Hardcoded Variables
-script_storage = relpath_to_me+"/helper_scripts"
 epoch_time = str(int(time.time()))
 mac_map = {}
-
-
-# Static Variables -- #Do not change!
 warning = []
+
+# Static Variables -- Do not change!
 libvirt_reuse_error = """
        When constructing a VAGRANTFILE for the libvirt provider
        interface reuse is not possible because the UDP tunnels
@@ -1274,8 +1289,8 @@ def render_jinja_templates(devices):
     mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
     if create_mgmt_device:
         # Check that MGMT Template Dir exists
-        mgmt_template_dir = relpath_to_me+"/templates/auto_mgmt_network/"
-        if not os.path.isdir(relpath_to_me+"/templates/auto_mgmt_network"):
+        mgmt_template_dir = template_storage + "/auto_mgmt_network/"
+        if not os.path.isdir(mgmt_template_dir):
             print(styles.FAIL + styles.BOLD +
                   "ERROR: " + mgmt_template_dir +
                   " does not exist. Cannot populate templates!" +
@@ -1292,6 +1307,7 @@ def render_jinja_templates(devices):
                 mgmt_templates.append(file)
 
         if verbose > 2:
+            print(" mgmt_template_dir: {}".format(mgmt_template_dir))
             print(" detected mgmt_templates:")
             print(mgmt_templates)
 
@@ -1313,33 +1329,13 @@ def render_jinja_templates(devices):
         for template in mgmt_templates:
             render_destination = os.path.join(mgmt_destination_dir, template[0:-3])
             template_source = os.path.join(mgmt_template_dir, template)
+            TEMPLATES.append([template_source,render_destination])
 
-            if verbose > 2:
-                print("    Rendering: " + template + " --> " + render_destination)
-
-            template = jinja2.Template(open(template_source).read())
-            with open(render_destination, 'w') as outfile:
-                outfile.write(template.render(devices=devices,
-                                              start_port=start_port,
-                                              port_gap=port_gap,
-                                              synced_folder=synced_folder,
-                                              provider=provider,
-                                              version=version,
-                                              customer=customer,
-                                              topology_file=topology_file,
-                                              arg_string=arg_string,
-                                              epoch_time=epoch_time,
-                                              mgmt_destination_dir=mgmt_destination_dir,
-                                              generate_ansible_hostfile=generate_ansible_hostfile,
-                                              create_mgmt_device=create_mgmt_device,
-                                              function_group=function_group,
-                                              network_functions=network_functions,
-                                              libvirt_prefix=libvirt_prefix,))
-
-    # Render the main Vagrantfile
+    # If just rendering mgmt templates, remove Vagrantfile from list
     if create_mgmt_device and create_mgmt_configs_only:
-        return 0
+        del TEMPLATES[0]
 
+    # Render the Templates
     for templatefile, destination in TEMPLATES:
 
         if verbose > 2:
@@ -1354,6 +1350,7 @@ def render_jinja_templates(devices):
                                           synced_folder=synced_folder,
                                           provider=provider,
                                           version=version,
+                                          customer=customer,
                                           topology_file=topology_file,
                                           arg_string=arg_string,
                                           epoch_time=epoch_time,
