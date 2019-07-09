@@ -166,7 +166,7 @@ Vagrant.configure("2") do |config|
       v.boot 'network'{% endif %}{% if device.function == 'host' %}
       v.nic_model_type = 'e1000' {% endif %}{% endif %}
 {% if device.memory is defined %}      v.memory = {{ device.memory }}{% endif %}
-{% if device.cpu is defined %}      v.cpu = {{ device.cpu }}{% endif %}
+{% if device.cpu is defined %}      v.cpus = {{ device.cpu }}{% endif %}
     end{% if synced_folder == False %}
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}
