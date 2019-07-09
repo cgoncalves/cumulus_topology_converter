@@ -199,6 +199,7 @@ Example:
 
 ```
 * memory -- (mostly optional) Sets the amount of memory (in MB) to be provided to the VM.
+* cpu -- (optional) Sets the number of vCPUs to be allocated to the VM.
 * version -- (optional) Sets the version of the vagrant box to be used.
 * function -- (optional) Correspondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM. This can specify other attributes like OS and Memory.
 * playbook -- (optional) Defines the provisioning playbook to be run on the device. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
