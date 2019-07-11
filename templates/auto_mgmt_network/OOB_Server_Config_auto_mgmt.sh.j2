@@ -48,7 +48,7 @@ install_ansible(){
     # See: https://bugs.launchpad.net/ubuntu/+source/ansible/+bug/1833013
     apt-get -q --option "Dpkg::Options::=--force-confold" --assume-yes install libssl1.1
 
-    apt-get install -qy sshpass libssh-dev python3-dev libssl-dev libffi-dev python3-pip DEBIAN_FRONTEND=noninteractive
+    apt-get install -qy sshpass libssh-dev python3-dev libssl-dev libffi-dev python3-pip
     /usr/bin/pip3 install setuptools --upgrade
     /usr/bin/pip3 install ansible==$ansible_version --upgrade
 }
