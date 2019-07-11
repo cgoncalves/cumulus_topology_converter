@@ -18,7 +18,7 @@ group {
 {%   if device.mgmt_ip is defined -%}
 {%     if device.function != "oob-server"-%}
 {%       if device.interfaces[0] is defined -%}
- host {{ device.hostname }} {hardware ethernet {{ device.interfaces[0].mac }}; fixed-address {{ device.mgmt_ip }}; option host-name "{{ device.hostname }}";{% if device.function=='spine' or device.function=='leaf' or device.function=='oob-switch' or device.function=='exit' or device.function=='internet' and devices[0].function == "oob-server" and devices[0].mgmt_ip is defined %} option cumulus-provision-url "http://{{ devices[0].mgmt_ip }}/ztp_oob.sh"; {% endif %} } 
+ host {{ device.hostname }} {hardware ethernet {{ device.interfaces[0].mac }}; fixed-address {{ device.mgmt_ip }}; option host-name "{{ device.hostname }}";{% if device.function=='spine' or device.function=='leaf' or device.function=='oob-switch' or device.function=='exit' or device.function=='internet' and devices[0].function == "oob-server" and devices[0].mgmt_ip is defined %} option cumulus-provision-url "http://{{ devices[0].mgmt_ip }}/cumulus-ztp"; {% endif %} } 
 {%       endif -%}
 {%     endif -%}
 {%   endif -%}

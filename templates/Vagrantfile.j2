@@ -37,13 +37,44 @@ unless Vagrant::DEFAULT_SERVER_URL.frozen?
 end
 
 $script = <<-SCRIPT
+function setup_ztp(){
+    echo "### Disabling ZTP service..."
+    systemctl stop ztp.service
+    ztp -d 2>&1
+    echo "### Resetting ZTP to work next boot..."
+    ztp -R 2>&1
+    ztp -i 2>&1
+
+    if [ -e /tmp/cumulus-ztp ]; then
+        echo "  ### Found ZTP Script, moving into preload directory... ###"
+        mv /tmp/cumulus-ztp /var/lib/cumulus/ztp/cumulus-ztp
+        chmod +x /var/lib/cumulus/ztp/cumulus-ztp
+        ls -lha /var/lib/cumulus/ztp/cumulus-ztp
+    fi
+}
+
+function disable_remap(){
+    echo "### Disabling default remap on Cumulus VX..."
+    mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup &> /dev/null
+}
+
+function vagrant_user_nclu(){
+    echo "### Giving Vagrant User Ability to Run NCLU Commands ###"
+    adduser vagrant netedit
+    adduser vagrant netshow
+}
+
 if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
     echo "### RUNNING CUMULUS EXTRA CONFIG ###"
     source /etc/lsb-release
+    echo "  INFO: Detected Cumulus Linux v$DISTRIB_RELEASE Release"
     if [ -e /etc/app-release ]; then
         echo "  INFO: Detected NetQ TS Server"
         source /etc/app-release
         echo "  INFO: Running NetQ TS Appliance Version $APPLIANCE_VERSION"
+        disable_remap
+        vagrant_user_nclu
+        setup_ztp
     else
         if [[ $DISTRIB_RELEASE =~ ^2.* ]]; then
             echo "  INFO: Detected a 2.5.x Based Release"
@@ -64,7 +95,6 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             echo "  INFO: Detected a 3.x Based Release ($DISTRIB_RELEASE)"
             echo "### Disabling default remap on Cumulus VX..."
             mv -v /etc/hw_init.d/S10rename_eth_swp.sh /etc/S10rename_eth_swp.sh.backup &> /dev/null
-            echo "  INFO: Detected Cumulus Linux v$DISTRIB_RELEASE Release"
             if [[ $DISTRIB_RELEASE =~ ^3.[1-9].* ]]; then
                 echo "### Fixing ONIE DHCP to avoid Vagrant Interface ###"
                 echo "     Note: Installing from ONIE will undo these changes."
@@ -81,24 +111,9 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
                     sed -i 's/users_with_show = root, cumulus/users_with_show = root, cumulus, vagrant/g' /etc/netd.conf
                 fi
             elif [[ $DISTRIB_RELEASE =~ ^3.[3-9].* ]]; then
-                echo "### Giving Vagrant User Ability to Run NCLU Commands ###"
-                adduser vagrant netedit
-                adduser vagrant netshow
+                vagrant_user_nclu
             fi
-            echo "### Disabling ZTP service..."
-            systemctl stop ztp.service
-            ztp -d 2>&1
-            echo "### Resetting ZTP to work next boot..."
-            ztp -R 2>&1
-            ztp -i 2>&1
-
-            if [ -e /tmp/cumulus-ztp ]; then
-                echo "  ### Found ZTP Script, moving into preload directory... ###"
-                mv /tmp/cumulus-ztp /var/lib/cumulus/ztp/cumulus-ztp
-                chmod +x /var/lib/cumulus/ztp/cumulus-ztp
-                ls -lha /var/lib/cumulus/ztp/cumulus-ztp
-            fi
-
+            setup_ztp
         fi
     fi
 fi
@@ -217,7 +232,7 @@ Vagrant.configure("2") do |config|
     device.vm.provision "file", source: "{{ mgmt_destination_dir }}dhcpd.hosts", destination: "~/dhcpd.hosts"
     device.vm.provision "file", source: "{{ mgmt_destination_dir }}hosts", destination: "~/hosts"
     device.vm.provision "file", source: "{{ mgmt_destination_dir }}ansible_hostfile", destination: "~/ansible_hostfile"
-    device.vm.provision "file", source: "{{ mgmt_destination_dir }}ztp_oob.sh", destination: "~/ztp_oob.sh"
+    device.vm.provision "file", source: "{{ mgmt_destination_dir }}cumulus-ztp", destination: "~/cumulus-ztp"
 {% endif -%}
 {% if create_mgmt_device and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 

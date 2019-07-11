@@ -50,7 +50,7 @@ subnet {{ devices[0].mgmt_network }} netmask {{ devices[0].mgmt_netmask }} {
   max-lease-time 345600;      #4 days
   option www-server {{ devices[0].mgmt_ip }};
   option default-url = "http://{{ devices[0].mgmt_ip }}/onie-installer";
-  option cumulus-provision-url "http://{{ devices[0].mgmt_ip }}/ztp_oob.sh";
+  option cumulus-provision-url "http://{{ devices[0].mgmt_ip }}/cumulus-ztp";
   option ntp-servers {{ devices[0].mgmt_ip }};
 }
 }

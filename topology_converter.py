@@ -128,7 +128,6 @@ if os.path.isdir('./templates'):
 else:
     template_storage = relpath_to_me + '/templates'
 VAGRANTFILE_template = template_storage + "/Vagrantfile.j2"
-customer = os.path.basename(os.path.dirname(os.getcwd()))
 TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
 
 # Parse Arguments
@@ -148,6 +147,7 @@ display_datastructures = False
 total_memory = 0
 arg_string = " ".join(sys.argv)
 libvirt_prefix = None
+customer = None
 
 if args.topology_file: topology_file = args.topology_file
 
@@ -200,6 +200,12 @@ if args.display_datastructures: display_datastructures = True
 if args.synced_folder: synced_folder = True
 
 if args.prefix != None: libvirt_prefix = args.prefix
+
+# Use Prefix as customer name if available
+if libvirt_prefix:
+    customer = libvirt_prefix
+else: 
+    customer = os.path.basename(os.path.dirname(os.getcwd()))
 
 if verbose > 2:
     print("Arguments:")
