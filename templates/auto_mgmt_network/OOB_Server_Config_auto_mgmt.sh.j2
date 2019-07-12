@@ -53,6 +53,8 @@ install_ansible(){
     /usr/bin/pip3 install ansible==$ansible_version --upgrade
 }
 
+set -e
+
 ## MOTD
 echo " ### Overwriting MOTD ###"
 cat <<EOT > /etc/motd.base64
@@ -106,8 +108,10 @@ iface eth1 inet static
     address {{ devices[0].mgmt_ip }}{{ devices[0].mgmt_cidrmask }}
 EOT
 
-echo " ### Applying Network Configuration via IFUPDOWN2... ###"
-/sbin/ifreload -a
+# We don't apply config here because interfaces have not been remapped.
+#    The subsequent reboot will apply the configuration above anyways.
+#echo " ### Applying Network Configuration via IFUPDOWN2... ###"
+#/sbin/ifreload -a
 
 if [ $puppet -eq 1 ]; then
     echo " ### Installing Puppet ### "
@@ -126,7 +130,11 @@ filegen loopstats file loopstats type day enable
 filegen peerstats file peerstats type day enable
 filegen clockstats file clockstats type day enable
 
-server clock.rdu.cumulusnetworks.com
+server 0.cumulusnetworks.pool.ntp.org iburst
+server 1.cumulusnetworks.pool.ntp.org iburst
+server 2.cumulusnetworks.pool.ntp.org iburst
+server 3.cumulusnetworks.pool.ntp.org iburst
+
 
 # By default, exchange time with everybody, but don't allow configuration.
 restrict -4 default kod notrap nomodify nopeer noquery
@@ -138,7 +146,8 @@ restrict ::1
 EOT
 
 echo " ### Creating cumulus user ###"
-useradd -m cumulus
+useradd -m cumulus -c "Cumulus User" -s /bin/bash
+echo 'cumulus:CumulusLinux!' | chpasswd
 
 echo " ### Setting Up DHCP ###"
 mv /home/$username/dhcpd.conf /etc/dhcp/dhcpd.conf
@@ -156,7 +165,7 @@ echo " ### Moving Ansible Hostfile into place ###"
 mkdir -p /etc/ansible
 mv /home/$username/ansible_hostfile /etc/ansible/hosts
 
-echo " ###Creating SSH keys for cumulus user ###"
+echo " ### Creating SSH keys for cumulus user ###"
 mkdir /home/cumulus/.ssh
 /usr/bin/ssh-keygen -b 2048 -t rsa -f /home/cumulus/.ssh/id_rsa -q -N ""
 cp /home/cumulus/.ssh/id_rsa.pub /home/cumulus/.ssh/authorized_keys
@@ -169,7 +178,7 @@ chown cumulus:cumulus /home/cumulus/.ssh/*
 
 echo "<html><h1>You've come to the OOB-MGMT-Server.</h1></html>" > /var/www/html/index.html
 
-echo "Copying Key into /var/www/html..."
+echo " ### Copying Key into /var/www/html... ###"
 cp /home/cumulus/.ssh/id_rsa.pub /var/www/html/authorized_keys
 chmod 777 -R /var/www/html/*
 
@@ -177,7 +186,11 @@ echo " ###Making cumulus passwordless sudo ###"
 echo "cumulus ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/10_cumulus
 
 echo ' ### Setting UP NAT and Routing on MGMT server... ### '
+{% if devices[0].vagrant is defined %}
+echo -e '#!/bin/bash \n/sbin/iptables -t nat -A POSTROUTING -o {{ devices[0].vagrant }} -j MASQUERADE' > /etc/rc.local
+{% else %}
 echo -e '#!/bin/bash \n/sbin/iptables -t nat -A POSTROUTING -o vagrant -j MASQUERADE' > /etc/rc.local
+{% endif %}
 chmod +x /etc/rc.local
 echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/98-ipforward.conf
 
@@ -200,7 +213,7 @@ EOT
 fi
 if [ $ansible -eq 1 ]; then
     cat <<EOT >> /home/cumulus/turnup.sh
-#Add any ansible specific steps here
+# Add any ansible specific steps here
 EOT
 fi
 
