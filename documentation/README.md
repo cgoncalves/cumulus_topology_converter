@@ -157,7 +157,7 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 **For Functions:** "oob-server" and "host"
 
 **Functional Defaults are:**
-* os="yk0/ubuntu-xenial"
+* os="generic/ubuntu1804"
 * memory="512"
 
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
