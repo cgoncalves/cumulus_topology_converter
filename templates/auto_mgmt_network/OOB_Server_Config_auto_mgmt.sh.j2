@@ -176,6 +176,11 @@ chmod 700 /home/cumulus/.ssh/
 chmod 600 /home/cumulus/.ssh/*
 chown cumulus:cumulus /home/cumulus/.ssh/*
 
+echo " ### Copying SSH keys to $username and moving SSH config ###"
+cp /home/cumulus/.ssh/id_rsa* /home/$username/.ssh/
+mv /home/$username/ssh_config /home/$username/.ssh/config
+chown -R $username:$username /home/$username/.ssh/
+
 echo "<html><h1>You've come to the OOB-MGMT-Server.</h1></html>" > /var/www/html/index.html
 
 echo " ### Copying Key into /var/www/html... ###"

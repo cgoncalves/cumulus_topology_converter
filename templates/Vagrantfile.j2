@@ -233,6 +233,7 @@ Vagrant.configure("2") do |config|
     device.vm.provision "file", source: "{{ mgmt_destination_dir }}hosts", destination: "~/hosts"
     device.vm.provision "file", source: "{{ mgmt_destination_dir }}ansible_hostfile", destination: "~/ansible_hostfile"
     device.vm.provision "file", source: "{{ mgmt_destination_dir }}cumulus-ztp", destination: "~/cumulus-ztp"
+    device.vm.provision "file", source: "{{ mgmt_destination_dir }}ssh_config", destination: "~/ssh_config"
 {% endif -%}
 {% if create_mgmt_device and device.function != "Unknown" and device.function != "oob-server" and device.function != "host" -%}
 
