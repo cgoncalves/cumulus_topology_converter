@@ -123,6 +123,7 @@ nohup bash -c 'sleep 10; shutdown now -r "Rebooting to Remap Interfaces"' &
 SCRIPT
 
 Vagrant.configure("2") do |config|
+  config.ssh.forward_agent = true
 {% if provider == 'virtualbox' %}
   simid = {{ epoch_time }}
 
