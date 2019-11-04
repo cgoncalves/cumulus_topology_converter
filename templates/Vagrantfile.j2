@@ -43,7 +43,7 @@ function setup_ztp(){
     ztp -d 2>&1
     echo "### Resetting ZTP to work next boot..."
     ztp -R 2>&1
-    ztp -i 2>&1
+    ztp -i &> /dev/null
 
     if [ -e /tmp/cumulus-ztp ]; then
         echo "  ### Found ZTP Script, moving into preload directory... ###"
@@ -78,19 +78,14 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
     else
         if [[ $DISTRIB_RELEASE =~ ^2.* ]]; then
             echo "  INFO: Detected a 2.5.x Based Release"
-
-            echo "  adding fake cl-acltool..."
+            echo "     2.5.x: adding fake cl-acltool..."
             echo -e "#!/bin/bash\nexit 0" > /usr/bin/cl-acltool
             chmod 755 /usr/bin/cl-acltool
-
-            echo "  adding fake cl-license..."
+            echo "     2.5.x: adding fake cl-license..."
             echo -e "#!/bin/bash\nexit 0" > /usr/bin/cl-license
             chmod 755 /usr/bin/cl-license
-
-            echo "  Disabling default remap on Cumulus VX..."
+            echo "     2.5.x: Disabling default remap on Cumulus VX..."
             mv -v /etc/init.d/rename_eth_swp /etc/init.d/rename_eth_swp.backup
-
-            echo "### Rebooting to Apply Remap..."
         elif [[ $DISTRIB_RELEASE =~ ^3.* ]]; then
             echo "  INFO: Detected a 3.x Based Release ($DISTRIB_RELEASE)"
             echo "### Disabling default remap on Cumulus VX..."
@@ -113,6 +108,11 @@ if grep -q -i 'cumulus' /etc/lsb-release &> /dev/null; then
             elif [[ $DISTRIB_RELEASE =~ ^3.[3-9].* ]]; then
                 vagrant_user_nclu
             fi
+            setup_ztp
+        elif [[ $DISTRIB_RELEASE =~ ^4.* ]]; then
+            echo "  INFO: Detected a 4.x Based Release ($DISTRIB_RELEASE)"
+            disable_remap
+            vagrant_user_nclu
             setup_ztp
         fi
     fi
