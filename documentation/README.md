@@ -120,6 +120,12 @@ Place this topology.dot file in the same directory as topology_converter.py (or 
       $ python ./topology_converter.py ./topology.dot
 ```
 
+if using Ubuntu:
+
+```
+      $ python3 ./topology_converter.py ./topology.dot
+```
+
 or if using Libvirt:
 
 
