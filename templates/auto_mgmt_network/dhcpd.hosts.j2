@@ -8,7 +8,7 @@ group {
 {% if devices[0].function == "oob-server" %}
   option domain-name-servers {{ devices[0].mgmt_ip }};
   option domain-name "simulation";
-  #option routers {{ devices[0].mgmt_ip }};
+  option routers {{ devices[0].mgmt_ip }};
   option www-server {{ devices[0].mgmt_ip }};
   option default-url = "http://{{ devices[0].mgmt_ip }}/onie-installer";{% else %}
     ### GROUP INFORMATION CANNOT BE WRITTEN BECAUSE
