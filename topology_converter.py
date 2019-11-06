@@ -943,7 +943,28 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
         for device in inventory:
 
             if 'mgmt_ip' in inventory[device]:
-                node_mgmt_ip = ipaddress.ip_address(inventory[device]['mgmt_ip'])
+                if inventory[device]['mgmt_ip'] != "":
+                    if device == "oob-mgmt-server":
+                        try:
+                            node_mgmt_ip = ipaddress.ip_address(inventory[device]['mgmt_ip'].split('/')[0])
+
+                        except:
+                            print(styles.FAIL + styles.BOLD + " ### ERROR: Invalid IP specified in mgmt_ip option for %s" \
+                                  % (device) + styles.ENDC)
+                            exit(1)
+                    else:
+                        try:
+                            node_mgmt_ip = ipaddress.ip_address(inventory[device]['mgmt_ip'])
+
+                        except:
+                            print(styles.FAIL + styles.BOLD + " ### ERROR: Invalid IP specified in mgmt_ip option for %s" \
+                                  % (device) + styles.ENDC)
+                            exit(1)
+                else:
+                    print(styles.FAIL + styles.BOLD + " ### ERROR: Empty value provided for mgmt_ip option for %s" \
+                          % (device) + styles.ENDC)
+                    exit(1)
+
 
                 # Check that Defined Mgmt_IP is in same Subnet as OOB-SERVER
                 if node_mgmt_ip not in network:
