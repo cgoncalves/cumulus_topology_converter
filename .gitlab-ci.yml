@@ -315,7 +315,7 @@ vagrant_default:
     - cat ./examples/cldemo.dot
     - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
     - spine01Block=`sed -n '/DEFINE VM for spine01/,/DEFINE VM for/p' < Vagrantfile`
-    - echo $spine01Block | grep 'INFO\: Adding UDEV Rule\: Vagrant interface = vagrant'
+    - echo $spine01Block | grep 'Vagrant interface = vagrant'
 
 vagrant:
   stage: attributes
@@ -394,7 +394,7 @@ vagrant_eth0:
     - cat ./examples/cldemo.dot
     - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -c
     - spine01Block=`sed -n '/DEFINE VM for spine01/,/DEFINE VM for/p' < Vagrantfile`
-    - echo $spine01Block | grep 'INFO\: Adding UDEV Rule\: Vagrant interface = eth0'
+    - echo $spine01Block | grep 'Vagrant interface = eth0'
 
 mgmt_ip:
   stage: auto management network
