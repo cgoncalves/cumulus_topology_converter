@@ -154,17 +154,32 @@ or if using Libvirt:
 ### Functional Defaults
 Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
 
-**For Functions:** "oob-switch" "exit" "superspine" "spine" "leaf" "tor"
+**For Functions:** "oob-switch"
 
 **Functional Defaults are:**
 * os="CumulusCommunity/cumulus-vx"
 * memory="768"
+* config="helper_scripts/oob_switch_config.sh"
 
-**For Functions:** "oob-server" and "host"
+**For Functions:** "exit" "superspine" "spine" "leaf" "tor"
+
+**Functional Defaults are:**
+* os="CumulusCommunity/cumulus-vx"
+* memory="768"
+* config="helper_scripts/extra_switch_config.sh"
+
+**For Functions:** "oob-server"
 
 **Functional Defaults are:**
 * os="generic/ubuntu1804"
 * memory="512"
+
+**For Functions:** "host"
+
+**Functional Defaults are:**
+* os="generic/ubuntu1804"
+* memory="512"
+* config="helper_scripts/extra_server_config.sh"
 
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
 
