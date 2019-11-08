@@ -309,6 +309,14 @@ vagrant_user:
     - echo $leaf01Block | grep 'device.ssh.username = "gitlabciuser"'
   when: always
 
+vagrant_default:
+  stage: attributes
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - spine01Block=`sed -n '/DEFINE VM for spine01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'INFO: Adding UDEV Rule: Vagrant interface = vagrant'
+
 vagrant:
   stage: attributes
   script:
@@ -377,6 +385,16 @@ device_creation:
     - grep "DEFINE VM for oob-mgmt-server" Vagrantfile
     - grep "DEFINE VM for oob-mgmt-switch" Vagrantfile
   when: always
+
+vagrant_eth0:
+  stage: auto management network
+  script:
+    - sed -i '/oob-mgmt-server/d' ./examples/cldemo.dot
+    - sed -i '/oob-mgmt-switch/d' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -c
+    - spine01Block=`sed -n '/DEFINE VM for spine01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $spine01Block | grep 'INFO: Adding UDEV Rule: Vagrant interface = eth0'
 
 mgmt_ip:
   stage: auto management network
