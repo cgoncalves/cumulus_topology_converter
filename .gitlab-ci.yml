@@ -1,0 +1,446 @@
+stages:
+  - providers
+  - libvirt
+  - functional defaults
+  - attributes
+  - link attributes
+  - auto management network
+  - pxe
+  - ansible
+  - cleanup
+
+default:
+  stage: providers
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot
+    - grep 'device.vm.provider "virtualbox"' Vagrantfile
+  when: always
+
+virtualbox:
+  stage: providers
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p virtualbox
+    - grep 'device.vm.provider "virtualbox"' Vagrantfile
+    - python3 ./topology_converter.py ./examples/cldemo.dot --provider virtualbox
+    - grep 'device.vm.provider "virtualbox"' Vagrantfile
+  when: always
+
+libvirt:
+  stage: providers
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - grep 'device.vm.provider :libvirt' Vagrantfile
+    - python3 ./topology_converter.py ./examples/cldemo.dot --provider libvirt
+    - grep 'device.vm.provider :libvirt' Vagrantfile
+  when: always
+
+start_port:
+  stage: libvirt
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -s 30000
+    - if [ $(grep -c '3[01]0[0-9][0-9]' Vagrantfile) -ne 238 ]; then exit 1; fi
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt --start-port 30000
+    - if [ $(grep -c '3[01]0[0-9][0-9]' Vagrantfile) -ne 238 ]; then exit 1; fi
+  when: always
+
+port_gap:
+  stage: libvirt
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -g 100
+    - if [ $(grep -c '8[01][0-9][0-9]' Vagrantfile) -ne 237 ]; then exit 1; fi
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt --port-gap 100
+    - if [ $(grep -c '8[01][0-9][0-9]' Vagrantfile) -ne 237 ]; then exit 1; fi
+  when: always
+
+tunnel_ip:
+  stage: libvirt
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -i 10.20.30.40
+    - if [ $(grep -c '10.20.30.40' Vagrantfile) -ne 237 ]; then exit 1; fi
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt --tunnel-ip 10.20.30.40
+    - if [ $(grep -c '10.20.30.40' Vagrantfile) -ne 237 ]; then exit 1; fi
+  when: always
+
+prefix:
+  stage: libvirt
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt --prefix GITLABCI
+    - grep "libvirt.default_prefix = 'GITLABCI'" Vagrantfile
+  when: always
+
+ports:
+  stage: libvirt
+  script:
+    - sed -i 's/"leaf01" \[/"leaf01" \[ports=32 /' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep "swp1"
+    - echo $leaf01Block | grep "swp2"
+    - echo $leaf01Block | grep "swp3"
+    - echo $leaf01Block | grep "swp4"
+    - echo $leaf01Block | grep "swp5"
+    - echo $leaf01Block | grep "swp6"
+    - echo $leaf01Block | grep "swp7"
+    - echo $leaf01Block | grep "swp8"
+    - echo $leaf01Block | grep "swp9"
+    - echo $leaf01Block | grep "swp10"
+    - echo $leaf01Block | grep "swp11"
+    - echo $leaf01Block | grep "swp12"
+    - echo $leaf01Block | grep "swp13"
+    - echo $leaf01Block | grep "swp14"
+    - echo $leaf01Block | grep "swp15"
+    - echo $leaf01Block | grep "swp16"
+    - echo $leaf01Block | grep "swp17"
+    - echo $leaf01Block | grep "swp18"
+    - echo $leaf01Block | grep "swp19"
+    - echo $leaf01Block | grep "swp20"
+    - echo $leaf01Block | grep "swp21"
+    - echo $leaf01Block | grep "swp22"
+    - echo $leaf01Block | grep "swp23"
+    - echo $leaf01Block | grep "swp24"
+    - echo $leaf01Block | grep "swp25"
+    - echo $leaf01Block | grep "swp26"
+    - echo $leaf01Block | grep "swp27"
+    - echo $leaf01Block | grep "swp28"
+    - echo $leaf01Block | grep "swp29"
+    - echo $leaf01Block | grep "swp30"
+    - echo $leaf01Block | grep "swp31"
+    - echo $leaf01Block | grep "swp32"
+  when: always
+
+oob-server:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "oob-mgmt-server" \[function="oob-server"/c\ "oob-mgmt-server" \[function="oob-server"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - oobmgmtserverBlock=`sed -n '/DEFINE VM for oob-mgmt-server/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $oobmgmtserverBlock | grep 'device.vm.box = "generic/ubuntu1804"'
+    - echo $oobmgmtserverBlock | grep 'v.memory = 1024'
+  when: always
+
+oob-switch:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "oob-mgmt-switch" \[function="oob-switch"/c\ "oob-mgmt-switch" \[function="oob-switch"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - oobmgmtswitchBlock=`sed -n '/DEFINE VM for oob-mgmt-switch/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $oobmgmtswitchBlock | grep 'device.vm.box = "CumulusCommunity/cumulus-vx"'
+    - echo $oobmgmtswitchBlock | grep 'v.memory = 768'
+  when: always
+
+internet:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "internet" \[function="internet"/c\ "internet" \[function="internet"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - internetBlock=`sed -n '/DEFINE VM for internet/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $internetBlock | grep 'device.vm.box = "CumulusCommunity/cumulus-vx"'
+    - echo $internetBlock | grep 'v.memory = 768'
+  when: always
+
+exit:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "exit01" \[function="exit"/c\ "exit01" \[function="exit"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - exitBlock=`sed -n '/DEFINE VM for exit01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $exitBlock | grep 'device.vm.box = "CumulusCommunity/cumulus-vx"'
+    - echo $exitBlock | grep 'v.memory = 768'
+  when: always
+
+superspine:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "spine01" \[function="superspine"/c\ "spine01" \[function="superspine"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - superspineBlock=`sed -n '/DEFINE VM for spine01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $superspineBlock | grep 'device.vm.box = "CumulusCommunity/cumulus-vx"'
+    - echo $superspineBlock | grep 'v.memory = 768'
+  when: always
+
+spine:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "spine02" \[function="spine"/c\ "spine02" \[function="spine"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - spineBlock=`sed -n '/DEFINE VM for spine02/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $spineBlock | grep 'device.vm.box = "CumulusCommunity/cumulus-vx"'
+    - echo $spineBlock | grep 'v.memory = 768'
+  when: always
+
+leaf:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leafBlock=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leafBlock | grep 'device.vm.box = "CumulusCommunity/cumulus-vx"'
+    - echo $leafBlock | grep 'v.memory = 768'
+  when: always
+
+tor:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "leaf02" \[function="tor"/c\ "leaf02" \[function="tor"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - torBlock=`sed -n '/DEFINE VM for leaf02/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $torBlock | grep 'device.vm.box = "CumulusCommunity/cumulus-vx"'
+    - echo $torBlock | grep 'v.memory = 768'
+  when: always
+
+host:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "server01" \[function="host"/c\ "server01" \[function="host"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - hostBlock=`sed -n '/DEFINE VM for server01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $hostBlock | grep 'device.vm.box = "yk0/ubuntu-xenial"'
+    - echo $hostBlock | grep 'v.memory = 512'
+  when: always
+
+fake:
+  stage: functional defaults
+  script:
+    - sed -i '/^ "server02" \[function="host"/c\ "server02" \[function="fake"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - if grep "DEFINE VM for server02" Vagrantfile; then exit 1; fi
+    - grep "link for swp3 --> server02:eth0" Vagrantfile
+    - grep "link for swp2 --> server02:eth1" Vagrantfile
+    - grep "link for swp2 --> server02:eth2" Vagrantfile
+  when: always
+
+os:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" os="gitlabci\/leaf01"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'device.vm.box = "gitlabci/leaf01"'
+  when: always
+
+version:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" version="9.8.7"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'device.vm.box_version = "9.8.7"'
+  when: always
+
+memory:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" memory=789\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'v.memory = 789'
+  when: always
+
+config:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" config="gitlabci/config"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'device.vm.provision .shell , path. "gitlabci/config"'
+  when: always
+
+ztp:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" ztp="gitlabci/ztp"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'device.vm.provision "file", source. "gitlabci/ztp", destination. "/tmp/cumulus-ztp"'
+  when: always
+
+playbook:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" playbook="gitlabci/playbook"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'ansible.playbook = "gitlabci/playbook"'
+  when: always
+
+tunnel_ip:
+  stage: attributes
+  script:
+    - sed -i 's/"leaf01" \[/"leaf01" \[tunnel_ip="10.20.30.40" /' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - if [ $(grep -c '10.20.30.40' Vagrantfile) -ne 22 ]; then exit 1; fi
+# This should be updated to check for the IPs just in the block for leaf01, but the below wasn't working
+#    - if [ $(echo $leaf01Block \| grep '10.20.30.40') -ne 20 ]; then exit 1; fi
+  when: always
+
+vagrant_user:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" vagrant_user="gitlabciuser"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'device.ssh.username = "gitlabciuser"'
+  when: always
+
+vagrant:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" vagrant="gitlabciinterface"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'ACTION=="add", SUBSYSTEM=="net", ATTR{ifindex}=="2", NAME="gitlabciinterface"'
+  when: always
+
+ssh_port:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" ssh_port=24\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'device.vm.network .forwarded_port, guest. 22, host. 24'
+  when: always
+
+legacy:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" legacy=True\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - if grep 'device.vm.hostname = "leaf01"' Vagrantfile; then exit 1; fi
+  when: always
+
+remap:
+  stage: attributes
+  script:
+    - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" remap=False\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - leaf01Block=`sed -n '/DEFINE VM for leaf01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $leaf01Block | grep 'REMAP Disabled for this node'
+  when: always
+
+left_mac:
+  stage: link attributes
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - server01Block=`sed -n '/DEFINE VM for server01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $server01Block | grep 'ATTR{address}=="a0:00:00:00:00:31", NAME="eth0"'
+  when: always
+
+right_mac:
+  stage: link attributes
+  script:
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
+    - oobmgmtswitchBlock=`sed -n '/DEFINE VM for oob-mgmt-switch/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $oobmgmtswitchBlock | grep 'ATTR{address}=="a0:00:00:00:00:61", NAME="swp1"'
+  when: always
+
+device_creation:
+  stage: auto management network
+  script:
+    - sed -i '/oob-mgmt-server/d' ./examples/cldemo.dot
+    - sed -i '/oob-mgmt-switch/d' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -c
+    - grep "DEFINE VM for oob-mgmt-server" Vagrantfile
+    - grep "DEFINE VM for oob-mgmt-switch" Vagrantfile
+  when: always
+
+mgmt_ip:
+  stage: auto management network
+  script:
+    - sed -i '/oob-mgmt-switch/d' ./examples/cldemo.dot
+    - sed -i '/^ "oob-mgmt-server" \[function="oob-server"/c\ "oob-mgmt-server" \[function="oob-server" mgmt_ip="10.20.30.254/24"\]' ./examples/cldemo.dot
+    - sed -i 's/"leaf01" \[/"leaf01" \[mgmt_ip=10.20.30.250 /' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -c
+    - grep "subnet 10.20.30.0 netmask 255.255.255.0" helper_scripts/auto_mgmt_network/dhcpd.conf
+    - grep "option domain-name-servers 10.20.30.254;" helper_scripts/auto_mgmt_network/dhcpd.conf
+    - grep "option www-server 10.20.30.254;" helper_scripts/auto_mgmt_network/dhcpd.conf
+    - grep 'option default-url = "http://10.20.30.254/onie-installer";' helper_scripts/auto_mgmt_network/dhcpd.conf
+    - if [ $(grep -c 'fixed-address 10.20.30' helper_scripts/auto_mgmt_network/dhcpd.hosts) -ne 15 ]; then exit 1; fi
+    - if [ $(grep -c '10.20.30' helper_scripts/auto_mgmt_network/hosts) -ne 16 ]; then exit 1; fi
+    - grep 'fixed-address 10.20.30.250; option host-name "leaf01"' helper_scripts/auto_mgmt_network/dhcpd.hosts
+  when: always
+
+ssh_user:
+  stage: auto management network
+  script:
+    - sed -i '/oob-mgmt-switch/d' ./examples/cldemo.dot
+    - sed -i '/^ "oob-mgmt-server" \[function="oob-server"/c\ "oob-mgmt-server" \[function="oob-server"\]' ./examples/cldemo.dot
+    - sed -i 's/"leaf01" \[/"leaf01" \[ssh_user="gitlabciuser" /' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -c
+    - grep "leaf01" -A 1 helper_scripts/auto_mgmt_network/ssh_config | grep "gitlabciuser"
+  when: always
+
+pxe:
+  stage: pxe
+  script:
+    - sed -i 's/"edge01" \[/"edge01" \[pxehost="True" /' ./examples/cldemo.dot
+    - sed -i 's/"edge01":"eth1" -- "exit01":"swp1"/"edge01":"eth1" -- "exit01":"swp1" \[left_pxebootinterface="True"\]/' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot
+    - edge01Block=`sed -n '/DEFINE VM for edge01/,/DEFINE VM for/p' < Vagrantfile`
+    - echo $edge01Block | grep 'Setup Interfaces for PXEBOOT'
+  when: always
+
+hostfile:
+  stage: ansible
+  script:
+    - sed -i '/oob-mgmt-server/d' ./examples/cldemo.dot
+    - sed -i '/oob-mgmt-switch/d' ./examples/cldemo.dot
+    - sed -i '/^ "leaf01" \[/c\ "leaf01" \[os="CumulusCommunity\/cumulus-vx" vagrant="eth0"\]' ./examples/cldemo.dot
+    - sed -i '/^ "spine01" \[/c\ "spine01" \[os="CumulusCommunity\/cumulus-vx" vagrant="eth0"\]' ./examples/cldemo.dot
+    - cat ./examples/cldemo.dot
+    - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt -a --prefix gitlab-runner_$CI_PIPELINE_ID
+    - grep 'ansible.playbook = "./helper_scripts/empty_playbook.yml"' Vagrantfile
+    - grep 'ansible.groups = {' Vagrantfile
+    - ls helper_scripts/empty_playbook.yml
+    - ls ansible.cfg
+    - vagrant up spine01 leaf01
+    - sleep 30
+    - ls .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
+    - ansible -m ping spine01,leaf01
+  when: always
+
+libvirt cleanup:
+  stage: cleanup
+  script:
+    - virsh list --all | grep gitlab-runner_$CI_PIPELINE_ID | tr -s ' ' | cut -d ' ' -f3 | xargs -n 1 virsh destroy
+    - virsh list --all | grep gitlab-runner_$CI_PIPELINE_ID | tr -s ' ' | cut -d ' ' -f3 | xargs -n 1 virsh undefine
+    - virsh vol-list default | grep gitlab-runner_$CI_PIPELINE_ID | cut -d ' ' -f2 | xargs -n 1 virsh vol-delete --pool default
+    - vagrant global-status --prune
+  when: always

@@ -1,5 +1,5 @@
 # Created by Topology-Converter v{{ version }}
-#    Template Revision: v4.7.0
+#    Template Revision: v4.7.1
 #    https://github.com/cumulusnetworks/topology_converter
 #    using topology data from: {{ topology_file }}
 
@@ -13,4 +13,5 @@
 
 [all:vars]
 ansible_user=cumulus
+ansible_become_pass=CumulusLinux!
 ansible_ssh_pass=CumulusLinux!

@@ -3,3 +3,5 @@
 Vagrantfile*
 *.dot
 dhcp_mac_map
+helper_scripts/auto_mgmt_network/*
+.DS_Store

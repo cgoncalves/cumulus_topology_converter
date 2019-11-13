@@ -117,14 +117,20 @@ Place this topology.dot file in the same directory as topology_converter.py (or 
 **2). Convert it to a Vagrantfile**
 
 ```
-      $ python ./topology_converter.py ./topology.dot
+      $ python3 ./topology_converter.py ./topology.dot
+```
+
+if using Ubuntu:
+
+```
+      $ python3 ./topology_converter.py ./topology.dot
 ```
 
 or if using Libvirt:
 
 
 ```
-      $ python ./topology_converter.py ./topology.dot -p libvirt
+      $ python3 ./topology_converter.py ./topology.dot -p libvirt
 ```
 
 **3). Start the Simulation**
@@ -142,23 +148,38 @@ or if using Libvirt:
 
 ### What is happening when you run Topology Converter?
 1. When topology_converter (TC) is called, TC reads the provided topology file line by line and learns information about each node and each link in the topology.
-2. This information is stored in a variables datastructure. (View this datastructure using the "python ./topology_converter.py [topology_file] -dd" option)
+2. This information is stored in a variables datastructure. (View this datastructure using the "python3 ./topology_converter.py [topology_file] -dd" option)
 3. A jinja2 template "Vagrantfile.j2" (stored in the /templates directory) is used to render a Vagrantfile based on the variables datastructure.
 
 ### Functional Defaults
 Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
 
-**For Functions:** "oob-switch" "exit" "superspine" "spine" "leaf" "tor"
+**For Functions:** "oob-switch"
 
 **Functional Defaults are:**
 * os="CumulusCommunity/cumulus-vx"
 * memory="768"
+* config="helper_scripts/oob_switch_config.sh"
 
-**For Functions:** "oob-server" and "host"
+**For Functions:** "exit" "superspine" "spine" "leaf" "tor"
 
 **Functional Defaults are:**
-* os="yk0/ubuntu-xenial"
+* os="CumulusCommunity/cumulus-vx"
+* memory="768"
+* config="helper_scripts/extra_switch_config.sh"
+
+**For Functions:** "oob-server"
+
+**Functional Defaults are:**
+* os="generic/ubuntu1804"
 * memory="512"
+
+**For Functions:** "host"
+
+**Functional Defaults are:**
+* os="generic/ubuntu1804"
+* memory="512"
+* config="helper_scripts/extra_server_config.sh"
 
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
 
@@ -199,6 +220,7 @@ Example:
 
 ```
 * memory -- (mostly optional) Sets the amount of memory (in MB) to be provided to the VM.
+* cpu -- (optional) Sets the number of vCPUs to be allocated to the VM.
 * version -- (optional) Sets the version of the vagrant box to be used.
 * function -- (optional) Correspondes to the [boot order](#boot-ordering) and the [functional defaults](#functional-defaults) in use for the VM. This can specify other attributes like OS and Memory.
 * playbook -- (optional) Defines the provisioning playbook to be run on the device. Keep in mind this playbook may be executed prior to having [interfaces remapped](#interface-remapping).
@@ -358,7 +380,7 @@ TC works by reading information from a topology file into variables which are th
 To see a list of the variables that will be passed to a template use the "-dd" which is short for "display datastructure" option.
 
 ```
-python ./topology_converter.py ./examples/2switch.dot -dd
+python3 ./topology_converter.py ./examples/2switch.dot -dd
 
 ```
 
