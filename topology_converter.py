@@ -450,7 +450,7 @@ def parse_topology(topology_file):
                 inventory[node_name]['config'] = script_storage+"/extra_switch_config.sh"
 
             elif value == 'host':
-                inventory[node_name]['os'] = "yk0/ubuntu-xenial"
+                inventory[node_name]['os'] = "generic/ubuntu1804"
                 inventory[node_name]['memory'] = "512"
                 inventory[node_name]['config'] = script_storage+"/extra_server_config.sh"
 
