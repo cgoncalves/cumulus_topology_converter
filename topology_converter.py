@@ -762,9 +762,7 @@ def parse_topology(topology_file):
 
             exit(1)
 
-        inventory[mgmt_server]["os"] = "generic/ubuntu1804"
-
-        if provider == "libvirt":
+        if "os" not in inventory[mgmt_server]:
             inventory[mgmt_server]["os"] = "generic/ubuntu1804"
 
         if "memory" not in inventory[mgmt_server]:
