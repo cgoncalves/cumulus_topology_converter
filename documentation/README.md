@@ -166,7 +166,6 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 **Functional Defaults are:**
 * os="CumulusCommunity/cumulus-vx"
 * memory="768"
-* config="helper_scripts/extra_switch_config.sh"
 
 **For Functions:** "oob-server"
 
