@@ -117,7 +117,7 @@ Place this topology.dot file in the same directory as topology_converter.py (or 
 **2). Convert it to a Vagrantfile**
 
 ```
-      $ python ./topology_converter.py ./topology.dot
+      $ python3 ./topology_converter.py ./topology.dot
 ```
 
 if using Ubuntu:
@@ -130,7 +130,7 @@ or if using Libvirt:
 
 
 ```
-      $ python ./topology_converter.py ./topology.dot -p libvirt
+      $ python3 ./topology_converter.py ./topology.dot -p libvirt
 ```
 
 **3). Start the Simulation**
@@ -148,7 +148,7 @@ or if using Libvirt:
 
 ### What is happening when you run Topology Converter?
 1. When topology_converter (TC) is called, TC reads the provided topology file line by line and learns information about each node and each link in the topology.
-2. This information is stored in a variables datastructure. (View this datastructure using the "python ./topology_converter.py [topology_file] -dd" option)
+2. This information is stored in a variables datastructure. (View this datastructure using the "python3 ./topology_converter.py [topology_file] -dd" option)
 3. A jinja2 template "Vagrantfile.j2" (stored in the /templates directory) is used to render a Vagrantfile based on the variables datastructure.
 
 ### Functional Defaults
@@ -380,7 +380,7 @@ TC works by reading information from a topology file into variables which are th
 To see a list of the variables that will be passed to a template use the "-dd" which is short for "display datastructure" option.
 
 ```
-python ./topology_converter.py ./examples/2switch.dot -dd
+python3 ./topology_converter.py ./examples/2switch.dot -dd
 
 ```
 

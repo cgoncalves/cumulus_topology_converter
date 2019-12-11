@@ -211,7 +211,7 @@ host:
     - cat ./examples/cldemo.dot
     - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
     - hostBlock=`sed -n '/DEFINE VM for server01/,/DEFINE VM for/p' < Vagrantfile`
-    - echo $hostBlock | grep 'device.vm.box = "yk0/ubuntu-xenial"'
+    - echo $hostBlock | grep 'device.vm.box = "generic/ubuntu1804"'
     - echo $hostBlock | grep 'v.memory = 512'
   when: always
 
