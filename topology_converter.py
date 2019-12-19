@@ -457,7 +457,6 @@ def parse_topology(topology_file):
             elif value == 'host':
                 inventory[node_name]['os'] = "generic/ubuntu1804"
                 inventory[node_name]['memory'] = "512"
-                inventory[node_name]['config'] = script_storage+"/extra_server_config.sh"
 
         if provider == 'libvirt' and 'pxehost' in node_attr_list:
             if node.get('pxehost').replace('"', '') == "True":

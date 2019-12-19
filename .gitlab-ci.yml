@@ -318,7 +318,7 @@ vagrant_eth0:
     - echo $spine01Block | grep 'Vagrant interface = eth0'
   when: always
 
-vagrant:
+vagrant_custom:
   stage: attributes
   script:
     - sed -i '/^ "leaf01" \[function="leaf"/c\ "leaf01" \[function="leaf" vagrant="gitlabciinterface"\]' ./examples/cldemo.dot
