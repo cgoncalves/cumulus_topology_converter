@@ -148,6 +148,7 @@ total_memory = 0
 arg_string = " ".join(sys.argv)
 libvirt_prefix = None
 customer = None
+vagrant = "eth0"
 
 if args.topology_file: topology_file = args.topology_file
 
@@ -157,13 +158,18 @@ if args.provider: provider = args.provider
 
 if args.ansible_hostfile: generate_ansible_hostfile = True
 
-if args.create_mgmt_device: create_mgmt_device = True
+if args.create_mgmt_device:
+    create_mgmt_device = True
+    vagrant = "vagrant"
 
 if args.create_mgmt_network:
     create_mgmt_device = True
     create_mgmt_network = True
+    vagrant = "vagrant"
 
-if args.create_mgmt_configs_only: create_mgmt_configs_only = True
+if args.create_mgmt_configs_only:
+    create_mgmt_configs_only = True
+    vagrant = "vagrant"
 
 if args.template:
     for templatefile, destination in args.template:
@@ -204,14 +210,14 @@ if args.prefix != None: libvirt_prefix = args.prefix
 # Use Prefix as customer name if available
 if libvirt_prefix:
     customer = libvirt_prefix
-else: 
+else:
     customer = os.path.basename(os.path.dirname(os.getcwd()))
 
 if verbose > 2:
     print("Arguments:")
     print(args)
-    
-if verbose > 2: 
+
+if verbose > 2:
     print("relpath_to_me: {}".format(relpath_to_me))
 
 ###################################
@@ -447,12 +453,10 @@ def parse_topology(topology_file):
             elif value in network_functions:
                 inventory[node_name]['os'] = "CumulusCommunity/cumulus-vx"
                 inventory[node_name]['memory'] = "768"
-                inventory[node_name]['config'] = script_storage+"/extra_switch_config.sh"
 
             elif value == 'host':
                 inventory[node_name]['os'] = "generic/ubuntu1804"
                 inventory[node_name]['memory'] = "512"
-                inventory[node_name]['config'] = script_storage+"/extra_server_config.sh"
 
         if provider == 'libvirt' and 'pxehost' in node_attr_list:
             if node.get('pxehost').replace('"', '') == "True":
@@ -524,6 +528,9 @@ def parse_topology(topology_file):
             if tunnel_ip != None: inventory[node_name]['tunnel_ip'] = tunnel_ip
             elif 'tunnel_ip' not in inventory[node_name]:
                 inventory[node_name]['tunnel_ip'] = '127.0.0.1'
+
+        if 'vagrant' not in inventory[node_name]:
+            inventory[node_name]['vagrant'] = vagrant
 
     # Add All the Edges to Inventory
     net_number = 1
@@ -839,9 +846,6 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
             for device in inventory:
                 if inventory[device]["function"] == "oob-server" or inventory[device]["function"] == "oob-switch":
                     continue
-                elif inventory[device]["function"] in network_functions:
-                    if "config" not in inventory[device]:
-                        inventory[device]["config"] = script_storage+"/extra_switch_config.sh"
 
                 mgmt_switch_swp += 1
                 net_number += 1
@@ -1156,7 +1160,7 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
             inventory[right_device]['interfaces'][right_interface]['local_ip'] = inventory[right_device]['tunnel_ip']
             inventory[right_device]['interfaces'][right_interface]['remote_ip'] = inventory[left_device]['tunnel_ip']
         elif right_device == "NOTHING":
-            if tunnel_ip != None: 
+            if tunnel_ip != None:
                 inventory[left_device]['interfaces'][left_interface]['local_ip'] = tunnel_ip
                 inventory[left_device]['interfaces'][left_interface]['remote_ip'] = tunnel_ip
             else:

@@ -166,7 +166,6 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 **Functional Defaults are:**
 * os="CumulusCommunity/cumulus-vx"
 * memory="768"
-* config="helper_scripts/extra_switch_config.sh"
 
 **For Functions:** "oob-server"
 
@@ -179,7 +178,6 @@ Functional defaults provide basic options for memory and OS when using pre-defin
 **Functional Defaults are:**
 * os="generic/ubuntu1804"
 * memory="512"
-* config="helper_scripts/extra_server_config.sh"
 
 Note: See more information about what functions are used for in the [Faked Devices](#faked-devices) and [Boot Ordering](#boot-ordering) sections.
 
