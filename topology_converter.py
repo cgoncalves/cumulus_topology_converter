@@ -104,6 +104,10 @@ parser.add_argument('--synced-folder', action='store_true',
                     help='Using this option enables the default Vagrant \
                     synced folder which we disable by default. \
                     See: https://www.vagrantup.com/docs/synced-folders/basic_usage.html')
+parser.add_argument('-mnm', '--mgmt_network_mode',choices=["veryisolated", "none", "nat", "route"],
+                    help='FOR LIBVIRT PROVIDER: capability to change \
+                    the mgmt_network_mode of the management network. \
+                    (nat by default)')
 parser.add_argument('--version', action='version', version="Topology \
                     Converter version is v%s" % version,
                     help='Using this option displays the version of Topology Converter')
@@ -149,6 +153,7 @@ arg_string = " ".join(sys.argv)
 libvirt_prefix = None
 customer = None
 vagrant = "eth0"
+mgmt_network_mode = "nat"
 
 if args.topology_file: topology_file = args.topology_file
 
@@ -206,6 +211,8 @@ if args.display_datastructures: display_datastructures = True
 if args.synced_folder: synced_folder = True
 
 if args.prefix != None: libvirt_prefix = args.prefix
+
+if args.mgmt_network_mode: mgmt_network_mode = args.mgmt_network_mode
 
 # Use Prefix as customer name if available
 if libvirt_prefix:
@@ -1388,7 +1395,8 @@ def render_jinja_templates(devices):
                                           create_mgmt_device=create_mgmt_device,
                                           function_group=function_group,
                                           network_functions=network_functions,
-                                          libvirt_prefix=libvirt_prefix,))
+                                          libvirt_prefix=libvirt_prefix,
+                                          mgmt_network_mode=mgmt_network_mode,))
 
 
 def print_datastructures(devices):

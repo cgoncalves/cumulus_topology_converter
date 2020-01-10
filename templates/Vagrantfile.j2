@@ -141,6 +141,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider :libvirt do |domain|
     domain.management_network_address = "10.255.#{wbid}.0/24"
     domain.management_network_name = "wbr#{wbid}"
+    domain.management_network_mode = "{{ mgmt_network_mode }}"
     # increase nic adapter count to be greater than 8 for all VMs.
     domain.nic_adapter_count = 130{% endif %}
   end
@@ -164,8 +165,8 @@ Vagrant.configure("2") do |config|
   ##### DEFINE VM for {{ device.hostname }} #####
   config.vm.define "{{ device.hostname }}" do |device|
     {% if device.legacy is not defined %}
-    device.vm.hostname = "{{ device.hostname }}" 
-    {% endif %}{% if device.pxehost=="True" %} 
+    device.vm.hostname = "{{ device.hostname }}"
+    {% endif %}{% if device.pxehost=="True" %}
     device.ssh.insert_key = false
     {%  if provider == 'libvirt'%}
     #NO BOX USED FOR PXE DEVICE{% else %}
@@ -183,6 +184,7 @@ Vagrant.configure("2") do |config|
       v.nic_model_type = 'e1000' {% endif %}{% endif %}
 {% if device.memory is defined %}      v.memory = {{ device.memory }}{% endif %}
 {% if device.cpu is defined %}      v.cpus = {{ device.cpu }}{% endif %}
+{% if device.mgmt_mac is defined %}    v.management_network_mac = "{{ device.mgmt_mac }}"{% endif %}
     end{% if synced_folder == False %}
     #   see note here: https://github.com/pradels/vagrant-libvirt#synced-folders
     device.vm.synced_folder ".", "/vagrant", disabled: true{% endif %}
