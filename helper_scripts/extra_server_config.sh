@@ -31,6 +31,10 @@ if [ "$?" == "0" ]; then
 
     echo "retry 1;" >> /etc/dhcp/dhclient.conf
     echo "timeout 600;" >> /etc/dhcp/dhclient.conf
+
+    #Enable serial console
+    sudo systemctl start serial-getty@ttyS0
+    sudo systemctl enable serial-getty@ttyS0
 fi
 
 #Test for Fedora-Based Host
