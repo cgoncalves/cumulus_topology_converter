@@ -453,9 +453,12 @@ hostfile:
     - grep 'ansible.groups = {' Vagrantfile
     - ls helper_scripts/empty_playbook.yml
     - ls ansible.cfg
+    - vagrant --version
+    - vagrant plugin list
     - vagrant up spine01 leaf01
     - sleep 30
     - ls .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
+    - ansible --version
     - ansible -m ping spine01,leaf01
   when: always
 
