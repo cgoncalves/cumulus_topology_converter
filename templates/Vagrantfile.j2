@@ -229,6 +229,7 @@ Vagrant.configure("2") do |config|
     # Enable serial console
     device.vm.provision :shell , inline: "sudo systemctl enable serial-getty@ttyS0"
     device.vm.provision :shell , inline: "sudo systemctl start serial-getty@ttyS0"
+
     {% endif -%}
 {% if device.function == "oob-server" and create_mgmt_device -%}
     # Copy over DHCP files and MGMT Network Files
