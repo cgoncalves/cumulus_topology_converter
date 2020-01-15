@@ -365,6 +365,7 @@ custom_dns_servers:
   stage: attributes
   script:
     - sed -i '/^ "oob-mgmt-server" \[function="oob-server"/c\ "oob-mgmt-server" \[function="oob-server" custom_dns_servers="1.2.3.4 5.6.7.8"\]' ./examples/cldemo.dot
+    - sed -i '/oob-mgmt-switch/d' ./examples/cldemo.dot
     - cat ./examples/cldemo.dot
     - python3 ./topology_converter.py ./examples/cldemo.dot -p libvirt
     - grep "DNS=1.2.3.4 5.6.7.8" helper_scripts/auto_mgmt_network/OOB_Server_Config_auto_mgmt.sh
