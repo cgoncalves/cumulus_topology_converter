@@ -52,6 +52,7 @@ graph dc1 {
     * It is recommended to have your oob-mgmt-server mgmt_ip configured with .254 as the last octet
   * If "mgmt_ip=" is not specified in the oob-mgmt-server node definition, a default value of 192.168.200.254 is assumed and DHCP will be handled using the 192.168.200.0/24 subnet (192.168.200.10-192.168.200.50).
   * If "mgmt_ip=" is specified in node definitions, a MAC entry will be created for the Eth0 port on each device associated with the provided "mgmt_ip" address for that node. (OOB-Switch will be statically addressed)
+* DNS server configuration
   * If "custom_dns_servers=" is specified in the oob-mgmt-server node definition the specified servers will be used for lookups by the oob-mgmt-server.
   * If "customer_dns_servers=" is not specified in the oob-mgmt-server node definition the default value of "8.8.8.8 1.1.1.1" will be used.
 * Ansible Installed on oob-mgmt-server
