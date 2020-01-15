@@ -227,6 +227,7 @@ Example:
 * remap -- (optional) Can be set to False to avoid all udev based remapping operations. For use with other boxes that are not linux based etc.
 * ubuntu -- (optional -- deprecated in v4.3.0) Used to identify ubuntu14.04 boxes in order to apply special configuration to the /etc/failsafe.conf file to expediate reboots.
 * mgmt_ip -- (optional) Used with the [Automated Management Network](./auto_mgmt_network) feature.
+* custom_dns_servers -- (optional) Used with the [Automated Management Network](./auto_mgmt_network) feature.
 * ports -- (optional) (_libvirt only_) Used to specify a range of ports that should exist on the node in question. This option only works for devices in functional groups: oob-switch, exit,superspine,spine,leaf,ToR. Example: ports=32 would make sure that swp1-swp32 exist on the target device. This option does not support breakout ports at this time.
 * ssh_port -- (optional) Specify a port (greater than 1024) to be used for SSH to a specific node.
 * vagrant_user -- (optional) Specifies which username vagrant will attempt to login to. MUST have Vagrant Insecure Key Added ahead of time!
@@ -477,7 +478,7 @@ graph dc1 {
 ```
 
 
-### Debugging Mode 
+### Debugging Mode
 Use the -v option.
 
 ```
@@ -533,4 +534,3 @@ This topology can be linear if you shut one of the links somewhere in the topolo
 This topology is provided by a Cumulus customer as a reference for their datacenter deployment with Cumulus.
 
 ![Customer Topology](customer_topology.png)
-

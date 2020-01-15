@@ -78,10 +78,10 @@ base64 -d /etc/motd.base64 > /etc/motd
 rm /etc/motd.base64
 chmod 755 /etc/motd
 
-echo " ### Overwriting DNS Server to 8.8.8.8 ###"
+echo " ### Overwriting DNS Server to {{ devices[0].custom_dns_servers|default("8.8.8.8 1.1.1.1") }} ###"
 #Required because the installation of DNSmasq throws off DNS momentarily
 sed -i '/DNS=/d' /etc/systemd/resolved.conf
-sed -i '/\[Resolve\]/a DNS=8.8.8.8 1.1.1.1' /etc/systemd/resolved.conf
+sed -i '/\[Resolve\]/a DNS={{ devices[0].custom_dns_servers|default("8.8.8.8 1.1.1.1") }}' /etc/systemd/resolved.conf
 systemctl restart systemd-resolved.service
 
 echo " ### Updating APT Repository... ###"
