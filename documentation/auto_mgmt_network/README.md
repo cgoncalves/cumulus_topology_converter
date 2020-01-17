@@ -54,7 +54,7 @@ graph dc1 {
   * If "mgmt_ip=" is specified in node definitions, a MAC entry will be created for the Eth0 port on each device associated with the provided "mgmt_ip" address for that node. (OOB-Switch will be statically addressed)
 * DNS server configuration
   * If "custom_dns_servers=" is specified in the oob-mgmt-server node definition the specified servers will be used for lookups by the oob-mgmt-server.
-  * If "customer_dns_servers=" is not specified in the oob-mgmt-server node definition the default value of "8.8.8.8 1.1.1.1" will be used.
+  * If "custom_dns_servers=" is not specified in the oob-mgmt-server node definition the default value of "8.8.8.8 1.1.1.1" will be used.
 * Ansible Installed on oob-mgmt-server
   * Ansible Hostfile prebuilt and installed to /etc/ansible/hosts based on nodes and management IPs
 * /etc/hosts file pre-built on oob-mgmt-server
