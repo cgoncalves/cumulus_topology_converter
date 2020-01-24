@@ -286,7 +286,7 @@ Creating the interface allows for the simulation of interface configuration that
 ```
 graph dc1 {
  "leaf1" [function="fake"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" config="./helper_scripts/extra_switch_config.sh"]
+ "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh"]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50"
 }
@@ -321,8 +321,8 @@ If a MAC address is not specified using the format shown below then it will be a
 
 ```
 graph dc1 {
- "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" config="./helper_scripts/extra_switch_config.sh"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" config="./helper_scripts/extra_switch_config.sh"]
+ "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh"]
+ "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh"]
    "leaf1":"swp1" -- "leaf2":"swp1" [ left_mac="44:38:39:1eaf:11", right_mac="44:38:39:1eaf:21"]
    "leaf1":"swp2" -- "leaf2":"swp2" [ left_mac="44:38:39:1eaf:12", right_mac="44:38:39:1eaf:22"]
    "leaf1":"swp3" -- "leaf2":"swp3" [ left_mac="44:38:39:1eaf:13", right_mac="44:38:39:1eaf:23"]
@@ -363,8 +363,8 @@ It is possible to strech simulations across an L3 fabric to place different simu
 
 ```
 graph dc1 {
- "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="300" config="./helper_scripts/extra_switch_config.sh" tunnel_ip="192.168.1.1"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="300" config="./helper_scripts/extra_switch_config.sh" tunnel_ip="192.168.1.2"]
+ "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh" tunnel_ip="192.168.1.1"]
+ "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh" tunnel_ip="192.168.1.2"]
    "leaf1":"swp11" -- "leaf2":"swp1" [ left_mac="44:38:39:1e:af:11", right_mac="44:38:39:1e:af:21"]
    "leaf1":"swp2" -- "leaf2":"swp2" [ left_mac="44:38:39:1e:af:12", right_mac="44:38:39:1e:af:22"]
    "leaf1":"swp33" -- "leaf2":"swp3" [ left_mac="44:38:39:1e:af:13", right_mac="44:38:39:1e:af:23"]
@@ -404,9 +404,9 @@ Link-Based Passthrough Attribute shown below: "newattribute"
 
 ```
 graph dc1 {
- "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" config="./helper_scripts/extra_switch_config.sh"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" config="./helper_scripts/extra_switch_config.sh"]
- "server1" [function="host" os="boxcutter/ubuntu1404" memory="400" ubuntu=True config="./helper_scripts/extra_server_config.sh" testattr="123456"]
+ "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh"]
+ "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/extra_switch_config.sh"]
+ "server1" [function="host" os="boxcutter/ubuntu1404" memory="512" config="./helper_scripts/extra_server_config.sh" testattr="123456"]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50" [newattribute="some value"]
    "server1":"eth1" -- "leaf1":"swp1"
@@ -420,9 +420,9 @@ Scripts can be specified for execution on the end host using the "config=" node 
 
 ```
 graph dc1 {
- "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" config="./helper_scripts/custom_script.sh"]
- "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="200" ]
- "server1" [function="host" os="boxcutter/ubuntu1404" memory="400" ubuntu=True ]
+ "leaf1" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" config="./helper_scripts/custom_script.sh"]
+ "leaf2" [function="leaf" os="CumulusCommunity/cumulus-vx" memory="768" ]
+ "server1" [function="host" os="boxcutter/ubuntu1404" memory="512" ]
    "leaf1":"swp40" -- "leaf2":"swp40"
    "leaf1":"swp50" -- "leaf2":"swp50"
    "server1":"eth1" -- "leaf1":"swp1"
