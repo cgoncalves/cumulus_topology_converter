@@ -171,6 +171,9 @@ mkdir /home/cumulus/.ssh
 /usr/bin/ssh-keygen -b 2048 -t rsa -f /home/cumulus/.ssh/id_rsa -q -N ""
 cp /home/cumulus/.ssh/id_rsa.pub /home/cumulus/.ssh/authorized_keys
 
+echo " ### Appending Vagrant generated pub-key to the Cumulus user account ###"
+cat /home/vagrant/.ssh/authorized_keys >> /home/cumulus/.ssh/authorized_keys
+
 chown -R cumulus:cumulus /home/cumulus/
 chown -R cumulus:cumulus /home/cumulus/.ssh
 chmod 700 /home/cumulus/.ssh/
