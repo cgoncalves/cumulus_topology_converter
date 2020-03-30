@@ -11,21 +11,20 @@ class TcConfig:
     def __init__(self, **kwargs):
         clean_kwargs = {k:v for k, v in kwargs.items() if v is not None} # remove null kwargs
 
+        self.ansible_hostfile = clean_kwargs.get('ansible_hostfile', False)
         self.arg_string = clean_kwargs.get('arg_string', ' '.join(sys.argv))
         self.create_mgmt_configs_only = clean_kwargs.get('create_mgmt_configs_only', False)
         self.create_mgmt_device = clean_kwargs.get('create_mgmt_device', False)
         self.create_mgmt_network = clean_kwargs.get('create_mgmt_network', False)
-        self.customer = clean_kwargs.get('customer', None)
         self.display_datastructures = clean_kwargs.get('display_datastructures', False)
         self.function_group = clean_kwargs.get('function_group', {})
-        self.generate_ansible_hostfile = clean_kwargs.get('generate_ansible_hostfile', False)
-        self.libvirt_prefix = clean_kwargs.get('libvirt_prefix', None)
         self.mac_map = {}
         self.network_functions = clean_kwargs.get('network_functions',
                                                   ['oob-switch', 'internet', 'exit', 'superspine',
                                                    'spine', 'leaf', 'tor'])
         self.parser = clean_kwargs.get('parser', None)
         self.port_gap = clean_kwargs.get('port_gap', 1000)
+        self.prefix = clean_kwargs.get('prefix', None)
         self.provider = clean_kwargs.get('provider', 'virtualbox')
         self.script_storage = clean_kwargs.get('script_storage', './helper_scripts')
         self.start_mac = clean_kwargs.get('start_mac', '443839000000')

@@ -121,7 +121,7 @@ TC_CONFIG.parser = parser
 network_functions = TC_CONFIG.network_functions
 function_group = TC_CONFIG.function_group
 provider = TC_CONFIG.provider
-generate_ansible_hostfile = TC_CONFIG.generate_ansible_hostfile
+generate_ansible_hostfile = TC_CONFIG.ansible_hostfile
 create_mgmt_device = TC_CONFIG.create_mgmt_device
 create_mgmt_network = TC_CONFIG.create_mgmt_network
 create_mgmt_configs_only = TC_CONFIG.create_mgmt_configs_only
@@ -132,9 +132,10 @@ port_gap = TC_CONFIG.port_gap
 synced_folder = TC_CONFIG.synced_folder
 display_datastructures = TC_CONFIG.display_datastructures
 arg_string = TC_CONFIG.arg_string
-libvirt_prefix = TC_CONFIG.libvirt_prefix
-customer = TC_CONFIG.customer
+libvirt_prefix = TC_CONFIG.prefix
 vagrant = TC_CONFIG.vagrant
+
+if args.topology_file: topology_file = args.topology_file
 
 # Determine whether local or global helper_scripts will be used.
 if os.path.isdir('./helper_scripts'):
@@ -143,26 +144,13 @@ else:
     TC_CONFIG.script_storage = relpath_to_me+"/helper_scripts"
 script_storage = TC_CONFIG.script_storage
 
-if args.topology_file: topology_file = args.topology_file
+if create_mgmt_device or args.create_mgmt_configs_only:
+    TC_CONFIG.vagrant = 'vagrant'
 
-if args.verbose: verbose = args.verbose
-
-if args.provider: provider = args.provider
-
-if args.ansible_hostfile: generate_ansible_hostfile = True
-
-if args.create_mgmt_device:
+if create_mgmt_network:
+    TC_CONFIG.vagrant = 'vagrant'
+    TC_CONFIG.create_mgmt_device = True
     create_mgmt_device = True
-    vagrant = "vagrant"
-
-if args.create_mgmt_network:
-    create_mgmt_device = True
-    create_mgmt_network = True
-    vagrant = "vagrant"
-
-if args.create_mgmt_configs_only:
-    create_mgmt_configs_only = True
-    vagrant = "vagrant"
 
 if args.template:
     for templatefile, destination in args.template:
@@ -174,7 +162,7 @@ for templatefile, destination in TEMPLATES:
               templatefile + "\" does not exist!" + styles.ENDC)
         exit(1)
 
-if args.tunnel_ip:
+if tunnel_ip:
     if provider == 'libvirt':
         tunnel_ip = args.tunnel_ip
         if tunnel_ip != 'random':
@@ -189,16 +177,6 @@ if args.tunnel_ip:
         print(styles.FAIL + styles.BOLD + " ### ERROR: tunnel IP was specified but " +
               "provider is not libvirt." + styles.ENDC)
         exit(1)
-
-if args.start_port: start_port = args.start_port
-
-if args.port_gap: port_gap = args.port_gap
-
-if args.display_datastructures: display_datastructures = True
-
-if args.synced_folder: synced_folder = True
-
-if args.prefix != None: libvirt_prefix = args.prefix
 
 # Use Prefix as customer name if available
 if libvirt_prefix:
