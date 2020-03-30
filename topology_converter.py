@@ -22,11 +22,11 @@ import importlib
 import ipaddress
 from operator import itemgetter
 
-from lib.tc_config import TcConfig
-from lib.warning_messages import WarningMessages
-from lib.parse_topology import parse_topology
-from lib.tc_error import TcError
-from lib.styles import styles
+from topology_converter.tc_config import TcConfig
+from topology_converter.warning_messages import WarningMessages
+from topology_converter.parse_topology import parse_topology
+from topology_converter.tc_error import TcError
+from topology_converter.styles import styles
 
 pp = pprint.PrettyPrinter(depth=6)
 
