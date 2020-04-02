@@ -7,6 +7,8 @@ sudo su
 
 useradd cumulus -m -s /bin/bash
 echo "cumulus:CumulusLinux!" | chpasswd
+usermod -aG sudo cumulus
+echo -e "cumulus ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/20_cumulus
 
 #Test for Debian-Based Host
 which apt &> /dev/null
