@@ -1,6 +1,6 @@
 # Created by Topology-Converter v{{ version }}
 #    Template Revision: v4.7.1
-#    https://gitlab.com/cumulus-consulting/tools/topology_converter 
+#    https://gitlab.com/cumulus-consulting/tools/topology_converter
 #    using topology data from: {{ topology_file }}
 #    built with the following args: {{ arg_string }}
 #
@@ -124,6 +124,8 @@ SCRIPT
 
 Vagrant.configure("2") do |config|
   config.ssh.forward_agent = true
+  VAGRANT_COMMAND = ARGV[0]
+
 {% if provider == 'virtualbox' %}
   simid = {{ epoch_time }}
 
@@ -164,15 +166,17 @@ Vagrant.configure("2") do |config|
   ##### DEFINE VM for {{ device.hostname }} #####
   config.vm.define "{{ device.hostname }}" do |device|
     {% if device.legacy is not defined %}
-    device.vm.hostname = "{{ device.hostname }}" 
-    {% endif %}{% if device.pxehost=="True" %} 
+    device.vm.hostname = "{{ device.hostname }}"
+    {% endif %}{% if device.pxehost=="True" %}
     device.ssh.insert_key = false
     {%  if provider == 'libvirt'%}
     #NO BOX USED FOR PXE DEVICE{% else %}
     device.vm.box = "{{ device.os }}"{% endif %}{% else %}
     device.vm.box = "{{ device.os }}"{% if device.version %}
     device.vm.box_version = "{{ device.version }}"{% endif %}{% endif %}{% if device.vagrant_user %}
-    device.ssh.username = "{{ device.vagrant_user }}"{% endif %}
+    if VAGRANT_COMMAND == "ssh" or VAGRANT_COMMAND == "scp"
+      device.ssh.username = "{{ device.vagrant_user }}"
+    end{% endif %}
 {% if provider == 'virtualbox' %}    device.vm.provider "virtualbox" do |v|
       v.name = "#{simid}_{{ device.hostname }}"
       v.customize ["modifyvm", :id, '--audiocontroller', 'AC97', '--audio', 'Null']{% elif provider == 'libvirt' %}
