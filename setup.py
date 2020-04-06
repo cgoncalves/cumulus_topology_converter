@@ -1,3 +1,4 @@
+import glob
 import setuptools
 
 with open('README.md', 'r') as fh:
@@ -20,6 +21,10 @@ setuptools.setup(
     ],
     python_requires='>=3.4',
     install_requires=[
-          'pydotplus',
+        'pydotplus',
     ],
+    data_files=[
+        ('/topology_converter/templates', glob.glob('templates/*.j2')),
+        ('/topology_converter/templates/auto_mgmt_network', glob.glob('templates/auto_mgmt_network/*.j2')),
+    ]
 )
