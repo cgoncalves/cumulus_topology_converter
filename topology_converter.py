@@ -13,7 +13,6 @@ version = "4.7.1"
 
 
 import os
-import re
 import argparse
 import ipaddress
 
@@ -199,47 +198,6 @@ libvirt_reuse_error = """
 """
 
 ###### Functions
-def clean_datastructure(devices):
-    global verbose
-
-    # Sort the devices by function
-    devices.sort(key=getKeyDevices)
-    for device in devices:
-        device['interfaces'] = sorted_interfaces(device['interfaces'])
-
-    if display_datastructures:
-        return devices
-    for device in devices:
-        if verbose > 0:
-            print(styles.GREEN + styles.BOLD + ">> DEVICE: " + device['hostname'] + styles.ENDC)
-            print("     code: " + device['os'])
-
-            if 'memory' in device:
-                print("     memory: " + device['memory'])
-
-            for attribute in device:
-                if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces':
-                    continue
-                print("     " + str(attribute) + ": " + str(device[attribute]))
-
-        if verbose > 1:
-            for interface_entry in device['interfaces']:
-                print("       LINK: " + interface_entry["local_interface"])
-                for attribute in interface_entry:
-                    if attribute != "local_interface":
-                        print("               " + attribute + ": " + interface_entry[attribute])
-
-    # Remove Fake Devices
-    indexes_to_remove = []
-    for i in range(0, len(devices)):
-        if 'function' in devices[i]:
-            if devices[i]['function'] == 'fake':
-                indexes_to_remove.append(i)
-    for index in sorted(indexes_to_remove, reverse=True):
-        del devices[index]
-    return devices
-
-
 def remove_generated_files():
     if display_datastructures:
         return
@@ -247,51 +205,6 @@ def remove_generated_files():
         print("Removing existing DHCP FILE...")
     if os.path.isfile(dhcp_mac_file):
         os.remove(dhcp_mac_file)
-
-
-def natural_sort_key(s):
-    _nsre = re.compile('([0-9]+)')
-    if s == 'eth0': return ['A',0,'']
-    return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, s)]
-
-
-def getKeyDevices(device):
-    # Used to order the devices for printing into the vagrantfile
-    if device['function'] == "oob-server":
-        return 1
-    elif device['function'] == "oob-switch":
-        return 2
-    elif device['function'] == "exit":
-        return 3
-    elif device['function'] == "superspine":
-        return 4
-    elif device['function'] == "spine":
-        return 5
-    elif device['function'] == "leaf":
-        return 6
-    elif device['function'] == "tor":
-        return 7
-    elif device['function'] == "host":
-        return 8
-    else:
-        return 9
-
-
-def sorted_interfaces(interface_dictionary):
-    sorted_list = []
-    interface_list = []
-
-    for link in interface_dictionary:
-        sorted_list.append(link)
-
-    sorted_list.sort(key=natural_sort_key)
-
-    for link in sorted_list:
-        interface_dictionary[link]["local_interface"] = link
-        interface_list.append(interface_dictionary[link])
-
-    return interface_list
 
 
 def generate_dhcp_mac_file(mac_map):
@@ -314,27 +227,6 @@ def generate_dhcp_mac_file(mac_map):
         mac_file.write(line + "\n")
 
     mac_file.close()
-
-
-def populate_data_structures(inventory):
-    global function_group
-    devices = []
-
-    for device in inventory:
-        inventory[device]['hostname'] = device
-        devices.append(inventory[device])
-
-    devices_clean = clean_datastructure(devices)
-
-    # Create Functional Group Map
-    for device in devices_clean:
-
-        if device['function'] not in function_group:
-            function_group[device['function']] = []
-
-        function_group[device['function']].append(device['hostname'])
-
-    return devices_clean
 
 
 def generate_ansible_files():
@@ -374,12 +266,12 @@ def main():
     except TcError:
         exit(1)
 
-    devices = populate_data_structures(inventory)
+    renderer = Renderer(TC_CONFIG)
+    devices = renderer.populate_data_structures(inventory)
 
     remove_generated_files()
 
     try:
-        renderer = Renderer(TC_CONFIG)
         renderer.render_jinja_templates(devices)
     except RenderError as err:
         print(styles.FAIL + styles.BOLD + str(err.message) + styles.ENDC)

@@ -4,10 +4,12 @@ Renderer module
 
 import os
 import pprint
+import re
 import time
 
 import jinja2
 
+from .styles import styles
 from .tc_error import RenderError
 
 class Renderer:
@@ -16,12 +18,7 @@ class Renderer:
     """
     def __init__(self, config):
         self.config = config
-        # Determine whether local or global templates will be used.
-        if os.path.isdir('./topology_converter/templates'):
-            self.template_storage = './topology_converter/templates'
-        else:
-            self.template_storage = self.config.relpath_to_me + '/topology_converter/templates'
-        vagrantfile_template = self.template_storage + "/Vagrantfile.j2"
+        vagrantfile_template = self.config.template_storage + "/Vagrantfile.j2"
         self.config.templates = [[vagrantfile_template, 'Vagrantfile']]
         self.epoch_time = str(int(time.time()))
 
@@ -51,7 +48,8 @@ class Renderer:
 
     def render_jinja_templates(self, devices, write_files=True):
         """
-        Renders Jinja2 templates
+        Renders Jinja2 templates. Some templates require the devices list to be in a certain order.
+        Therefore, you should build the device list via Renderer.populate_data_structures()
 
         Arguments:
         devices (list) - List of devices
@@ -73,7 +71,7 @@ class Renderer:
         mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
         if self.config.create_mgmt_device:
             # Check that MGMT Template Dir exists
-            mgmt_template_dir = self.template_storage + "/auto_mgmt_network/"
+            mgmt_template_dir = self.config.template_storage + "/auto_mgmt_network/"
             if not os.path.isdir(mgmt_template_dir):
                 raise RenderError('ERROR: ' + str(mgmt_template_dir) + \
                                   ' does not exist. Cannot populate templates!')
@@ -140,3 +138,130 @@ class Renderer:
                 with open(destination, 'w') as outfile:
                     outfile.write(rendered_template)
         return rendered_templates
+
+    def populate_data_structures(self, inventory):
+        """
+        Populates device and interface data structures in a format suitable for template parsing
+
+        Arguments:
+        inventory (dict) - Topology serialized as a dict
+
+        Returns
+        list - List of a devices suitable for template parsing
+        """
+        devices = []
+
+        for device in inventory:
+            inventory[device]['hostname'] = device
+            devices.append(inventory[device])
+
+        devices_clean = self.clean_datastructure(devices)
+
+        # Create Functional Group Map
+        for device in devices_clean:
+
+            if device['function'] not in self.config.function_group:
+                self.config.function_group[device['function']] = []
+
+            self.config.function_group[device['function']].append(device['hostname'])
+
+        return devices_clean
+
+    def clean_datastructure(self, devices):
+        """
+        Sorts a device list and removes faked devices
+
+        Arguments:
+        devices (list) - Dirty data structure
+
+        Returns
+        list - Clean data structure
+        """
+        # Sort the devices by function
+        devices.sort(key=getKeyDevices)
+        for device in devices:
+            device['interfaces'] = sorted_interfaces(device['interfaces'])
+
+        if self.config.display_datastructures:
+            return devices
+        for device in devices:
+            if self.config.verbose > 0:
+                print(styles.GREEN + styles.BOLD + ">> DEVICE: " + device['hostname'] + styles.ENDC)
+                print("     code: " + device['os'])
+
+                if 'memory' in device:
+                    print("     memory: " + device['memory'])
+
+                for attribute in device:
+                    if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces':
+                        continue
+                    print("     " + str(attribute) + ": " + str(device[attribute]))
+
+            if self.config.verbose > 1:
+                for interface_entry in device['interfaces']:
+                    print("       LINK: " + interface_entry["local_interface"])
+                    for attribute in interface_entry:
+                        if attribute != "local_interface":
+                            print("               " + attribute + ": " + interface_entry[attribute])
+
+        # Remove Fake Devices
+        indexes_to_remove = []
+        for i in range(0, len(devices)):
+            if 'function' in devices[i]:
+                if devices[i]['function'] == 'fake':
+                    indexes_to_remove.append(i)
+        for index in sorted(indexes_to_remove, reverse=True):
+            del devices[index]
+        return devices
+
+def sorted_interfaces(interface_dictionary):
+    """
+    Creates a sorted list of interfaces from an interfaces dictionary
+
+    Arguments:
+    interface_dictionary (dict)
+
+    Returns
+    list - Sorted list
+    """
+    sorted_list = []
+    interface_list = []
+
+    for link in interface_dictionary:
+        sorted_list.append(link)
+
+    sorted_list.sort(key=natural_sort_key)
+
+    for link in sorted_list:
+        interface_dictionary[link]["local_interface"] = link
+        interface_list.append(interface_dictionary[link])
+
+    return interface_list
+
+def getKeyDevices(device):
+    """ Used to order the devices for printing into the vagrantfile """
+    if device['function'] == "oob-server":
+        return 1
+    elif device['function'] == "oob-switch":
+        return 2
+    elif device['function'] == "exit":
+        return 3
+    elif device['function'] == "superspine":
+        return 4
+    elif device['function'] == "spine":
+        return 5
+    elif device['function'] == "leaf":
+        return 6
+    elif device['function'] == "tor":
+        return 7
+    elif device['function'] == "host":
+        return 8
+    else:
+        return 9
+
+def natural_sort_key(s):
+    """ Sort function for sorting interface lists """
+    _nsre = re.compile('([0-9]+)')
+    if s == 'eth0': return ['A',0,'']
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(_nsre, s)]

@@ -13,6 +13,11 @@ class TcConfig:
         clean_kwargs = {k:v for k, v in kwargs.items() if v is not None} # remove null kwargs
         default_relpath_to_me = os.path.relpath(os.path.dirname(os.path.abspath(__file__)),
                                                 os.getcwd())
+        default_template_storage = clean_kwargs.get('template_storage', './templates')
+        if not os.path.isdir(default_template_storage):
+            default_template_storage = './topology_converter/templates'
+        if not os.path.isdir(default_template_storage):
+            default_template_storage = default_relpath_to_me + '/templates'
 
         self.ansible_hostfile = clean_kwargs.get('ansible_hostfile', False)
         self.arg_string = clean_kwargs.get('arg_string', ' '.join(sys.argv))
@@ -34,6 +39,7 @@ class TcConfig:
         self.start_mac = clean_kwargs.get('start_mac', '443839000000')
         self.start_port = clean_kwargs.get('start_port', 8000)
         self.synced_folder = clean_kwargs.get('synced_folder', False)
+        self.template_storage = default_template_storage
         self.templates = clean_kwargs.get('template', [])
         self.tunnel_ip = clean_kwargs.get('tunnel_ip', None)
         self.topology_file = clean_kwargs.get('topology_file', '')
