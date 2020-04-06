@@ -61,7 +61,7 @@ graph dc1 {
 
 
 ### Implementation Details
-In order for the automated management network builder to create all of this extra configuration it uses a series of extra templates which are rendered along with the template which renders the Vagrantfile while Topology Converter is being executed. Those templates exist in the ./templates/auto_mgmt_network/ directory and include:
+In order for the automated management network builder to create all of this extra configuration it uses a series of extra templates which are rendered along with the template which renders the Vagrantfile while Topology Converter is being executed. Those templates exist in the ./topology_converter/templates/auto_mgmt_network/ directory and include:
 * ansible_hostfile.j2
 * dhcpd.conf.j2
 * dhcpd.hosts.j2

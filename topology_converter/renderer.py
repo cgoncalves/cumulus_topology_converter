@@ -17,10 +17,10 @@ class Renderer:
     def __init__(self, config):
         self.config = config
         # Determine whether local or global templates will be used.
-        if os.path.isdir('./templates'):
-            self.template_storage = './templates'
+        if os.path.isdir('./topology_converter/templates'):
+            self.template_storage = './topology_converter/templates'
         else:
-            self.template_storage = self.config.relpath_to_me + '/templates'
+            self.template_storage = self.config.relpath_to_me + '/topology_converter/templates'
         vagrantfile_template = self.template_storage + "/Vagrantfile.j2"
         self.config.templates = [[vagrantfile_template, 'Vagrantfile']]
         self.epoch_time = str(int(time.time()))
