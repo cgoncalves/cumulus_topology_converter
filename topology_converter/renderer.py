@@ -92,7 +92,7 @@ class Renderer:
                 print(mgmt_templates)
 
             # Create output location for MGMT template files
-            if not os.path.isdir(mgmt_destination_dir):
+            if write_files and not os.path.isdir(mgmt_destination_dir):
                 if self.config.verbose > 2:
                     print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
 
