@@ -75,7 +75,7 @@ These templates, once rendered will be placed on the OOB-mgmt-server in the appr
 * hosts --> /etc/hosts
 * OOB_Server_Config_auto_mgmt.sh --> executed on bootup
 
-New templates can be added to this directory and they will be automatically rendered to the ./helper_scripts/auto_mgmt_network/ directory however the standard ./templates/Vagrantfile.j2 template would need to be extended to process any new files.
+New templates can be added to this directory and they will be automatically rendered to the ./helper_scripts/auto_mgmt_network/ directory however the standard ./topology_converter/templates/Vagrantfile.j2 template would need to be extended to process any new files.
 
 ### Sample Output
 From the output below it is possible to see the managment links being automatically created. If you use the '-v' option you will see even more as all of the extra individual template files are rendered.
