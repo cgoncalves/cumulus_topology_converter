@@ -61,7 +61,7 @@ graph dc1 {
 
 
 ### Implementation Details
-In order for the automated management network builder to create all of this extra configuration it uses a series of extra templates which are rendered along with the template which renders the Vagrantfile while Topology Converter is being executed. Those templates exist in the ./templates/auto_mgmt_network/ directory and include:
+In order for the automated management network builder to create all of this extra configuration it uses a series of extra templates which are rendered along with the template which renders the Vagrantfile while Topology Converter is being executed. Those templates exist in the ./topology_converter/templates/auto_mgmt_network/ directory and include:
 * ansible_hostfile.j2
 * dhcpd.conf.j2
 * dhcpd.hosts.j2
@@ -75,7 +75,7 @@ These templates, once rendered will be placed on the OOB-mgmt-server in the appr
 * hosts --> /etc/hosts
 * OOB_Server_Config_auto_mgmt.sh --> executed on bootup
 
-New templates can be added to this directory and they will be automatically rendered to the ./helper_scripts/auto_mgmt_network/ directory however the standard ./templates/Vagrantfile.j2 template would need to be extended to process any new files.
+New templates can be added to this directory and they will be automatically rendered to the ./helper_scripts/auto_mgmt_network/ directory however the standard ./topology_converter/templates/Vagrantfile.j2 template would need to be extended to process any new files.
 
 ### Sample Output
 From the output below it is possible to see the managment links being automatically created. If you use the '-v' option you will see even more as all of the extra individual template files are rendered.

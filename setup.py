@@ -20,6 +20,7 @@ setuptools.setup(
     ],
     python_requires='>=3.4',
     install_requires=[
-          'pydotplus',
+        'pydotplus',
     ],
+    package_data={'topology_converter.templates': ['*.j2', 'auto_mgmt_network/*.j2']}
 )

@@ -149,7 +149,7 @@ or if using Libvirt:
 ### What is happening when you run Topology Converter?
 1. When topology_converter (TC) is called, TC reads the provided topology file line by line and learns information about each node and each link in the topology.
 2. This information is stored in a variables datastructure. (View this datastructure using the "python3 ./topology_converter.py [topology_file] -dd" option)
-3. A jinja2 template "Vagrantfile.j2" (stored in the /templates directory) is used to render a Vagrantfile based on the variables datastructure.
+3. A jinja2 template "Vagrantfile.j2" (stored in the /topology_converter/templates directory) is used to render a Vagrantfile based on the variables datastructure.
 
 ### Functional Defaults
 Functional defaults provide basic options for memory and OS when using pre-defined functions. Presently the functional defaults are defined as follows but can be overwritten by manually specifying the associated attribute.
@@ -374,7 +374,7 @@ graph dc1 {
 
 
 ### Custom Templates
-TC works by reading information from a topology file into variables which are then used to populate a Jinja2 template for the Vagrantfile (called: ./templates/Vagrantfile.j2). TC allows you to specify additional templates that can be filled in using the same information from the topology file.
+TC works by reading information from a topology file into variables which are then used to populate a Jinja2 template for the Vagrantfile (called: ./topology_converter/templates/Vagrantfile.j2). TC allows you to specify additional templates that can be filled in using the same information from the topology file.
 
 To see a list of the variables that will be passed to a template use the "-dd" which is short for "display datastructure" option.
 
@@ -393,7 +393,7 @@ To specify a custom template use the "-t" option:
 ```
 
 ### Passthrough Attributes
-When working with custom templates or when modifying the included Vagrantfile template (called: ./templates/Vagrantfile.j2) it may be useful to provide additional parameters to populate variables in your customized template. By default any variable specified at the node level is automatically passed through to the templates whether or not TC actually uses it. This allows for maximum flexibility for end-users to add custom information about nodes and attributes.
+When working with custom templates or when modifying the included Vagrantfile template (called: ./topology_converter/templates/Vagrantfile.j2) it may be useful to provide additional parameters to populate variables in your customized template. By default any variable specified at the node level is automatically passed through to the templates whether or not TC actually uses it. This allows for maximum flexibility for end-users to add custom information about nodes and attributes.
 
 **Note: for links it is possible to override the attributes generated for the link by TC since passthrough attributes are applied last. One could use this to manually specify a particular network number for the virtualbox provider. For attributes specified on links, any attrubutes which are not "left_mac" or "right_mac" will be applied to both ends of the link.**
 

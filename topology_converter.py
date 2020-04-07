@@ -13,22 +13,15 @@ version = "4.7.1"
 
 
 import os
-import re
-import time
-import pprint
-import jinja2
 import argparse
-import importlib
 import ipaddress
-from operator import itemgetter
 
 from topology_converter.tc_config import TcConfig
-from topology_converter.warning_messages import WarningMessages
+from topology_converter.tc_error import RenderError, TcError
 from topology_converter.parse_topology import parse_topology
-from topology_converter.tc_error import TcError
+from topology_converter.renderer import Renderer
 from topology_converter.styles import styles
-
-pp = pprint.PrettyPrinter(depth=6)
+from topology_converter.warning_messages import WarningMessages
 
 parser = argparse.ArgumentParser(description='Topology Converter -- Convert \
                                  topology.dot files into Vagrantfiles')
@@ -102,22 +95,10 @@ parser.add_argument('--version', action='version', version="Topology \
 parser.add_argument('--prefix', help='Specify a prefix to be used for machines in libvirt. By default the name of the current folder is used.')
 args = parser.parse_args()
 
-# Dynamic Variables
-relpath_to_me = os.path.relpath(os.path.dirname(os.path.abspath(__file__)), os.getcwd())
-
-# Determine whether local or global templates will be used.
-template_storage = None
-VAGRANTFILE = 'Vagrantfile'
-if os.path.isdir('./templates'):
-    template_storage = './templates'
-else:
-    template_storage = relpath_to_me + '/templates'
-VAGRANTFILE_template = template_storage + "/Vagrantfile.j2"
-TEMPLATES = [[VAGRANTFILE_template, VAGRANTFILE]]
-
 # Parse Arguments
 TC_CONFIG = TcConfig(**args.__dict__)
 TC_CONFIG.parser = parser
+TC_CONFIG.version = version
 network_functions = TC_CONFIG.network_functions
 function_group = TC_CONFIG.function_group
 provider = TC_CONFIG.provider
@@ -135,13 +116,13 @@ arg_string = TC_CONFIG.arg_string
 libvirt_prefix = TC_CONFIG.prefix
 vagrant = TC_CONFIG.vagrant
 
-if args.topology_file: topology_file = args.topology_file
+topology_file = TC_CONFIG.topology_file
 
 # Determine whether local or global helper_scripts will be used.
 if os.path.isdir('./helper_scripts'):
     TC_CONFIG.script_storage = './helper_scripts'
 else:
-    TC_CONFIG.script_storage = relpath_to_me+"/helper_scripts"
+    TC_CONFIG.script_storage = TC_CONFIG.relpath_to_me+"/helper_scripts"
 script_storage = TC_CONFIG.script_storage
 
 if create_mgmt_device or args.create_mgmt_configs_only:
@@ -154,9 +135,9 @@ if create_mgmt_network:
 
 if args.template:
     for templatefile, destination in args.template:
-        TEMPLATES.append([templatefile, destination])
+        TC_CONFIG.templates.append([templatefile, destination])
 
-for templatefile, destination in TEMPLATES:
+for templatefile, destination in TC_CONFIG.templates:
     if not os.path.isfile(templatefile):
         print(styles.FAIL + styles.BOLD + " ### ERROR: provided template file-- \"" +
               templatefile + "\" does not exist!" + styles.ENDC)
@@ -178,18 +159,12 @@ if tunnel_ip:
               "provider is not libvirt." + styles.ENDC)
         exit(1)
 
-# Use Prefix as customer name if available
-if libvirt_prefix:
-    customer = libvirt_prefix
-else:
-    customer = os.path.basename(os.path.dirname(os.getcwd()))
-
 if verbose > 2:
     print("Arguments:")
     print(args)
 
 if verbose > 2:
-    print("relpath_to_me: {}".format(relpath_to_me))
+    print("relpath_to_me: {}".format(TC_CONFIG.relpath_to_me))
 
 ###################################
 #### MAC Address Configuration ####
@@ -207,7 +182,6 @@ dhcp_mac_file = "./dhcp_mac_map"
 ######################################################
 
 # Hardcoded Variables
-epoch_time = str(int(time.time()))
 mac_map = TC_CONFIG.mac_map
 warning = WarningMessages()
 
@@ -224,47 +198,6 @@ libvirt_reuse_error = """
 """
 
 ###### Functions
-def clean_datastructure(devices):
-    global verbose
-
-    # Sort the devices by function
-    devices.sort(key=getKeyDevices)
-    for device in devices:
-        device['interfaces'] = sorted_interfaces(device['interfaces'])
-
-    if display_datastructures:
-        return devices
-    for device in devices:
-        if verbose > 0:
-            print(styles.GREEN + styles.BOLD + ">> DEVICE: " + device['hostname'] + styles.ENDC)
-            print("     code: " + device['os'])
-
-            if 'memory' in device:
-                print("     memory: " + device['memory'])
-
-            for attribute in device:
-                if attribute == 'memory' or attribute == 'os' or attribute == 'interfaces':
-                    continue
-                print("     " + str(attribute) + ": " + str(device[attribute]))
-
-        if verbose > 1:
-            for interface_entry in device['interfaces']:
-                print("       LINK: " + interface_entry["local_interface"])
-                for attribute in interface_entry:
-                    if attribute != "local_interface":
-                        print("               " + attribute + ": " + interface_entry[attribute])
-
-    # Remove Fake Devices
-    indexes_to_remove = []
-    for i in range(0, len(devices)):
-        if 'function' in devices[i]:
-            if devices[i]['function'] == 'fake':
-                indexes_to_remove.append(i)
-    for index in sorted(indexes_to_remove, reverse=True):
-        del devices[index]
-    return devices
-
-
 def remove_generated_files():
     if display_datastructures:
         return
@@ -272,51 +205,6 @@ def remove_generated_files():
         print("Removing existing DHCP FILE...")
     if os.path.isfile(dhcp_mac_file):
         os.remove(dhcp_mac_file)
-
-
-def natural_sort_key(s):
-    _nsre = re.compile('([0-9]+)')
-    if s == 'eth0': return ['A',0,'']
-    return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, s)]
-
-
-def getKeyDevices(device):
-    # Used to order the devices for printing into the vagrantfile
-    if device['function'] == "oob-server":
-        return 1
-    elif device['function'] == "oob-switch":
-        return 2
-    elif device['function'] == "exit":
-        return 3
-    elif device['function'] == "superspine":
-        return 4
-    elif device['function'] == "spine":
-        return 5
-    elif device['function'] == "leaf":
-        return 6
-    elif device['function'] == "tor":
-        return 7
-    elif device['function'] == "host":
-        return 8
-    else:
-        return 9
-
-
-def sorted_interfaces(interface_dictionary):
-    sorted_list = []
-    interface_list = []
-
-    for link in interface_dictionary:
-        sorted_list.append(link)
-
-    sorted_list.sort(key=natural_sort_key)
-
-    for link in sorted_list:
-        interface_dictionary[link]["local_interface"] = link
-        interface_list.append(interface_dictionary[link])
-
-    return interface_list
 
 
 def generate_dhcp_mac_file(mac_map):
@@ -339,135 +227,6 @@ def generate_dhcp_mac_file(mac_map):
         mac_file.write(line + "\n")
 
     mac_file.close()
-
-
-def populate_data_structures(inventory):
-    global function_group
-    devices = []
-
-    for device in inventory:
-        inventory[device]['hostname'] = device
-        devices.append(inventory[device])
-
-    devices_clean = clean_datastructure(devices)
-
-    # Create Functional Group Map
-    for device in devices_clean:
-
-        if device['function'] not in function_group:
-            function_group[device['function']] = []
-
-        function_group[device['function']].append(device['hostname'])
-
-    return devices_clean
-
-
-def render_jinja_templates(devices):
-    global function_group
-
-    if display_datastructures:
-        print_datastructures(devices)
-
-    if verbose > 2:
-        print("RENDERING JINJA TEMPLATES...")
-
-    # Render the MGMT Network stuff
-    mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
-    if create_mgmt_device:
-        # Check that MGMT Template Dir exists
-        mgmt_template_dir = template_storage + "/auto_mgmt_network/"
-        if not os.path.isdir(mgmt_template_dir):
-            print(styles.FAIL + styles.BOLD +
-                  "ERROR: " + mgmt_template_dir +
-                  " does not exist. Cannot populate templates!" +
-                  styles.ENDC)
-
-            exit(1)
-
-        # Scan MGMT Template Dir for .j2 files
-        mgmt_templates = []
-
-        for file in os.listdir(mgmt_template_dir):
-
-            if file.endswith(".j2"):
-                mgmt_templates.append(file)
-
-        if verbose > 2:
-            print(" mgmt_template_dir: {}".format(mgmt_template_dir))
-            print(" detected mgmt_templates:")
-            print(mgmt_templates)
-
-        # Create output location for MGMT template files
-        if not os.path.isdir(mgmt_destination_dir):
-            if verbose > 2:
-                print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
-
-            try:
-                os.makedirs(mgmt_destination_dir)
-
-            except:
-                print(styles.FAIL + styles.BOLD +
-                      "ERROR: Could not create output directory for mgmt template renders!" +
-                      styles.ENDC)
-                exit(1)
-
-        # Render out the templates
-        for template in mgmt_templates:
-            render_destination = os.path.join(mgmt_destination_dir, template[0:-3])
-            template_source = os.path.join(mgmt_template_dir, template)
-            TEMPLATES.append([template_source,render_destination])
-
-    # If just rendering mgmt templates, remove Vagrantfile from list
-    if create_mgmt_device and create_mgmt_configs_only:
-        del TEMPLATES[0]
-
-    # Render the Templates
-    for templatefile, destination in TEMPLATES:
-
-        if verbose > 2:
-            print("    Rendering: " + templatefile + " --> " + destination)
-
-        template = jinja2.Template(open(templatefile).read())
-
-        with open(destination, 'w') as outfile:
-            outfile.write(template.render(devices=devices,
-                                          start_port=start_port,
-                                          port_gap=port_gap,
-                                          synced_folder=synced_folder,
-                                          provider=provider,
-                                          version=version,
-                                          customer=customer,
-                                          topology_file=topology_file,
-                                          arg_string=arg_string,
-                                          epoch_time=epoch_time,
-                                          mgmt_destination_dir=mgmt_destination_dir,
-                                          generate_ansible_hostfile=generate_ansible_hostfile,
-                                          create_mgmt_device=create_mgmt_device,
-                                          function_group=function_group,
-                                          network_functions=network_functions,
-                                          libvirt_prefix=libvirt_prefix,))
-
-
-def print_datastructures(devices):
-    print("\n\n######################################")
-    print("   DATASTRUCTURES SENT TO TEMPLATE:")
-    print("######################################\n")
-    print("provider=" + provider)
-    print("synced_folder=" + str(synced_folder))
-    print("version=" + str(version))
-    print("topology_file=" + topology_file)
-    print("arg_string=" + arg_string)
-    print("epoch_time=" + str(epoch_time))
-    print("script_storage=" + script_storage)
-    print("generate_ansible_hostfile=" + str(generate_ansible_hostfile))
-    print("create_mgmt_device=" + str(create_mgmt_device))
-    print("function_group=")
-    pp.pprint(function_group)
-    print("network_functions=")
-    pp.pprint(network_functions)
-    print("devices=")
-    pp.pprint(devices)
-    exit(0)
 
 
 def generate_ansible_files():
@@ -507,11 +266,18 @@ def main():
     except TcError:
         exit(1)
 
-    devices = populate_data_structures(inventory)
+    renderer = Renderer(TC_CONFIG)
+    devices = renderer.populate_data_structures(inventory)
 
     remove_generated_files()
 
-    render_jinja_templates(devices)
+    try:
+        renderer.render_jinja_templates(devices)
+    except RenderError as err:
+        print(styles.FAIL + styles.BOLD + str(err.message) + styles.ENDC)
+        exit(1)
+    if display_datastructures:
+        exit(0)
 
     generate_dhcp_mac_file(mac_map)
 
