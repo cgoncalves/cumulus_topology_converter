@@ -27,6 +27,8 @@ class TcConfig:
         self.display_datastructures = clean_kwargs.get('display_datastructures', False)
         self.function_group = clean_kwargs.get('function_group', {})
         self.mac_map = {}
+        self.mgmt_destination_dir = clean_kwargs.get('function_group',
+                                                     './helper_scripts/auto_mgmt_network/')
         self.network_functions = clean_kwargs.get('network_functions',
                                                   ['oob-switch', 'internet', 'exit', 'superspine',
                                                    'spine', 'leaf', 'tor'])

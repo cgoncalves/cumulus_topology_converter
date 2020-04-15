@@ -68,7 +68,6 @@ class Renderer:
             print("RENDERING JINJA TEMPLATES...")
 
         # Render the MGMT Network stuff
-        mgmt_destination_dir = "./helper_scripts/auto_mgmt_network/"
         if self.config.create_mgmt_device:
             # Check that MGMT Template Dir exists
             mgmt_template_dir = self.config.template_storage + "/auto_mgmt_network/"
@@ -90,19 +89,20 @@ class Renderer:
                 print(mgmt_templates)
 
             # Create output location for MGMT template files
-            if write_files and not os.path.isdir(mgmt_destination_dir):
+            if write_files and not os.path.isdir(self.config.mgmt_destination_dir):
                 if self.config.verbose > 2:
-                    print("Making Directory for MGMT Helper Files: " + mgmt_destination_dir)
+                    print("Making Directory for MGMT Helper Files: " + \
+                          self.config.mgmt_destination_dir)
 
                 try:
-                    os.makedirs(mgmt_destination_dir)
+                    os.makedirs(self.config.mgmt_destination_dir)
                 except:
                     raise RenderError('ERROR: Could not create output directory for mgmt ' + \
                                       'template renders!')
 
             # Render out the templates
             for template in mgmt_templates:
-                render_destination = os.path.join(mgmt_destination_dir, template[0:-3])
+                render_destination = os.path.join(self.config.mgmt_destination_dir, template[0:-3])
                 template_source = os.path.join(mgmt_template_dir, template)
                 self.config.templates.append([template_source, render_destination])
 
