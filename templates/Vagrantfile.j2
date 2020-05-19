@@ -219,9 +219,6 @@ Vagrant.configure("2") do |config|
         vbox.customize ["modifyvm", :id, "--nicbootprio{{loop.index+1}}", "1"]{% endif %}{% endif %}{% endfor %}{% endif %}
     end{% endif %}
 
-    # Fixes "stdin: is not a tty" and "mesg: ttyname failed : Inappropriate ioctl for device"  messages --> https://github.com/mitchellh/vagrant/issues/1673
-    device.vm.provision :shell , inline: "(sudo grep -q 'mesg n' /root/.profile 2>/dev/null && sudo sed -i '/mesg n/d' /root/.profile  2>/dev/null) || true;", privileged: false
-
     {% if "ubuntu" in device.os.lower() -%}
     # Shorten Boot Process - Applies to Ubuntu Only - remove \"Wait for Network\"
     device.vm.provision :shell , inline: "sed -i 's/sleep [0-9]*/sleep 1/' /etc/init/failsafe.conf 2>/dev/null || true"
