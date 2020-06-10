@@ -12,8 +12,8 @@ import re
 
 import pydotplus
 
+from . import tc_error
 from .warning_messages import WarningMessages
-from .tc_error import TcError
 from .styles import styles
 
 WARNING = WarningMessages()
@@ -39,37 +39,28 @@ def lint_topo_file(topology_file):
                 line.encode('ascii', 'ignore')
 
             except UnicodeDecodeError as e:
-                print(styles.FAIL + styles.BOLD +
-                      " ### ERROR: Line %s:\n %s\n         --> \"%s\" \n     \
-                      Has hidden unicode characters in it which prevent it \
-                      from being converted to ASCII cleanly. Try manually \
-                      typing it instead of copying and pasting."
-                      % (count, line, re.sub(r'[^\x00-\x7F]+', '?', line)) + styles.ENDC)
-                raise TcError(e)
+                msg = "Line %s:\n %s\n         --> \"%s\" \n" \
+                    % (count, line, re.sub(r'[^\x00-\x7F]+', '?', line))
+                msg += "Has hidden unicode characters in it which prevent it from being " + \
+                       "converted to ASCII cleanly. Try manually typing it instead of " + \
+                       "copying and pasting."
+                raise tc_error.LintError(msg)
 
             if line.count("\"") % 2 == 1:
-                print(styles.FAIL + styles.BOLD +
-                      " ### ERROR: Line %s: Has an odd \
-                      number of quotation characters \
-                      (\").\n     %s\n" % (count, line) + styles.ENDC)
-                raise TcError()
+                msg = "Line %s: Has an odd number of quotation characters (\").\n" % count
+                msg += "     %s\n" % line
+                raise tc_error.LintError(msg)
 
             if line.count("'") % 2 == 1:
-                print(styles.FAIL + styles.BOLD +
-                      " ### ERROR: Line %s: Has an odd \
-                      number of quotation characters \
-                      (').\n     %s\n" % (count, line) + styles.ENDC)
-                raise TcError()
+                msg = "Line %s: Has an odd number of quotation characters (').\n     %s\n" \
+                    % (count, line)
+                raise tc_error.LintError(msg)
 
             if line.count(":") == 2:
                 if " -- " not in line:
-                    print(styles.FAIL + styles.BOLD +
-                          " ### ERROR: Line %s: Does not \
-                          contain the following sequence \" -- \" \
-                          to seperate the different ends of the link.\n     %s\n"
-                          % (count, line) + styles.ENDC)
-
-                    raise TcError()
+                    msg = "Line %s: Does not contain the following sequence \" -- \" " % count
+                    msg += "to seperate the different ends of the link.\n     %s\n" % line
+                    raise tc_error.LintError(msg)
 
 
 def get_random_localhost_ip():
@@ -150,13 +141,10 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
     PortB = str(config.start_port + config.port_gap + net_number)
 
     if int(PortA) > int(config.start_port + config.port_gap) and config.provider == "libvirt":
-        print(styles.FAIL + styles.BOLD +
-              " ### ERROR: Configured Port_Gap: (" + str(config.port_gap) + ") \
-              exceeds the number of links in the topology. Read the help options to fix.\n\n" +
-              styles.ENDC)
-
+        msg = "Configured Port_Gap: (" + str(config.port_gap) + ") " + \
+              "exceeds the number of links in the topology. Read the help options to fix.\n\n"
         config.parser.print_help()
-        raise TcError()
+        raise tc_error.TcError(msg)
 
     # Add a Link to the Inventory for both switches
 
@@ -166,12 +154,10 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
         inventory[left_device]['interfaces'][left_interface]['mac'] = left_mac_address
 
         if left_mac_address in config.mac_map:
-            print(styles.FAIL + styles.BOLD +
-                  " ### ERROR -- MAC Address Collision - tried to use " +
-                  left_mac_address + " on " + left_device + ":" + left_interface +
-                  "\n                 but it is already in use. Check your Topology File!" +
-                  styles.ENDC)
-            raise TcError()
+            msg = "MAC Address Collision - tried to use " + \
+                  left_mac_address + " on " + left_device + ":" + left_interface + \
+                  "\n                 but it is already in use. Check your Topology File!"
+            raise tc_error.TcError(msg)
 
         config.mac_map[left_mac_address] = left_device + "," + left_interface
 
@@ -183,8 +169,8 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
             inventory[left_device]['interfaces'][left_interface]['remote_port'] = PortB
 
     else:
-        print(styles.FAIL + styles.BOLD + " ### ERROR -- Interface " + left_interface + " Already used on device: " + left_device + styles.ENDC)
-        raise TcError()
+        msg = "Interface " + left_interface + " Already used on device: " + left_device
+        raise tc_error.TcError(msg)
 
     # Add right host switchport to inventory
     if right_device == "NOTHING":
@@ -195,13 +181,10 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
         inventory[right_device]['interfaces'][right_interface]['mac'] = right_mac_address
 
         if right_mac_address in config.mac_map:
-            print(styles.FAIL + styles.BOLD +
-                  " ### ERROR -- MAC Address Collision - tried to use " +
-                  right_mac_address + " on " + right_device + ":" + right_interface +
-                  "\n                 but it is already in use. Check your Topology File!" +
-                  styles.ENDC)
-
-            raise TcError()
+            msg = "MAC Address Collision - tried to use " + \
+                  right_mac_address + " on " + right_device + ":" + right_interface + \
+                  "\n                 but it is already in use. Check your Topology File!"
+            raise tc_error.TcError(msg)
 
         config.mac_map[right_mac_address] = right_device + "," + right_interface
 
@@ -213,10 +196,8 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
             inventory[right_device]['interfaces'][right_interface]['remote_port'] = PortA
 
     else:
-        print(styles.FAIL + styles.BOLD +
-              " ### ERROR -- Interface " + right_interface +
-              " Already used on device: " + right_device + styles.ENDC)
-        raise TcError()
+        msg = "Interface " + right_interface + " Already used on device: " + right_device
+        raise tc_error.TcError(msg)
 
     inventory[left_device]['interfaces'][left_interface]['remote_interface'] = right_interface
     inventory[left_device]['interfaces'][left_interface]['remote_device'] = right_device
@@ -271,15 +252,11 @@ def parse_topology(topology_file, config):
     try:
         topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
     except Exception as e:
-        print(styles.FAIL + styles.BOLD +
-              " ### ERROR: Cannot parse the provided topology.dot \
-              file (%s)\n     There is probably a syntax error \
-              of some kind, common causes include failing to \
-              close quotation marks and hidden characters from \
-              copy/pasting device names into the topology file."
-              % (topology_file) + styles.ENDC)
-
-        raise TcError(e)
+        msg = "Cannot parse the provided topology.dot file (%s)\n" % topology
+        msg += "     There is probably a syntax error of some kind, " + \
+               "common causes include failing to close quotation marks and hidden " + \
+               "characters from copy/pasting device names into the topology file."
+        raise tc_error.TcError(msg)
 
     inventory = {}
 
@@ -296,8 +273,8 @@ def parse_topology(topology_file, config):
               " ### ERROR: There is a syntax error in your topology file \
               (%s). Read the error output above for any clues as to the source."
               % (topology_file) + styles.ENDC)
-
-        raise TcError()
+        raise tc_error.TcError("There is a syntax error in your topology file: " + str(e),
+                               print_on_create=False)
 
     try:
         edges = topology.get_edge_list()
@@ -308,8 +285,8 @@ def parse_topology(topology_file, config):
               " ### ERROR: There is a syntax error in your topology file \
               (%s). Read the error output above for any clues as to the source."
               % (topology_file) + styles.ENDC)
-
-        raise TcError(e)
+        raise tc_error.TcError("There is a syntax error in your topology file: " + str(e),
+                               print_on_create=False)
 
     # Add Nodes to inventory
     for node in nodes:
@@ -317,37 +294,26 @@ def parse_topology(topology_file, config):
         node_name = node.get_name().replace('"', '')
 
         if node_name.startswith(".") or node_name.startswith("-"):
-            print(styles.FAIL + styles.BOLD +
-                  " ### ERROR: Node name cannot start with a hyphen or period. \
-                  '%s' is not valid!\n" % (node_name) + styles.ENDC)
-
-            raise TcError()
+            msg = "Node name cannot start with a hyphen or period. '%s' is not valid!\n" % node_name
+            raise tc_error.TcError(msg)
 
         reg = re.compile('^[A-Za-z0-9\.-]+$')
 
         if not reg.match(node_name):
-            print(styles.FAIL + styles.BOLD +
-                  " ### ERROR: Node name for the \
-                  VM should only contain letters, \
-                  numbers, hyphens or dots. It cannot \
-                  start with a hyphen or dot.  \
-                  '%s' is not valid!\n" % (node_name) + styles.ENDC)
-
-            raise TcError()
+            msg = "Node name for the VM should only contain letters, numbers, hyphens or dots. " + \
+                  "It cannot start with a hyphen or dot. '%s' is not valid!\n" % node_name
+            raise tc_error.TcError(msg)
 
         # Try to encode into ascii
         try:
             node_name.encode('ascii', 'ignore')
 
         except UnicodeDecodeError as e:
-            print(styles.FAIL + styles.BOLD +
-                  " ### ERROR: Node name \"%s\" --> \"%s\" \
-                  has hidden unicode characters in it which \
-                  prevent it from being converted to Ascii cleanly. \
-                  Try manually typing it instead of copying and pasting."
-                  % (node_name, re.sub(r'[^\x00-\x7F]+', ' ', node_name)) + styles.ENDC)
-
-            raise TcError()
+            msg = "Node name \"%s\" --> \"%s\" has hidden unicode characters in it " \
+                % (node_name, re.sub(r'[^\x00-\x7F]+', ' ', node_name))
+            msg += "which prevent it from being converted to Ascii cleanly. " + \
+                   "Try manually typing it instead of copying and pasting."
+            raise tc_error.TcError(msg)
 
         if node_name not in inventory:
             inventory[node_name] = {}
@@ -414,25 +380,22 @@ def parse_topology(topology_file, config):
         if provider == 'libvirt':
             if 'os' in inventory[node_name]:
                 if inventory[node_name]['os'] == 'boxcutter/ubuntu1604' or inventory[node_name]['os'] == 'bento/ubuntu-16.04' or inventory[node_name]['os'] == 'ubuntu/xenial64':
-                    print(styles.FAIL + styles.BOLD + " ### ERROR: device " + node_name +
-                          " -- Incompatible OS for libvirt provider.")
-                    print("              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt")
-                    print("              use an ubuntu1604 image which is natively built for libvirt")
-                    print("              like generic/ubuntu18.04.")
-                    print("              See https://github.com/CumulusNetworks/topology_converter/tree/master/documentation#vagrant-box-selection")
-                    print("              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607")
-                    print("              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609" + styles.ENDC)
-                    raise TcError()
+                    msg = "device " + node_name + " -- Incompatible OS for libvirt provider."
+                    msg += "              Do not attempt to use a mutated image for Ubuntu16.04 on Libvirt"
+                    msg += "              use an ubuntu1604 image which is natively built for libvirt"
+                    msg += "              like generic/ubuntu18.04."
+                    msg += "              See https://github.com/CumulusNetworks/topology_converter/tree/master/documentation#vagrant-box-selection"
+                    msg += "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/607"
+                    msg += "              See https://github.com/vagrant-libvirt/vagrant-libvirt/issues/609"
+                    raise tc_error.TcError(msg)
 
         # Make sure mandatory attributes are present.
         mandatory_attributes = ['os', ]
         for attribute in mandatory_attributes:
             if attribute not in inventory[node_name]:
-                print(styles.FAIL + styles.BOLD +
-                      " ### ERROR: MANDATORY DEVICE ATTRIBUTE \"" + attribute + "\" \
-                      not specified for " + node_name + styles.ENDC)
-
-                raise TcError()
+                msg = "MANDATORY DEVICE ATTRIBUTE \"" + attribute + "\" not specified for " + \
+                      node_name
+                raise tc_error.TcError(msg)
 
         # Extra Massaging for specific attributes.
         # light sanity checking.
@@ -442,15 +405,11 @@ def parse_topology(topology_file, config):
         if 'memory' in inventory[node_name]:
             try:
                 if int(inventory[node_name]['memory']) <= 0:
-                    print(styles.FAIL + styles.BOLD +
-                          " ### ERROR -- Memory must be greater than 0mb on " +
-                           node_name + styles.ENDC)
-                    raise TcError()
+                    msg = "Memory must be greater than 0mb on " + node_name
+                    raise tc_error.TcError(msg)
             except:
-                print(styles.FAIL + styles.BOLD +
-                      " ### ERROR -- There is something wrong with the memory definition on " +
-                      node_name + styles.ENDC)
-                raise TcError()
+                msg = "There is something wrong with the memory definition on " + node_name
+                raise tc_error.TcError(msg)
 
         if provider == "libvirt":
             if tunnel_ip != None: inventory[node_name]['tunnel_ip'] = tunnel_ip
@@ -499,15 +458,13 @@ def parse_topology(topology_file, config):
             try:
                 value.encode('ascii', 'ignore')
             except UnicodeDecodeError as e:
-                print(styles.FAIL + styles.BOLD +
-                      " ### ERROR: in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        \
-                      Link component: \"%s\" has hidden unicode characters in it \
-                      which prevent it from being converted to Ascii cleanly. \
-                      Try manually typing it instead of copying and pasting."
-                      % (left_device, left_interface, right_device, right_interface,
-                         re.sub(r'[^\x00-\x7F]+', ' ', value)) + styles.ENDC)
-
-                raise TcError()
+                msg = "in line --> \"%s\":\"%s\" -- \"%s\":\"%s\"\n        " \
+                    % (left_device, left_interface, right_device, right_interface)
+                msg += "Link component: \"%s\" has hidden unicode characters in it " \
+                    % re.sub(r'[^\x00-\x7F]+', ' ', value)
+                msg += "which prevent it from being converted to Ascii cleanly. " + \
+                       "Try manually typing it instead of copying and pasting."
+                raise tc_error.TcError(msg)
 
         left_mac_address = ""
 
@@ -529,18 +486,14 @@ def parse_topology(topology_file, config):
 
         # Check to make sure each device in the edge already exists in inventory
         if left_device not in inventory:
-            print(styles.FAIL + styles.BOLD + " ### ERROR: device " +
-                  left_device + " is referred to in list of edges/links \
-                  but not defined as a node." + styles.ENDC)
-
-            raise TcError()
+            msg = "device " + left_device + " is referred to in list of edges/links " + \
+                  "but not defined as a node."
+            raise tc_error.TcError(msg)
 
         if right_device not in inventory:
-            print(styles.FAIL + styles.BOLD +
-                  " ### ERROR: device " + right_device + " is referred to \
-                  in list of edges/links but not defined as a node." + styles.ENDC)
-
-            raise TcError()
+            msg = "device " + right_device + " is referred to in list of edges/links but " + \
+                  "not defined as a node."
+            raise tc_error.TcError(msg)
 
         # Adds link to inventory datastructure
         add_link(inventory,
@@ -615,12 +568,8 @@ def parse_topology(topology_file, config):
                 count += 1  # increment count to make sure more than one interface doesn't try to set nicbootprio
 
         if count > 1:
-            print(styles.FAIL + styles.BOLD +
-                  " ### ERROR -- Device " + device +
-                  " sets pxebootinterface more than once." +
-                  styles.ENDC)
-
-            raise TcError()
+            msg = "Device " + device + " sets pxebootinterface more than once."
+            raise tc_error.TcError(msg)
 
     #######################
     # Add Mgmt Network Links
@@ -644,8 +593,8 @@ def parse_topology(topology_file, config):
         # Hardcode mgmt server parameters
         if mgmt_server == None:
             if "oob-mgmt-server" in inventory:
-                print(styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-server must be set to function = "oob-server"' + styles.ENDC)
-                raise TcError()
+                msg = 'oob-mgmt-server must be set to function = "oob-server"'
+                raise tc_error.TcError(msg)
             inventory["oob-mgmt-server"] = {}
             inventory["oob-mgmt-server"]["function"] = "oob-server"
 
@@ -691,12 +640,9 @@ def parse_topology(topology_file, config):
             inventory[mgmt_server]["mgmt_dhcp_stop"] = ("%s" % intf.network[50])
 
         except IndexError:
-            print(styles.FAIL + styles.BOLD +
-                  " ### ERROR: Prefix Length on the Out Of Band Server \
-                  is not big enough to support usage of the 10th-50th \
-                  IP addresses being used for DHCP")
-
-            raise TcError()
+            msg = "Prefix Length on the Out Of Band Server is not big enough to support usage " + \
+                  "of the 10th-50th IP addresses being used for DHCP"
+            raise tc_error.TcError(msg)
 
         if "os" not in inventory[mgmt_server]:
             inventory[mgmt_server]["os"] = "generic/ubuntu1804"
@@ -727,8 +673,8 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
         if mgmt_switch is None and config.create_mgmt_network:
 
             if "oob-mgmt-switch" in inventory:
-                print(styles.FAIL + styles.BOLD + ' ### ERROR: oob-mgmt-switch must be set to function = "oob-switch"' + styles.ENDC)
-                raise TcError()
+                msg = 'oob-mgmt-switch must be set to function = "oob-switch"'
+                raise tc_error.TcError(msg)
 
             inventory["oob-mgmt-switch"] = {}
             inventory["oob-mgmt-switch"]["function"] = "oob-switch"
@@ -783,14 +729,10 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
                 net_number += 1
 
                 if int(PortA) > int(config.start_port + config.port_gap) and provider == "libvirt":
-                    print(styles.FAIL + styles.BOLD +
-                          " ### ERROR: Configured Port_Gap: (" + str(config.port_gap) + ") exceeds \
-                          the number of links in the topology. Read the help options to fix.\n\n" +
-                          styles.ENDC)
-
+                    msg = "Configured Port_Gap: (" + str(config.port_gap) + ") exceeds " + \
+                          "the number of links in the topology. Read the help options to fix.\n\n"
                     config.parser.print_help()
-
-                    raise TcError()
+                    raise tc_error.TcError(msg)
 
                 mgmt_switch_swp_val = "swp" + str(mgmt_switch_swp)
                 left_mac = mac_fetch(mgmt_switch, mgmt_switch_swp_val, config)
@@ -803,18 +745,14 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
                 if "eth0" in inventory[device]['interfaces']:
 
                     if inventory[device]['interfaces']['eth0']['remote_interface'] != mgmt_switch_swp_val:
-                        print(styles.FAIL + styles.BOLD +
-                              " ### ERROR: %s:eth0 interface already exists but \
-                              not connected to %s:%s" % (device, mgmt_switch, mgmt_switch_swp_val) +
-                              styles.ENDC)
-                        raise TcError()
+                        msg = "%s:eth0 interface already exists but not connected to %s:%s" \
+                            % (device, mgmt_switch, mgmt_switch_swp_val)
+                        raise tc_error.TcError(msg)
 
                     if inventory[device]['interfaces']['eth0']['remote_device'] != mgmt_switch:
-                        print(styles.FAIL + styles.BOLD +
-                              " ### ERROR: %s:eth0 interface already exists but \
-                              not connected to %s:%s" % (device, mgmt_switch, mgmt_switch_swp_val) +
-                              styles.ENDC)
-                        raise TcError()
+                        msg = "%s:eth0 interface already exists but not connected to %s:%s" \
+                            % (device, mgmt_switch, mgmt_switch_swp_val)
+                        raise tc_error.TcError(msg)
 
                     if verbose > 2:
                         print("        mgmt link on %s already exists and is good." % (mgmt_switch))
@@ -824,18 +762,14 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
                 if mgmt_switch_swp_val in inventory[mgmt_switch]['interfaces']:
 
                     if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_interface'] != "eth0":
-                        print(styles.FAIL + styles.BOLD +
-                              " ### ERROR: %s:%s-- link already exists but \
-                              not connected to %s:eth0" % (mgmt_switch, mgmt_switch_swp_val, device) +
-                              styles.ENDC)
-                        raise TcError()
+                        msg = "%s:%s-- link already exists but not connected to %s:eth0" \
+                            % (mgmt_switch, mgmt_switch_swp_val, device)
+                        raise tc_error.TcError(msg)
 
                     if inventory[mgmt_switch]['interfaces'][mgmt_switch_swp_val]['remote_device'] != device:
-                        print(styles.FAIL + styles.BOLD +
-                              " ### ERROR: %s:%s-- link already exists but \
-                              not connected to %s:eth0" % (mgmt_switch, mgmt_switch_swp_val, device) +
-                              styles.ENDC)
-                        raise TcError()
+                        msg = "%s:%s-- link already exists but not connected to %s:eth0" \
+                            % (mgmt_switch, mgmt_switch_swp_val, device)
+                        raise tc_error.TcError(msg)
 
                     if verbose > 2:
                         print("        mgmt link on %s already exists and is good." % (mgmt_switch))
@@ -884,30 +818,25 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
                             node_mgmt_ip = ipaddress.ip_address(inventory[device]['mgmt_ip'].split('/')[0])
 
                         except:
-                            print(styles.FAIL + styles.BOLD + " ### ERROR: Invalid IP specified in mgmt_ip option for %s" \
-                                  % (device) + styles.ENDC)
-                            raise TcError()
+                            msg = "Invalid IP specified in mgmt_ip option for %s" % device
+                            raise tc_error.TcError(msg)
                     else:
                         try:
                             node_mgmt_ip = ipaddress.ip_address(inventory[device]['mgmt_ip'])
 
                         except:
-                            print(styles.FAIL + styles.BOLD + " ### ERROR: Invalid IP specified in mgmt_ip option for %s" \
-                                  % (device) + styles.ENDC)
-                            raise TcError()
+                            msg = "Invalid IP specified in mgmt_ip option for %s" % device
+                            raise tc_error.TcError(msg)
                 else:
-                    print(styles.FAIL + styles.BOLD + " ### ERROR: Empty value provided for mgmt_ip option for %s" \
-                          % (device) + styles.ENDC)
-                    raise TcError()
+                    msg = "Empty value provided for mgmt_ip option for %s" % device
+                    raise tc_error.TcError(msg)
 
 
                 # Check that Defined Mgmt_IP is in same Subnet as OOB-SERVER
                 if node_mgmt_ip not in network:
-                    print(styles.FAIL + styles.BOLD +
-                          " ### ERROR: IP address (%s) is not in the \
-                          Management Server subnet %s" % (node_mgmt_ip, network))
-
-                    raise TcError()
+                    msg = "IP address (%s) is not in the Management Server subnet %s" \
+                        % (node_mgmt_ip, network)
+                    raise tc_error.TcError(msg)
 
                 # Remove Address from Valid Assignable Address Pool
                 try:
@@ -918,10 +847,8 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
                               Address already assigned to %s" % (node_mgmt_ip, device))
 
                 except:
-                    print(styles.FAIL + styles.BOLD +
-                          " ### ERROR: Cannot mark the mgmt_ip (%s) as used." % (node_mgmt_ip))
-
-                    raise TcError()
+                    msg = "Cannot mark the mgmt_ip (%s) as used." % node_mgmt_ip
+                    raise tc_error.TcError(msg)
 
         # Add Mgmt_IP if not configured
         for device in inventory:
