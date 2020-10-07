@@ -82,11 +82,11 @@ sudo pip3 install ipaddress
 
 ```
 brew install python3
-sudo pip install --upgrade pip
-sudo pip install setuptools
-sudo pip install pydotplus
-sudo pip install jinja2
-sudo pip install ipaddress
+sudo pip3 install --upgrade pip
+sudo pip3 install setuptools
+sudo pip3 install pydotplus
+sudo pip3 install jinja2
+sudo pip3 install ipaddress
 ```
 
 
