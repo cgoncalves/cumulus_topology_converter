@@ -221,14 +221,15 @@ def add_link(inventory, left_device, right_device, left_interface, right_interfa
                 inventory[left_device]['interfaces'][left_interface]['remote_ip'] = "127.0.0.1"
 
 
-def parse_topology(topology_file, config):
+def parse_topology(topology_file, config, dot_data=None):
     """
-    Parses a topology file in DOT format and serializes it into a dict that contains all defined
-    nodes and their links.
+    Parses a topology file or string in DOT format and serializes it into a dict that contains all
+    defined nodes and their links. Note: only topologies parsed from a file will be linted.
 
     Arguments:
-    topology_file (str) - Path to DOT file
+    topology_file (str) - Path to DOT file (or None if using the `dot_data` argument)
     config (TcConfig) - TcConfig instance
+    topology_dot (str) - String in DOT format representing the topology
 
     Returns:
     dict - Serialized topology
@@ -244,19 +245,38 @@ def parse_topology(topology_file, config):
                          'config': './helper_scripts/oob_switch_config.sh',
                          'function': 'oob-switch', 'mgmt_ip': '192.168.200.2', 'vagrant': 'eth0'},
     ...etc...
+    >>> parse_topology(None, config, 'graph "my topology" {\n "leaf" [function="leaf"...}')
+    {'leaf': {'interfaces': {'swp1': {'mac': '44:38:39:00:00:01', 'network': 'net1',
+                                      'remote_interface': 'eth1',
+                                      'remote_device': 'oob-mgmt-switch'}},
+              'os': 'b9164d74-3b65-4267-95a6-8bcbaccaccd6', 'memory': '768',
+              'function': 'leaf', 'mgmt_ip': '192.168.200.3', 'vagrant': 'eth0'},
+    ...etc...
     """
     provider = config.provider
     verbose = config.verbose
     tunnel_ip = config.tunnel_ip
-    lint_topo_file(topology_file)
-    try:
-        topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
-    except Exception as e:
-        msg = "Cannot parse the provided topology.dot file (%s)\n" % topology
-        msg += "     There is probably a syntax error of some kind, " + \
-               "common causes include failing to close quotation marks and hidden " + \
-               "characters from copy/pasting device names into the topology file."
-        raise tc_error.TcError(msg)
+    if not topology_file and not dot_data:
+        raise tc_error.TcError('Must pass either the topology_file or dot_data argument')
+    if topology_file:
+        lint_topo_file(topology_file)
+        try:
+            topology = pydotplus.graphviz.graph_from_dot_file(topology_file)
+        except Exception as e:
+            msg = "Cannot parse the provided topology.dot file (%s)\n" % topology
+            msg += "     There is probably a syntax error of some kind, " + \
+                "common causes include failing to close quotation marks and hidden " + \
+                "characters from copy/pasting device names into the topology file."
+            raise tc_error.TcError(msg)
+    else:
+        try:
+            topology = pydotplus.graphviz.graph_from_dot_data(dot_data)
+        except Exception as e:
+            msg = "Cannot parse the provided DOT data\n"
+            msg += "\tThere is probably a syntax error of some kind, "
+            msg += "common causes include failing to close quotation marks and hidden "
+            msg += "characters from copy/pasting device names into the topology data."
+            raise tc_error.TcError(msg)
 
     inventory = {}
 
@@ -269,10 +289,11 @@ def parse_topology(topology_file, config):
 
     except Exception as e:
         print(e)
-        print(styles.FAIL + styles.BOLD +
-              " ### ERROR: There is a syntax error in your topology file \
-              (%s). Read the error output above for any clues as to the source."
-              % (topology_file) + styles.ENDC)
+        if topology_file:
+            print(styles.FAIL + styles.BOLD +
+                  " ### ERROR: There is a syntax error in your topology file \
+                  (%s). Read the error output above for any clues as to the source."
+                  % (topology_file) + styles.ENDC)
         raise tc_error.TcError("There is a syntax error in your topology file: " + str(e),
                                print_on_create=False)
 
@@ -281,10 +302,11 @@ def parse_topology(topology_file, config):
 
     except Exception as e:
         print(e)
-        print(styles.FAIL + styles.BOLD +
-              " ### ERROR: There is a syntax error in your topology file \
-              (%s). Read the error output above for any clues as to the source."
-              % (topology_file) + styles.ENDC)
+        if topology_file:
+            print(styles.FAIL + styles.BOLD +
+                  " ### ERROR: There is a syntax error in your topology file \
+                  (%s). Read the error output above for any clues as to the source."
+                  % (topology_file) + styles.ENDC)
         raise tc_error.TcError("There is a syntax error in your topology file: " + str(e),
                                print_on_create=False)
 
