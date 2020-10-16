@@ -619,6 +619,7 @@ def parse_topology(topology_file, config, dot_data=None):
                 raise tc_error.TcError(msg)
             inventory["oob-mgmt-server"] = {}
             inventory["oob-mgmt-server"]["function"] = "oob-server"
+            inventory["oob-mgmt-server"]["vagrant"] = config.vagrant
 
             intf = ipaddress.ip_interface(u'192.168.200.254/24')
 
@@ -701,6 +702,7 @@ folder to see how we set up the OOB server for you..''' + styles.ENDC)
             inventory["oob-mgmt-switch"] = {}
             inventory["oob-mgmt-switch"]["function"] = "oob-switch"
             inventory["oob-mgmt-switch"]["interfaces"] = {}
+            inventory["oob-mgmt-switch"]["vagrant"] = config.vagrant
 
             if provider == "libvirt":
                 if tunnel_ip != None: inventory["oob-mgmt-switch"]['tunnel_ip'] = tunnel_ip
