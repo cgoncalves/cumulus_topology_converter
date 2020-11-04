@@ -1386,7 +1386,8 @@ def render_jinja_templates(devices):
                                           create_mgmt_device=create_mgmt_device,
                                           function_group=function_group,
                                           network_functions=network_functions,
-                                          libvirt_prefix=libvirt_prefix,))
+                                          libvirt_prefix=libvirt_prefix,
+                                          script_storage=script_storage,))
 
 
 def print_datastructures(devices):
