@@ -34,7 +34,7 @@ fi
 which yum &> /dev/null
 if [ "$?" == "0" ]; then
     echo -e "note: fedora-based device detected"
-    /usr/bin/dnf install python -y
+    /usr/bin/dnf install python3 -y
     echo -e "DEVICE=vagrant\nBOOTPROTO=dhcp\nONBOOT=yes" > /etc/sysconfig/network-scripts/ifcfg-vagrant
     rm -f /etc/sysconfig/network-scripts/ifcfg-eth0
 fi
