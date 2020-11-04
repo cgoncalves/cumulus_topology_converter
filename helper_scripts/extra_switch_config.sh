@@ -15,9 +15,6 @@ iface lo inet loopback
 auto vagrant
 iface vagrant inet dhcp
 
-auto eth0
-iface eth0 inet dhcp
-
 EOT
 
 #add line to support bonding inside virtualbox VMs
