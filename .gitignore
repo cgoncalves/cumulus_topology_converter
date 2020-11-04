@@ -4,4 +4,5 @@ Vagrantfile*
 *.dot
 dhcp_mac_map
 helper_scripts/auto_mgmt_network/*
+helper_scripts/empty_playbook.yml
 .DS_Store
